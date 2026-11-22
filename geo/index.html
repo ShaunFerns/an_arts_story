@@ -498,34 +498,35 @@ function buildEastQuadFacade(){
   }
   const band=new THREE.Mesh(new THREE.BoxGeometry(len,.16,.16),bronzeMat);
   band.position.set(0,buildingHeight-.28,.10);wall.add(band);
-  // Mount the identity lettering directly on the long *existing* brick
-  // face adjoining the right side of the glass doors.
-  if(!main&&len>22&&on>.55&&eastQuadGoldTexture){
-   const doorEnd=eastQuadEntrance.face[1];
-   const da=Math.hypot(a[0]-doorEnd[0],a[1]-doorEnd[1]);
-   const db=Math.hypot(b[0]-doorEnd[0],b[1]-doorEnd[1]);
-   if(Math.min(da,db)<5){
-    // Place the sign beside the doorway return (not far along the long wing).
-    // This wall is the original mapped masonry surface, not a projecting bay.
-    // 3.05 m from the connected end keeps the 5.4 m lettering on this wall.
-    const signLocalX=(da<db?1:-1)*(len/2-3.05);
-    // Existing wall plane is at local z=0, lettering sits only 3cm clear.
-    const sign=new THREE.Mesh(new THREE.PlaneGeometry(5.4,5.0),
-      new THREE.MeshBasicMaterial({map:eastQuadGoldTexture,transparent:true,
-        depthWrite:false,side:THREE.DoubleSide,alphaTest:.05}));
-    sign.name='EastQuadGoldNorthEntranceWallSign';
-    sign.position.set(signLocalX,5.3,.055);wall.add(sign);
-    // Use the original dark brick tone directly behind the sign in the reference.
-    const brickWall=wall.children.find(o=>o.geometry?.type==='PlaneGeometry'&&o!==sign);
-    if(brickWall?.material)brickWall.material.color.set(0x89756c);
-    if(brickWall)brickWall.name='EastQuadRightSignBrickWall';
-    const gpos=new THREE.Vector3(signLocalX,5.3,.035);
-    const world=wall.localToWorld(gpos.clone());
-    eastQuadEntrance.sign={side:'right when facing main entrance',
-      mountedOnBrick:true,existingFootprintWall:true,
-      exactTextVerified:true,localX:signLocalX,
-      projectedCentre:[world.x,world.y,-world.z]};
+  // IMPORTANT: viewed from the Luas/north approach, the existing wall
+  // immediately to the RIGHT of the glass doors adjoins face[0], NOT face[1].
+  // The previous implementation used face[1], putting the sign to the left.
+  // Attach the flat lettering to that existing wall; no new wall geometry.
+  const doorRightCorner=eastQuadEntrance.face[0];
+  const da=Math.hypot(a[0]-doorRightCorner[0],a[1]-doorRightCorner[1]);
+  const db=Math.hypot(b[0]-doorRightCorner[0],b[1]-doorRightCorner[1]);
+  const rightAdjacent=!main&&len>7.5&&Math.min(da,db)<.25;
+  if(rightAdjacent&&eastQuadGoldTexture){
+   // 5.2 m-wide sign on the original facade, next to the doorway.
+   const signWidth=Math.min(5.2,len-1.0);
+   const fromCorner=Math.min(3.25,(len-signWidth)/2+.15);
+   const signLocalX=(da<db?-1:1)*(len/2-fromCorner);
+   // Swap the previous generic wall material for darker brick backing.
+   const brickWall=wall.children.find(o=>o.geometry?.type==='PlaneGeometry');
+   if(brickWall){
+    brickWall.name='EastQuadRightSignBrickWall';
+    brickWall.material.color.set(0x78675f);
    }
+   const sign=new THREE.Mesh(new THREE.PlaneGeometry(signWidth,4.9),
+    new THREE.MeshBasicMaterial({map:eastQuadGoldTexture,transparent:true,
+      depthWrite:false,side:THREE.DoubleSide,alphaTest:.045}));
+   sign.name='EastQuadGoldNorthEntranceWallSign';
+   sign.position.set(signLocalX,5.2,.055);
+   wall.add(sign);
+   const world=wall.localToWorld(sign.position.clone());
+   eastQuadEntrance.sign={side:'right when facing main entrance',
+     mountedOnBrick:true,existingFootprintWall:true,exactTextVerified:true,
+     wallFace:[a,b],projectedCentre:[world.x,world.y,-world.z]};
   }
   scene.add(wall);eastQuadFacadeAudit.wallFaces++;
   if(len<2.1)continue;
@@ -536,6 +537,7 @@ function buildEastQuadFacade(){
     const y=2.15+floor*4.45;
     if(y+1.55>buildingHeight-.5)continue;
     if(main&&y<21.0)continue;
+    if(rightAdjacent&&y<8.6)continue;
     if(rightReturn&&y<rightReturnBase+1.5)continue;
     if(secondary&&floor===0&&Math.abs(offset)<4.6)continue;
     // World position derives from wall-local x basis and its outward normal.
