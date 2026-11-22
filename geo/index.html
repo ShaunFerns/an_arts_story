@@ -584,33 +584,60 @@ const npcOutfits=[
  {top:0x6d668d,bottom:0x303b48,shoe:0x2e3033},
  {top:0xad8a55,bottom:0x36424f,shoe:0x312e2a}
 ];
-function addNpcClothes(body,i){
- const colors=npcOutfits[i%npcOutfits.length],cloth=(color)=>new THREE.MeshStandardMaterial({color,roughness:1,metalness:0,side:THREE.DoubleSide});
- const shirt=cloth(colors.top),trousers=cloth(colors.bottom),shoes=cloth(colors.shoe);
- const add=(geometry,material,x,y,z=0,rotZ=0)=>{
-  const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.rotation.z=rotZ;
-  mesh.castShadow=true;mesh.receiveShadow=true;body.add(mesh);return mesh;
+// The old imported mannequin protruded through stiff, unrigged costume meshes.
+// A slimmer, entirely clothed figure is a visual scale *comparison*, not a
+// claim of verified character height. ?npc=original retains the old GLB.
+const originalNpcRig=new URLSearchParams(location.search).get('npc')==='original';
+const npcPrototypeScale=.82;
+function addClothedNpc(body,i){
+ const palette=npcOutfits[i%npcOutfits.length];
+ const fabric=(color)=>new THREE.MeshStandardMaterial({color,roughness:.92,metalness:0});
+ const top=fabric(palette.top),pants=fabric(palette.bottom),shoe=fabric(palette.shoe);
+ const skin=fabric(i%2?0xb98b6b:0xd1a889),hair=fabric(i%2?0x3c302e:0x5d4a36);
+ const student=new THREE.Group();student.name='ClothedStudentVisual';body.add(student);
+ const part=(g,m,x,y,z=0,parent=student)=>{
+  const p=new THREE.Mesh(g,m);p.position.set(x,y,z);
+  p.castShadow=true;p.receiveShadow=true;parent.add(p);return p;
  };
- // Simple garment volumes over the neutral Quaternius rig.
- add(new THREE.CylinderGeometry(.225,.22,.5,12),shirt,0,1.18);
- add(new THREE.CylinderGeometry(.096,.105,.70,10),trousers,-.115,.55);
- add(new THREE.CylinderGeometry(.096,.105,.70,10),trousers,.115,.55);
- for(const sign of [-1,1]){
-   add(new THREE.CylinderGeometry(.092,.095,.28,10),shirt,sign*.265,1.30,0,sign*.12);
-   add(new THREE.BoxGeometry(.18,.12,.29),shoes,sign*.115,.12,.07);
+ part(new THREE.CylinderGeometry(.185,.155,.49,12),top,0,1.155);
+ part(new THREE.CylinderGeometry(.079,.081,.105,10),skin,0,1.445);
+ part(new THREE.SphereGeometry(.115,12,10),skin,0,1.588);
+ part(new THREE.SphereGeometry(.119,12,8,0,Math.PI*2,0,Math.PI*.44),hair,0,1.647);
+ const arms=[],legs=[];
+ for(const side of [-1,1]){
+  const armPivot=new THREE.Group();armPivot.position.set(side*.226,1.365,0);student.add(armPivot);
+  part(new THREE.CylinderGeometry(.072,.065,.35,10),top,0,-.17,0,armPivot);
+  part(new THREE.CylinderGeometry(.044,.043,.26,10),skin,0,-.44,0,armPivot);
+  part(new THREE.SphereGeometry(.054,10,8),skin,0,-.59,0,armPivot);
+  arms.push({pivot:armPivot,side});
+  const legPivot=new THREE.Group();legPivot.position.set(side*.105,.91,0);student.add(legPivot);
+  part(new THREE.CylinderGeometry(.105,.084,.67,10),pants,0,-.335,0,legPivot);
+  part(new THREE.BoxGeometry(.18,.12,.27),shoe,0,-.74,-.06,legPivot);
+  legs.push({pivot:legPivot,side});
  }
+ student.scale.setScalar(npcPrototypeScale);
+ student.position.y=-.08*npcPrototypeScale;
+ body.userData.studentVisual=student;
+ body.userData.walkArms=arms;body.userData.walkLegs=legs;
+ body.userData.prototypeHeight=1.74*npcPrototypeScale;
 }
 const npcs=[];let nearbyNpc=null;
 for(const [i,m] of missions.entries()){
  const story=npcStories[m.name];if(!m.found||!story)continue;
  const body=new THREE.Group();
  const isEast=m.name==='East Quad';
- body.position.set(m.position[0]+(isEast?0:(i%2?.8:-.8)),.05,-m.position[1]+(isEast?0:(i%3-1)*.7));
+ // Clear the door's central sightline; keep dialogue tied to NPC position.
+ body.position.set(m.position[0]+(isEast?2.1:(i%2?.8:-.8)),.05,-m.position[1]+(isEast?-1.2:(i%3-1)*.7));
  body.position.y=groundHeight(body.position.x,-body.position.z)+.05;
- if(modelRig){const figure=cloneSkinned(modelRig);body.add(figure);const npcBones={};figure.traverse(o=>{if(o.isSkinnedMesh)o.castShadow=true;if(o.isBone)for(const [role,bone] of Object.entries(rigBones))if(o.name===bone.name)npcBones[role]=o});body.userData.animation=createAnimations(figure,npcBones)}
- else{const avatar=new THREE.Mesh(new THREE.CapsuleGeometry(.27,1,5,10),mat(0x638c8d));avatar.position.y=1;body.add(avatar)}
- if(modelRig)addNpcClothes(body,i);
- const marker=new THREE.Mesh(new THREE.OctahedronGeometry(.14),mat(0xecc580));marker.position.y=2.12;body.add(marker);
+ if(originalNpcRig&&modelRig){
+  const figure=cloneSkinned(modelRig);body.add(figure);
+  const npcBones={};figure.traverse(o=>{
+   if(o.isSkinnedMesh)o.castShadow=true;
+   if(o.isBone)for(const [role,bone] of Object.entries(rigBones))if(o.name===bone.name)npcBones[role]=o;
+  });
+  body.userData.animation=createAnimations(figure,npcBones);
+ }else addClothedNpc(body,i);
+ const marker=new THREE.Mesh(new THREE.OctahedronGeometry(.10),mat(0xecc580));marker.position.y=originalNpcRig?2.12:1.63;body.add(marker);
  scene.add(body);npcs.push({body,story,name:m.name});
 }
 // Campus sign families, based on photographic references and the external
@@ -799,7 +826,15 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
  }
  player.position.x=resolved.x;player.position.z=-resolved.y;player.position.y=groundHeight(resolved.x,resolved.y)+.05;player.rotation.y=Math.atan2(x,z)} }
  if(animationController)animationController.update(dt,movingRig?((keys.ShiftLeft||keys.ShiftRight)?'run':'walk'):'idle');
- for(const npc of npcs)npc.body.userData.animation?.update(dt,'idle');
+ for(const npc of npcs){
+  npc.body.userData.animation?.update(dt,'idle');
+  const arms=npc.body.userData.walkArms;
+  if(arms){
+   const sway=Math.sin(now*.0014+npc.body.position.x*.17)*.035;
+   for(const a of arms)a.pivot.rotation.x=a.side*sway;
+   for(const l of npc.body.userData.walkLegs)l.pivot.rotation.x=-l.side*sway*.36;
+  }
+ }
  const target=player.position.clone().add(new THREE.Vector3(0,1.6,0));
  if(firstPerson){
   camera.position.copy(target);
@@ -818,6 +853,6 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
   camera.lookAt(target);
  }renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=missions.indexOf(home);missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get entrancePrototypes(){return entryPrototypes},get plazaFeatures(){return eastQuadPlazaFeatures},plazaCollision:(x,n)=>intersectsPlanter(x,n),get closestNpcVerticalDifference(){const n=nearestNpc();return n?n.body.position.y-player.position.y:null},get npcVisualDiagnostics(){return npcs.map(n=>{const figure=n.body.children.find(c=>c.type==='Group');const figureBox=figure?new THREE.Box3().setFromObject(figure):null;const bodyBox=new THREE.Box3().setFromObject(n.body);return {name:n.name,groundY:groundHeight(n.body.position.x,-n.body.position.z),originY:n.body.position.y,rigBottom:figureBox?.min.y,rigTop:figureBox?.max.y,rigHeight:figureBox?.max.y-figureBox?.min.y,wholeHeight:bodyBox.max.y-bodyBox.min.y}})},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],groundHeight(m.position[0],m.position[1])+.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-82-percent'},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.name==='East Quad');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get plazaFeatures(){return eastQuadPlazaFeatures},plazaCollision:(x,n)=>intersectsPlanter(x,n),get closestNpcVerticalDifference(){const n=nearestNpc();return n?n.body.position.y-player.position.y:null},get npcVisualDiagnostics(){return npcs.map(n=>{const figure=n.body.children.find(c=>c.type==='Group');const figureBox=figure?new THREE.Box3().setFromObject(figure):null;const bodyBox=new THREE.Box3().setFromObject(n.body);return {name:n.name,groundY:groundHeight(n.body.position.x,-n.body.position.z),originY:n.body.position.y,rigBottom:figureBox?.min.y,rigTop:figureBox?.max.y,rigHeight:figureBox?.max.y-figureBox?.min.y,wholeHeight:bodyBox.max.y-bodyBox.min.y}})},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],groundHeight(m.position[0],m.position[1])+.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
