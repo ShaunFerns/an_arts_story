@@ -96,7 +96,7 @@ export function addBuildingRoof(scene,feature,design,base,wallMaterial) {
    {width:[-27.5,27.25],depth:[14.35,24.3],pitch:'cross',rise:3.23},
    {width:[-27.6,-15.0],depth:[9.5,24.1],pitch:'long',rise:4.00,hip:true},
    {width:[18.3,27.25],depth:[10,27.72],pitch:'long',rise:3.85,hip:true},
-   {width:[-4.85,4.85],depth:[-.1,20.4],pitch:'long',rise:3.92,hip:true},
+   {width:[-4.85,4.85],depth:[-.1,20.4],pitch:'long',rise:3.92},
    {width:[-6.8,5.9],depth:[20,34.05],pitch:'long',rise:4.10,hip:true},
    {width:[-15.4,-6.5],depth:[20.8,34.1],pitch:'cross',rise:3.03,hip:true},
    {width:[-28.8,-19.3],depth:[26.2,37.7],pitch:'long',rise:3.65},

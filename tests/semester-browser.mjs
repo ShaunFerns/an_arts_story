@@ -55,7 +55,17 @@ try {
   assert.equal(audit.paving?.length,6);
   assert(audit.paving.every(surface=>surface.triangles>30));
   const chapelDoor=audit.doors.find(door=>door.id==='laurence');
-  assert(chapelDoor.door[1]<-62&&chapelDoor.outward[0]>.8,'Chapel entrance should face east from the south end');
+  assert(chapelDoor.door[1]<-68&&chapelDoor.outward[0]>.9,'Chapel interaction should be outside the east porch');
+  const chapel=audit.facades.find(f=>f.id==='way/310375420');
+  assert.deepEqual(chapel.roof.volumes,['nave','chancel','sacristy']);
+  assert.equal(chapel.roof.bellcote,'north');
+  assert.equal(chapel.porches.length,2);
+  assert.deepEqual(chapelDoor.door,chapel.porches[0]);
+  const porchChecks=await page.evaluate(({porches,outward})=>porches.map(([x,n],i)=>{
+    const inward=i===0?-.30:.30;
+    return window.__artsGeo.collisionProbe(x+outward[0]*inward,n+outward[1]*inward).id;
+  }),{porches:chapel.porches,outward:chapelDoor.outward});
+  assert.deepEqual(porchChecks,['way/310375420/porch/1','way/310375420/porch/-1']);
   assert.equal(audit.doors.length,8);
   assert(audit.bridge.clearance>=8&&audit.bridge.clearance<=10);
   assert(audit.facades.some(f=>f.palette==='central'&&f.windowCount>120&&f.wallMaterial==='centralBrick'&&f.roof.profile==='terrace'));
@@ -145,7 +155,8 @@ try {
   assert(audit.rathdown.foot[0]>43&&audit.rathdown.foot[1]<-54&&audit.rathdown.head[0]<35);
   assert.deepEqual([...audit.rathdown.railSources].sort(),['way/1355378351','way/1355378352','way/1355378353']);
   const rathdown=audit.doors.find(d=>d.id==='rathdown');
-  assert(rathdown.outward[1]<-.85&&rathdown.door[1]<-24);
+  assert(rathdown.outward[0]>.9&&Math.hypot(rathdown.door[0]-9,rathdown.door[1]+20.8)<.2,
+    'Rathdown reception should face into the entrance court from the east side of the projecting wing');
 
   for(const point of [[352,-119],[335,-129],[313,-132]])segments+=await walk(point);
   const height=await model(()=>{
