@@ -15,6 +15,8 @@ if(Math.hypot(luas.position[0]-382,luas.position[1]+100)>45)throw Error('Broadst
 
 if(g.features<1000||g.counts.building<50||g.counts.barrier<5)throw Error('Source data lacks building/wall coverage');
 if(!g.missions.some(m=>m.name==='East Quad'&&m.found))throw Error('East Quad OSM building waypoint missing');
+const lower=g.missions.find(m=>m.name==='Lower House');
+if(!lower?.found||!lower.provisional||lower.source!=='way/307799384')throw Error('Lower House provisional waypoint missing or wrongly represented');
 await page.evaluate(()=>window.__artsGeo.openMap());
 if(await page.locator('#overlay').getAttribute('hidden')!==null)throw Error('Map should be open');
 await page.screenshot({path:'/tmp/arts-geo-mission-map.png',fullPage:true});
