@@ -5,7 +5,7 @@
 <div id="heads"><div class="pane"><small>FIRST SEMESTER · AN ARTS STORY</small><h1>Grangegorman · Mission Map</h1><p id="objective">Rathdown-centred world · connecting real footprints and boundaries</p></div><div class="pane right"><small>GEOGRAPHIC BASE · OSM</small><p id="status">Reading Rathdown map data…</p><p>WASD move · mouse drag look · scroll zoom · <b>M</b> mission map</p></div></div>
 <canvas id="mini" width="390" height="390" aria-label="Open the mission map" role="button" tabindex="0"></canvas>
 <div id="foot"><div class="pane controls">1 world unit = <strong>1 metre</strong><br>Buildings: simple scaled blocks · walls/hedges: source feature lines<br><span id="pos"></span></div><div class="buttons"><button id="mapBtn">☰ Open mission map (M)</button><button id="restart">Return to Rathdown</button></div></div>
-<div id="overlay" hidden role="dialog" aria-modal="true" aria-label="Grangegorman mission map"><div id="mapShell"><div id="mapFrame"><canvas id="map" width="1000" height="1000" aria-label="Mapped campus with mission markers"></canvas></div><div id="side"><button id="closeMap">✕ Return to game (M)</button><div class="pane"><small>RATHDOWN ORIGIN · 1 KM RADIUS</small><h1>Mission map</h1><p>One game unit equals one metre. Click a marker or select a mission. The dashed gold line is a <b>bearing, not a verified walking route</b>.</p><p id="attribution">© OpenStreetMap contributors · ODbL</p></div><div id="missionList" class="pane"></div><div id="mapNote">Mapped footprints and walls are based on OpenStreetMap tags. Heights and some barriers are estimated; elevations are not yet surveyed.</div></div></div></div>
+<div id="overlay" hidden role="dialog" aria-modal="true" aria-label="Grangegorman mission map"><div id="mapShell"><div id="mapFrame"><canvas id="map" width="1000" height="1000" aria-label="Mapped campus with mission markers"></canvas></div><div id="side"><button id="closeMap">✕ Return to game (M)</button><div class="pane"><small>RATHDOWN ORIGIN · 1 KM RADIUS</small><h1>Mission map</h1><p>One game unit equals one metre. Click a marker or select a mission. The dashed gold line is a <b>bearing, not a verified walking route</b>.</p><p id="attribution">© OpenStreetMap contributors · ODbL</p></div><div id="missionList" class="pane"></div><div id="mapNote">Mapped footprints and walls are based on OpenStreetMap tags. Heights are estimates. Lower House is a provisional mapping of the Sports and Student Facility footprint pending campus-plan verification; elevations are not yet surveyed.</div></div></div></div>
 <div id="error" hidden><article><h1>Verified geographic data unavailable</h1><p id="errorText"></p><p>The game will not substitute invented geography for missing OpenStreetMap data. <a href="../review/">Open the older experimental route</a> or review the <a href="https://github.com/ShaunFerns/an_arts_story/blob/main/docs/geographic-and-visual-reset.md">geographic specification</a>.</p></article></div>
 <script type="importmap">{"imports":{"three":"../vendor/three.module.js","three/addons/":"../vendor/addons/"}}</script>
 <script type="module">
@@ -81,9 +81,19 @@ function nearestWalkable(centre,footprint){
 }
 const missions=landmarkMatches.map(([name,re,desc])=>{
  const matches=zone.filter(f=>re.test(f.name));
+ // Lower House is not named as such in this OSM extract. A probable matching
+ // OSM footprint is mapped as "Sports and Student Facility", way/307799384.
+ // TU Dublin documents Lower House's student and sports functions; the
+ // Lower House archaeological site point (53.352671,-6.278262) lies ~21m
+ // from this footprint. Keep this explicitly PROVISIONAL until plan review.
+ const inferredLower=name==='Lower House'&&matches.length===0;
+ if(inferredLower){
+   const candidate=zone.find(f=>f.id==='way/307799384'&&f.kind==='building');
+   if(candidate)matches.push(candidate);
+ }
  matches.sort((a,b)=>{const score=f=>(f.tags?.railway==='tram_stop'?10:0)+(f.kind==='building'?2:0)+(f.id==='node/8398652317'?1:0);return score(b)-score(a)});
  const f=matches[0],centre=f?midpoint(f.coords):null,approach=centre?nearestWalkable(centre,f.kind==='building'?f:null):null;
- return {name,description:desc,found:!!(f&&approach),position:approach?.point||null,centre,source:f?.id,approachWay:approach?.road};
+ return {name,description:inferredLower&&f?desc+' · footprint provisional':desc,found:!!(f&&approach),provisional:!!(f&&inferredLower),position:approach?.point||null,centre,source:f?.id,approachWay:approach?.road};
 });
 const solidBuildings=zone.filter(f=>f.kind==='building'&&f.coords.length>3).map(f=>{
  const xs=f.coords.map(p=>p[0]),ys=f.coords.map(p=>p[1]);
@@ -143,6 +153,6 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
  }
  const target=player.position.clone().add(new THREE.Vector3(0,1.6,0)),pos=target.clone().add(new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*follow,Math.sin(pitch)*follow,Math.cos(yaw)*Math.cos(pitch)*follow));camera.position.lerp(pos,.13);camera.lookAt(target);renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=available.length?missions.indexOf(available[0]):null;missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,origin,features:zone.length,counts,collisions:{buildings:solidBuildings.length,barrierSegments:solidEdges.length},missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,origin,features:zone.length,counts,collisions:{buildings:solidBuildings.length,barrierSegments:solidEdges.length},missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
