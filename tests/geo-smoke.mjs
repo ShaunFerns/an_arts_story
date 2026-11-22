@@ -52,17 +52,24 @@ if(Math.hypot(signBuild.position[0]-entries[0].mainWallMidpoint[0],signBuild.pos
 const paving=await page.evaluate(()=>window.__artsGeo.eastQuadPavingAudit);
 console.log('East Quad paved forecourt:',JSON.stringify(paving));
 if(!paving.created||paving.width<25||paving.lightMarkers<4)throw Error('Entrance forecourt is still bare grass');
+const doors=await page.evaluate(()=>window.__artsGeo.missionDoorRegistry);
+console.log('Other mission-building exterior doors:',JSON.stringify(doors));
+for(const name of ['Central Quad','Rathdown House','Lower House']){
+ const d=doors.find(x=>x.name===name);
+ if(!d||d.dimensions.height<2.1||Math.hypot(d.door[0]-d.interaction[0],d.door[1]-d.interaction[1])>10)throw Error(name+' mission entry and nearby NPC missing');
+}
 const facade=await page.evaluate(()=>window.__artsGeo.eastQuadFacadeAudit);
 console.log('Full East Quad facade build:',JSON.stringify(facade));
 if(facade.wallFaces<4||facade.windowBays<20||facade.brickCoverageM<40)throw Error('East Quad still has untextured building sides');
 
 const plaza=await page.evaluate(()=>window.__artsGeo.plazaFeatures);
 console.log('Photo-referenced East Quad curved seating:',JSON.stringify(plaza));
-if(plaza.length!==1||plaza[0].slats<30||plaza[0].dimensions.length<8)throw Error('Curved East Quad seating not built');
+if(plaza.length!==2||plaza.some(p=>p.slats<30||p.dimensions.length<12))throw Error('Two wider East Quad curved seats required');
 if(plaza[0].distanceToNpc<6||plaza[0].nearestPedestrianPath<2.4)throw Error('East Quad seating is not integrated into entrance pedestrian forecourt');
-if(plaza[0].sideOfDoor!=='left when approaching northern entrance'||plaza[0].entranceDistance>18)throw Error('Curved seating still too far from northern entrance');
+if(plaza.some(p=>p.entranceDistance>39))throw Error('Curved seating too far from northern entrance');
 const planterSolid=await page.evaluate(p=>window.__artsGeo.plazaCollision(...p),plaza[0].position);
 if(!planterSolid)throw Error('Player can walk through the seating planter');
+for(const p of plaza.slice(1))if(!await page.evaluate(pos=>window.__artsGeo.plazaCollision(...pos),p.position))throw Error('Second seating island is not collidable');
 const heightAudit=await page.evaluate(()=>window.__artsGeo.visualHeightAudit);
 console.log('Campus visual height estimates:',JSON.stringify(heightAudit));
 if(!heightAudit.some(x=>x.source==='visual_estimate_east_quad'&&x.height===arrival.height))throw Error('East Quad OSM footprint did not receive revised height');
@@ -172,6 +179,7 @@ const calibration=await eqReview.evaluate(()=>{
 });
 console.log('East Quad NPC vs reference 2.10m door:',JSON.stringify(calibration));
 if(calibration.variant!=='clothed-adult')throw Error('Wrong default NPC variant');
+if(calibration.scale!==1)throw Error('NPCs must remain at 1:1 visual scale');
 if(!calibration.npc||!(calibration.npc.height>1.55&&calibration.npc.height<1.80))throw Error('NPC is not shorter than reference 2.10m door');
 if(calibration.npc.width>.9)throw Error('NPC shoulder width still disproportionate');
 const thirdPerson=await eqReview.evaluate(()=>{
