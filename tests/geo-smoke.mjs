@@ -43,6 +43,7 @@ const entries=await page.evaluate(()=>window.__artsGeo.entrancePrototypes);
 console.log('East Quad exterior entrance:',JSON.stringify(entries));
 if(entries.length!==2||!entries.some(e=>e.northFacing&&e.provisional&&e.interaction)||!entries.some(e=>!e.northFacing))throw Error('North main entrance and preserved secondary entry required');
 if(entries.some(e=>e.wallLength<7))throw Error('Entrances not grounded in the mapped East Quad perimeter');
+if(JSON.stringify(entries[0].face)===JSON.stringify(entries[1].face))throw Error('Photo-referenced northern entrance and retained secondary doors overlap');
 const plaza=await page.evaluate(()=>window.__artsGeo.plazaFeatures);
 console.log('Photo-referenced East Quad curved seating:',JSON.stringify(plaza));
 if(plaza.length!==1||plaza[0].slats<30||plaza[0].dimensions.length<8)throw Error('Curved East Quad seating not built');
