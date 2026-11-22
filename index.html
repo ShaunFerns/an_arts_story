@@ -435,7 +435,7 @@
     const clock = new THREE.Clock();
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x8fb6d0);
-    scene.fog = new THREE.Fog(0x8fb6d0, 35, 150);
+    scene.fog = new THREE.Fog(0x8fb6d0, 125, 415);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -993,8 +993,21 @@
 
     // Broadstone–University arrival: a short tram platform and a stylised Luas vehicle.
     // The platform is an arrival device, not a survey-accurate railway model.
-    const platform=new THREE.Mesh(new THREE.BoxGeometry(20,.24,4),brickMat(0xc8c7bc));
+    const platform=new THREE.Mesh(new THREE.BoxGeometry(42,.24,4.8),brickMat(0xc8c7bc));
     platform.position.set(42*CAMPUS_SPREAD,.14,36*CAMPUS_SPREAD);scene.add(platform);
+    // Stop furniture, canopy and planting help ground the first seconds at human scale.
+    const stopOrigin=42*CAMPUS_SPREAD,stopZ=36*CAMPUS_SPREAD;
+    const shelterSteel=new THREE.MeshStandardMaterial({color:0x49585d,metalness:.64,roughness:.37});
+    const shelterRoof=new THREE.Mesh(new THREE.BoxGeometry(10,.22,3.8),shelterSteel);
+    shelterRoof.position.set(stopOrigin-10,3.4,stopZ+4.1);shelterRoof.castShadow=true;scene.add(shelterRoof);
+    for(const x of [-14.5,-5.5])for(const z of [2.6,5.5]){
+      const post=new THREE.Mesh(new THREE.CylinderGeometry(.085,.09,3.4,8),shelterSteel);
+      post.position.set(stopOrigin+x,1.7,stopZ+z);scene.add(post);
+    }
+    const shelterPanel=new THREE.Mesh(new THREE.BoxGeometry(9,.05,2.4),new THREE.MeshStandardMaterial({color:0xa6c2c8,transparent:true,opacity:.24,metalness:.1,roughness:.12}));
+    shelterPanel.position.set(stopOrigin-10,1.65,stopZ+5.3);scene.add(shelterPanel);
+    const shelterSeat=new THREE.Mesh(new THREE.BoxGeometry(5,.15,.65),new THREE.MeshStandardMaterial({color:0x8e7560,roughness:.7}));
+    shelterSeat.position.set(stopOrigin-10,.68,stopZ+4.7);scene.add(shelterSeat);
     for(const tz of [34.2,37.8]){const line=new THREE.Mesh(new THREE.BoxGeometry(20,.055,.11),brickMat(0x6a7779));line.position.set(42*CAMPUS_SPREAD,.28,tz*CAMPUS_SPREAD);scene.add(line);}
     const tram=new THREE.Group();
     const tramDoors=[];
@@ -1514,7 +1527,7 @@ You look around and make a mental note that some people are here for the first t
             <div class="legend"><span><i class="dot current"></i>You are here</span><span><i class="dot target"></i>Next person</span><span><i class="dot other"></i>Other building</span></div>`;
         case 'timetable':
           if(!state.timetablePublished)return '<h4>Timetable</h4><div class="card"><div class="label">Awaiting publication</div><p>Programme Operations will publish the initial Semester 1 timetable on the Friday before the first classes. Your advising preferences are not a confirmed allocation.</p></div>';
-          return `<h4>Timetable</h4><div class="card"><div class="label">Semester 1 · published example</div>${state.timetable.map(m=>`<p><strong>${m.code}</strong> — ${m.name}<br>${m.day} · ${m.time} · ${m.place}</p>`).join('')}</div><div class="card"><p>The timetable shows where and when classes happen. It does not show all the reading, preparation and assignment work that surround a module.</p></div>`;
+          return `<h4>Timetable</h4><div class="card"><div class="label">Semester 1 · illustrative timetable</div><p class="phoneNotice">This is a narrative example, not your actual TU Dublin timetable.</p>${state.timetable.map(m=>`<p><strong>${m.code}</strong> — ${m.name}<br>${m.day} · ${m.time} · ${m.place}</p>`).join('')}</div><div class="card"><p>The timetable shows where and when classes happen. It does not show all the reading, preparation and assignment work that surround a module.</p></div>`;
         case 'planner':
           return `<h4>Curriculum planner</h4><div class="card"><div class="label">Current picture</div><p><strong>Likely interests</strong>: ${state.formA.interests.join(' and ')}</p><p><strong>Current confidence</strong>: ${state.formA.confidence}</p><p><strong>Watchpoint</strong>: ${state.formA.watchpoint}</p></div><div class="card"><p>Stage 1 exploration is about understanding possibilities and keeping routes open. It does not automatically mean every published module can be exchanged once a timetable appears.</p></div>`;
         case 'formA':
@@ -1715,6 +1728,7 @@ You look around and make a mental note that some people are here for the first t
       state.huntEvidence=state.huntEvidence||{};state.huntDone=state.huntDone||[];
       state.notes=state.notes||[];state.messages=state.messages||[];
       if(Array.isArray(stored.position)&&stored.position.length===3)player.position.set(...stored.position);
+      state.timetablePublished=!!(state.timetablePublished || state.inductionDone);
       if(Number.isFinite(stored.yaw))yaw=stored.yaw;
       if(Number.isFinite(stored.pitch))pitch=stored.pitch;
       document.getElementById('startScreen').hidden=true;
