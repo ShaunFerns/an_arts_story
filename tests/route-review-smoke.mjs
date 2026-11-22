@@ -9,7 +9,14 @@ const status=await page.evaluate(()=>({rigged:window.__artsRouteReview.rigged,st
 console.log('Review initial state:',JSON.stringify(status));
 const measure=await page.evaluate(()=>window.__artsRouteReview.diagnostics());
 console.log('Scale measurements:',JSON.stringify(measure));
-if(!(measure.characterHeight>0&&measure.characterHeight<5))throw Error('Rigged character dimensions invalid');
+if(!(measure.characterHeight>1.6&&measure.characterHeight<1.85))throw Error('Player should be human height, not oversized');
+if(measure.doorHeight.lower < measure.characterHeight*1.3 || measure.doorHeight.lower > measure.characterHeight*1.8)throw Error('Lower House doorway is out of proportion with the rigged student');
+if(measure.doorHeight.rathdown < measure.characterHeight*1.3 || measure.doorHeight.rathdown > measure.characterHeight*1.8)throw Error('Rathdown entrance doorway scale is unrealistic');
+const [sx,sz]=measure.approachFacing.from,[ex,ez]=measure.approachFacing.towards,[bx,bz]=measure.eastQuadCentre;
+const dx=ex-sx,dz=ez-sz;
+const leftDot=(bx-sx)*dz-(bz-sz)*dx;
+console.log('East Quad left-of-approach check:',JSON.stringify({leftDot,approach:[sx,sz,ex,ez],building:[bx,bz]}));
+if(leftDot>=0)throw Error('East Quad must be left of the arriving player, not ahead or right');
 if(!status.rigged)throw Error('The CC0 rigged GLB character must load; no placeholder-only deployment');
 if(status.stops.length!==5)throw Error('Missing one or more grounded geographic review stops');
 if(errors.length)throw Error('Browser errors: '+JSON.stringify(errors));
