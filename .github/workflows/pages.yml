@@ -36,7 +36,7 @@ jobs:
           test -f review/index.html && test -s review/assets/student-rig.glb
           cp -R review dist/review
           mkdir -p dist/geo
-          cp geo/index.html geo/data.json dist/geo/
+          cp geo/index.html geo/data.json geo/collision.mjs dist/geo/
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -53,6 +53,8 @@ jobs:
                   (Path('dist') / name).write_bytes(src.read_bytes())
           PY
           touch dist/.nojekyll
+      - name: Verify wall thickness and navigation physics
+        run: node tests/collision.test.mjs
       - name: Install Chromium for startup test
         run: npx playwright install --with-deps chromium
       - name: Verify 3D in browser
