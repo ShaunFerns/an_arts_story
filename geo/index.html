@@ -123,12 +123,9 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
  const mesh=polygonMesh(f.coords,height,(f.id==='way/810540713'?mat(0x77736d):/Quad/i.test(f.name)?newBrick:grey));
  if(mesh){
   if(f.id==='way/810540713'){
-   // Keep the OSM roof/cap but avoid double-rendered opaque wall planes.
-   // The photo-informed exterior below supplies the visible walls instead.
-   // Collision continues to use the untouched mapped OSM polygon.
-   mesh.material=[roofMat,new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false})];
-   mesh.castShadow=false;
-   mesh.raycast=()=>{};
+   // Preserve the original OSM-mapped building volume unmodified.
+   // Decorative overlays sit outside its existing perimeter.
+   mesh.material=mat(0x77736d);
   }
   counts.building++;
  }
@@ -266,6 +263,7 @@ const collision=makeCollisionWorld(zone,{playerRadius:.34,worldRadius:990,worldE
 const entryPrototypes=[];
 const eastQuadOriginalApproach=[...(missions.find(m=>m.name==='East Quad')?.position||[])];
 let eastQuadNorthFaceKey=null;
+let eastQuadGoldTexture=null;
 function nearestPointOnSegment2D(p,a,b){
  const dx=b[0]-a[0],dy=b[1]-a[1],len2=dx*dx+dy*dy;
  const f=len2>.0001?THREE.MathUtils.clamp(((p[0]-a[0])*dx+(p[1]-a[1])*dy)/len2,0,1):0;
@@ -380,56 +378,8 @@ function createEastQuadEntry(north=true){
  add(new THREE.BoxGeometry(8.6,.08,2.65),threshold,0,.014,1.25);
  add(new THREE.BoxGeometry(8.6,.035,.11),darkMetal,0,.063,2.35);
  if(north){
- // East Quad's real identity sign is the recognition cue: individual warm
- // gold raised T / DUBLIN lettering against *dark variegated brick*, with
- // bilingual small lettering and AN CHEARNÓG THOIR — EAST QUAD below.
- // Reference photos:
- // https://www.ste.ie/east-quad-grangegorman-ahr-architects
- // https://www.ndfa.ie/projects/p2 (East Quad building-signage photograph)
- // Canvas supplies high-resolution surface markings; offset overlay
- // approximates dimensional metal letters without custom downloaded fonts.
- const brickCanvas=document.createElement('canvas');
- brickCanvas.width=1024;brickCanvas.height=1024;
- const pc=brickCanvas.getContext('2d');
- pc.fillStyle='#625a50';pc.fillRect(0,0,1024,1024);
- // Repeated Clifton-Grey-like brick coursing. Stylised, not a proprietary
- // masonry image or a claim of surveyed individual brick positions.
- let seed=5732;
- const noise=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
- for(let row=0;row<53;row++){
-  const yy=row*20,offset=row%2?39:0;
-  for(let x=-80+offset;x<1060;x+=78){
-   const v=noise(),warm=noise()>.68;
-   const rgb=warm?[94+v*22,83+v*18,68+v*15]:[78+v*31,76+v*27,72+v*24];
-   pc.fillStyle='rgb('+rgb.map(Math.round).join(',')+')';
-   pc.fillRect(x+1,yy+1,76,17);
-   pc.fillStyle='rgba(18,17,16,.09)';pc.fillRect(x+1,yy+15,76,3);
-  }
- }
- const brickTexture=new THREE.CanvasTexture(brickCanvas);
- brickTexture.colorSpace=THREE.SRGBColorSpace;
- brickTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
- const brickPanel=new THREE.Mesh(
-  new THREE.PlaneGeometry(5.6,12.3),
-  new THREE.MeshStandardMaterial({map:brickTexture,roughness:.94,side:THREE.DoubleSide})
- );
- // The earlier sign was a flat sheet projected *beyond* the 9.6m OSM
- // north doorway segment. The adjoining footprint return hid the lettering.
- // Build its own brick-faced, shallow architectural bay physically attached
- // to the right side of the atrium, with the letters forward of masonry.
- // The bay is a photo-informed reconstruction, not CAD-measured depth.
- const signWall=add(new THREE.BoxGeometry(5.65,12.3,.92),
-   new THREE.MeshStandardMaterial({map:brickTexture,roughness:.96}),7.2,6.15,.62);
- signWall.name='EastQuadRightSignBrickWall';
- brickPanel.position.set(7.2,6.15,1.10);group.add(brickPanel);
- // Tall narrow metal-framed windows above the wall-mounted lettering.
- const windowMat=new THREE.MeshPhysicalMaterial({color:0x465c66,roughness:.23,metalness:.18,transparent:true,opacity:.87,side:THREE.DoubleSide});
- for(const x of [5.7,7.15,8.62]){
-  const frame=add(new THREE.BoxGeometry(1.03,3.65,.17),darkMetal,x,9.9,1.19);
-  add(new THREE.BoxGeometry(.87,3.48,.028),windowMat,x,9.9,1.31);
- }
- // Transparent canvas lets the lettering sit on the brick and shadow
- // independently: no background rectangle/advertising-board effect.
+ // Keep the verified sign lettering as one original surface texture;
+ // it is mounted later on the existing adjacent footprint wall.
  const lettersCanvas=document.createElement('canvas');
  lettersCanvas.width=1200;lettersCanvas.height=1100;
  const lc=lettersCanvas.getContext('2d');
@@ -448,15 +398,9 @@ function createEastQuadEntry(north=true){
  lc.fillText('AN CHEARNÓG THOIR – EAST QUAD',122,855);
  const lettersTexture=new THREE.CanvasTexture(lettersCanvas);
  lettersTexture.colorSpace=THREE.SRGBColorSpace;
- const faceMaterial=new THREE.MeshBasicMaterial({map:lettersTexture,transparent:true,depthWrite:false,side:THREE.DoubleSide,alphaTest:.04});
- const signFace=new THREE.Mesh(new THREE.PlaneGeometry(5.60,5.1),faceMaterial);
- signFace.position.set(7.2,4.9,1.28);group.add(signFace);
- signFace.name='EastQuadGoldNorthEntranceWallSign';
- // Give letters a soft backing shadow to suggest raised metal lettering.
- const shadow=new THREE.Mesh(new THREE.PlaneGeometry(5.60,5.1),
-  new THREE.MeshBasicMaterial({map:lettersTexture,color:0x443a32,transparent:true,opacity:.25,depthWrite:false,side:THREE.DoubleSide,alphaTest:.04}));
- shadow.position.set(7.22,4.87,1.235);group.add(shadow);
+ eastQuadGoldTexture=lettersTexture;
  }
+
  scene.add(group);
  // Path-side interaction node: prefer pedestrian position outside the entry.
  let target=null;
@@ -475,9 +419,7 @@ function createEastQuadEntry(north=true){
   interaction:north?m.position:(target||m.position),northFacing:north,provisional:true,doorComposition:north?'northern glazed atrium, side doors and revolving entrance':'secondary glazed door / revolving door / glazed door',sourcePhoto:north?'https://www.ste.ie/east-quad-grangegorman-ahr-architects':null,
   wallLength:seg.length,distanceFromOriginalApproach:seg.distance,
   sign:north?{side:'right when facing main entrance',mountedOnBrick:true,
-    localX:7.2,localZ:1.28,localY:4.9,
-    onBrickBayWidth:5.65,entranceClearance:7.2-4.4,
-    projectedCentre:(()=>{const p=group.localToWorld(new THREE.Vector3(7.2,4.9,1.28));return [p.x,p.y,-p.z]})()}:null};
+    location:'existing adjacent long north brick wall',verifiedTextFromPhoto:false}:null};
  entryPrototypes.push(info);
  return info;
 }
@@ -528,14 +470,9 @@ function buildEastQuadFacade(){
   if(ox*(cx-center[0])+on*(cn-center[1])<0){ox=-ox;on=-on}
   const ang=Math.atan2(ox,-on),base=groundHeight(cx,cn)+.02;
   const main=matchSegment(a,b,eastQuadEntrance),secondary=matchSegment(a,b,eastQuadSecondaryEntrance);
-  const corner=eastQuadEntrance.face[0];
-  const rightReturn=!main&&len<19&&
-   (Math.hypot(a[0]-corner[0],a[1]-corner[1])<.20||
-    Math.hypot(b[0]-corner[0],b[1]-corner[1])<.20);
-  // The OSM short return intersects the documented gold lettering.
-  // This particular simplified return is held above the sign bay height
-  // so the entrance's brick sign wall is actually visible from arrival.
-  const rightReturnBase=12.5;
+  // No carved-out short returns or projecting sign-bay geometry.
+  // The original mapped footprint remains continuous.
+  const rightReturn=false,rightReturnBase=0;
   const wall=new THREE.Group();wall.position.set(cx+ox*.095,base,-cn-on*.095);wall.rotation.y=ang;
   // The photographed main atrium occupies the first ~21m of its wall.
   // Avoid covering it with a brick layer; the entrance geometry remains.
@@ -559,6 +496,30 @@ function buildEastQuadFacade(){
   }
   const band=new THREE.Mesh(new THREE.BoxGeometry(len,.16,.16),bronzeMat);
   band.position.set(0,buildingHeight-.28,.10);wall.add(band);
+  // Mount the identity lettering directly on the long *existing* brick
+  // face adjoining the right side of the glass doors.
+  if(!main&&len>22&&on>.55&&eastQuadGoldTexture){
+   const doorEnd=eastQuadEntrance.face[1];
+   const da=Math.hypot(a[0]-doorEnd[0],a[1]-doorEnd[1]);
+   const db=Math.hypot(b[0]-doorEnd[0],b[1]-doorEnd[1]);
+   if(Math.min(da,db)<5){
+    const signLocalX=(da<db?1:-1)*(len/2-4.7);
+    // Existing wall plane is at local z=0, lettering sits only 3cm clear.
+    const sign=new THREE.Mesh(new THREE.PlaneGeometry(5.4,5.0),
+      new THREE.MeshBasicMaterial({map:eastQuadGoldTexture,transparent:true,
+        depthWrite:false,side:THREE.DoubleSide,alphaTest:.05}));
+    sign.name='EastQuadGoldNorthEntranceWallSign';
+    sign.position.set(signLocalX,5.3,.035);wall.add(sign);
+    const brickWall=wall.children.find(o=>o.geometry?.type==='PlaneGeometry'&&o!==sign);
+    if(brickWall)brickWall.name='EastQuadRightSignBrickWall';
+    const gpos=new THREE.Vector3(signLocalX,5.3,.035);
+    const world=wall.localToWorld(gpos.clone());
+    eastQuadEntrance.sign={side:'right when facing main entrance',
+      mountedOnBrick:true,existingFootprintWall:true,
+      exactTextVerified:false,localX:signLocalX,
+      projectedCentre:[world.x,world.y,-world.z]};
+   }
+  }
   scene.add(wall);eastQuadFacadeAudit.wallFaces++;
   if(len<2.1)continue;
   const bays=Math.max(1,Math.floor((len-.5)/4.35));
