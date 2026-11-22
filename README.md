@@ -6,7 +6,7 @@ An independently developed educational narrative-game prototype exploring a new 
 
 **[OPEN THE CURRENT GAME — GEOGRAPHIC BUILD](https://shaunferns.github.io/an_arts_story/geo/)**
 
-Start at **Broadstone–University Luas** and walk Grangegorman to play the seven chapters of the simulated BA Arts semester. Follow the destination in **Phone → What’s next**. **Phone → Campus** includes the East Quad orientation walk and optional conversations. Progress is saved in the browser.
+Start at **Broadstone–University Luas** and walk Grangegorman to play the seven chapters of the simulated BA Arts semester. Follow the destination in **Phone → What’s next** and talk to the contact waiting outside the building. **Phone → Campus** includes the East Quad orientation walk and optional conversations. Progress is saved in the browser.
 
 | Control | Action |
 | --- | --- |

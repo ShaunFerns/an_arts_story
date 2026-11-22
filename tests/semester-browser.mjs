@@ -54,8 +54,13 @@ try {
   console.log('World snapshots: '+JSON.stringify({doors:audit.doors,bridge:audit.bridge,missions:audit.missions,spawn:audit.spawn}));
   assert.equal(audit.doors.length,8);
   assert(audit.bridge.clearance>=8&&audit.bridge.clearance<=10);
-  assert(audit.facades.some(f=>f.palette==='central'&&f.windowCount>150));
-  assert(audit.facades.some(f=>f.palette==='library'&&f.windowCount>70));
+  assert(audit.facades.some(f=>f.palette==='central'&&f.windowCount>120&&f.wallMaterial==='centralBrick'&&f.roof.profile==='terrace'));
+  assert(audit.facades.some(f=>f.id==='way/1361416599'&&f.windowCount>70&&f.wallMaterial==='harling'&&f.roof.eaves<f.roof.ridge));
+  for(const id of ['way/310375422','way/516821746','way/396704720','way/307799384','way/310375420','way/516824969']){
+    const historic=audit.facades.find(f=>f.id===id);
+    assert(historic?.roof&&['gable','hip'].includes(historic.roof.profile)&&historic.roof.ridge>historic.roof.eaves);
+    assert.match(historic.wallMaterial,/Stone$/);
+  }
 
   // Search around the current player using the game's actual collision probes.
   // The browser then walks every segment with the live movement function at a
@@ -136,6 +141,20 @@ try {
     },'E — Enter '+door.name);
     await page.keyboard.press('e');
   }
+  async function walkToMeeting(door){
+    const contact=await model(()=>window.__artsGeo.semesterMeetingPlaces);
+    const meeting=contact[door.id];
+    assert(meeting?.visible);
+    assert(Math.hypot(meeting.position[0]-door.interaction[0],meeting.position[1]-door.interaction[1])>2);
+    segments+=await walk(door.exit);
+    segments+=await walk(meeting.position);
+    await page.waitForFunction(()=>{
+      const hint=document.querySelector('#npcHint');
+      return !hint.hidden&&/^E — (Talk to |Continue outside )/.test(hint.textContent);
+    });
+    await page.keyboard.press('e');
+    assert((await state()).visited.includes(door.id));
+  }
   async function lookAtFacade(door) {
     const x=door.door[0]+door.outward[0]*13,n=door.door[1]+door.outward[1]*13;
     const shot=await page.evaluate(([x,n,tx,tn])=>window.__artsGeo.reviewPose(x,n,tx,tn,2.5),[x,n,...door.door]);
@@ -145,7 +164,7 @@ try {
   await walkToDoor(east);
   assert.equal(await panelTitle(),'East Quad entrance');
   await button('Exit to campus').click();
-  await walkToDoor(central);
+  await walkToMeeting(central);
   assert.equal(await panelTitle(),'What have I joined?');
   await page.reload({waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>window.__artsGeo?.ready);
@@ -159,14 +178,14 @@ try {
   assert.equal((await state()).formA.modules.length,6);
   await page.screenshot({path:'/tmp/arts-geo-semester-timetable.png'});
   await button('Close (M)').click();
-  await walkToDoor(east);
+  await walkToMeeting(east);
   assert.equal(await panelTitle(),'Your first module');
   await choice();
   assert.equal((await state()).pending,'ch2b');
-  await walkToDoor(library);
+  await walkToMeeting(library);
   assert.equal(await panelTitle(),'What does 5 ECTS mean?');
   await choice();
-  await walkToDoor(east);
+  await walkToMeeting(east);
   assert.equal(await panelTitle(),'Your first two weeks');
   await choice();
   assert.equal((await state()).pending,'ch3a');
@@ -189,10 +208,10 @@ try {
   await button('Zoom in').click();
   await button('Close (M)').click();
   await page.setViewportSize({width:1152,height:768});
-  await walkToDoor(audit.doors.find(d=>d.id==='lower'));
+  await walkToMeeting(audit.doors.find(d=>d.id==='lower'));
   assert.equal(await panelTitle(),'I thought Stage 1 meant I could change anything');
   await choice();
-  await walkToDoor(audit.doors.find(d=>d.id==='rathdown'));
+  await walkToMeeting(audit.doors.find(d=>d.id==='rathdown'));
   assert((await state()).visited.includes('rathdown'));
   await page.keyboard.press('Escape');
   for(const door of [eastSouth,...audit.doors.filter(d=>['glass','laurence'].includes(d.id))]){
@@ -209,7 +228,7 @@ try {
     if(progress.current==='ending')break;
     if(progress.pending){
       const task=await model(()=>window.__artsGeo.activeTask);
-      await walkToDoor(audit.doors.find(d=>d.id===task.place));
+      await walkToMeeting(audit.doors.find(d=>d.id===task.place));
     } else await choice();
   }
   assert.deepEqual((await state()).chapterDone,[0,1,2,3,4,5,6]);
@@ -222,7 +241,7 @@ try {
   await page.locator('#missionList section').filter({hasText:'Earlier choices return'})
     .getByRole('button',{name:'Find on campus'}).click();
   await button('Close (M)').click();
-  await walkToDoor(audit.doors.find(d=>d.id==='lower'));
+  await walkToMeeting(audit.doors.find(d=>d.id==='lower'));
   assert.match(await panelTitle(),/Earlier choices return/);
   await choice();
   await choice();

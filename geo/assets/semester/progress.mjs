@@ -57,7 +57,9 @@ export function createProgress(saved, onChange = () => {}) {
   const task = () => {
     const id = state.current && nodes[state.current] ? state.current : state.pending;
     const place = placeFor(id);
-    return place ? {id,place,title:sceneTitle(id),detail:state.referral?.why} : null;
+    const rawSpeaker = nodes[id]?.speaker;
+    const speaker = typeof rawSpeaker==='function' ? rawSpeaker(state) : rawSpeaker;
+    return place ? {id,place,title:sceneTitle(id),speaker,detail:state.referral?.why} : null;
   };
   function at(id,place) {
     state.current = id;

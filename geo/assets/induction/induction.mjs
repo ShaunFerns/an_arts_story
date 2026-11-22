@@ -2,6 +2,7 @@ import {dialogueCopy, huntStops, timetable} from './dialogue.mjs';
 
 export const places = {
   east: {name:'East Quad', landmark:'East Quad'},
+  central: {name:'Central Quad', landmark:'Central Quad'},
   rathdown: {name:'Student Hub', landmark:'Rathdown House'},
   lower: {name:'Students’ Union', landmark:'Lower House'},
   glass: {name:'Glassmanogue gym', landmark:'Glassmanogue'},
@@ -11,9 +12,9 @@ export const places = {
 
 export const characters = {
   induction: {place:'east', name:'Bríd · Arts induction', offset:[2.1,1.2]},
-  adviser: {place:'east', name:'Dr Aoife Byrne · academic adviser', offset:[-2.8,1.5]},
+  adviser: {place:'central', name:'Dr Aoife Byrne · academic adviser', offset:[-.45,-2.4]},
   sustainability: {place:'east', name:'Sustainability team', offset:[11.8,8.5]},
-  cian: {place:'east', name:'Cian · fellow student', offset:[5.4,4]},
+  cian: {place:'lower', name:'Cian · fellow student', offset:[1.1,3.2]},
   lecturer: {place:'east', name:'Róisín · subject lecturer', offset:[7.5,1.8]},
   support: {place:'rathdown', name:'Niamh · Student Hub', offset:[-.8,0]},
   union: {place:'lower', name:'Students’ Union representative', offset:[.8,0]},
@@ -23,18 +24,18 @@ export const characters = {
 
 const missions = {
   welcome: {npc:'induction', node:'induction1', objective:'Walk from Broadstone–University to East Quad and meet Bríd.'},
-  preferences: {npc:'adviser', node:'inductionAdviser', objective:'Speak with Dr Aoife Byrne outside East Quad about Semester 1.'},
+  preferences: {npc:'adviser', node:'inductionAdviser', objective:'Speak with Dr Aoife Byrne outside Central Quad about Semester 1.'},
   joinHunt: {npc:'sustainability', node:'huntStart', objective:'Join the sustainability team in the East Quad forecourt.'},
   hunt: {npc:'induction', objective:'Explore the five scavenger-hunt stops in any order.'},
   friday: {npc:'induction', node:'friday', objective:'Continue to the Friday timetable publication.'},
-  cian: {npc:'cian', node:'cian1', objective:'Find Cian outside East Quad and look at his timetable question.'},
+  cian: {npc:'cian', node:'cian1', objective:'Find Cian outside Lower House and look at his timetable question.'},
   cianAdviser: {npc:'adviser', node:'adviser1', objective:'Ask Dr Byrne how Cian’s timetable relates to his academic options.'},
   cianSupport: {npc:'support', node:'support1', objective:'Find Niamh at the Student Hub in Rathdown House.'},
   cianReturn: {npc:'adviser', node:'adviserReturn', objective:'Take the clarified question back to Dr Byrne.'},
-  cianWrap: {npc:'adviser', node:'wrapUp', objective:'Finish Cian’s advising discussion at East Quad.'},
+  cianWrap: {npc:'adviser', node:'wrapUp', objective:'Finish Cian’s advising discussion at Central Quad.'},
   saoirse: {npc:'saoirse', node:'saoirse1', objective:'Meet Saoirse near the Students’ Union at Lower House.'},
   lecturer: {npc:'lecturer', node:'lecturer1', objective:'Ask Róisín outside East Quad about the subject and prerequisites.'},
-  saoirseReturn: {npc:'adviser', node:'adviserSecond', objective:'Discuss the new interest with Dr Byrne outside East Quad.'},
+  saoirseReturn: {npc:'adviser', node:'adviserSecond', objective:'Discuss the new interest with Dr Byrne outside Central Quad.'},
   complete: {objective:'Both advising cases are complete. You can keep exploring Grangegorman.'},
 };
 
@@ -79,7 +80,7 @@ export function createInduction({storage, saveKey, ui}) {
   copy.friday = {
     speaker:'Programme Operations', title:'Friday before teaching begins',
     text:'Your initial Semester 1 timetable is now available. It reflects module availability, capacity, programme requirements and your preferences. Contact the programme team for allocation questions.\n\nThis is an illustrative timetable for the game. It contains no live TU Dublin registration or module availability.',
-    choices:['Open my timetable','Find Cian outside East Quad'],
+    choices:['Open my timetable','Find Cian outside Lower House'],
   };
   copy.constraints = {
     speaker:copy.inductionAdviser.speaker, title:'Any constraints to record?',

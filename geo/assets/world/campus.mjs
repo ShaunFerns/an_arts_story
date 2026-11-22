@@ -1,7 +1,19 @@
 import * as THREE from 'three';
+import {addBuildingRoof,buildingDesign,roofLevel} from './roofs.mjs';
+export {buildingDesign} from './roofs.mjs';
 
 const materials = {
-  brick:new THREE.MeshStandardMaterial({color:0x795d4e,roughness:.91}),
+  centralBrick:new THREE.MeshStandardMaterial({color:0xc9beb0,roughness:.92}),
+  harling:new THREE.MeshStandardMaterial({color:0xc5c2b7,roughness:1}),
+  lowerStone:new THREE.MeshStandardMaterial({color:0xb5a38b,roughness:.96}),
+  wardStone:new THREE.MeshStandardMaterial({color:0xa9a69a,roughness:.96}),
+  infirmaryStone:new THREE.MeshStandardMaterial({color:0x959698,roughness:.96}),
+  chapelStone:new THREE.MeshStandardMaterial({color:0x817f7a,roughness:.96}),
+  clockStone:new THREE.MeshStandardMaterial({color:0xa59a86,roughness:.96}),
+  sash:new THREE.MeshStandardMaterial({color:0x70716d,roughness:.75}),
+  terracotta:new THREE.MeshStandardMaterial({color:0x9d7850,roughness:.85}),
+  polishedStone:new THREE.MeshStandardMaterial({color:0x858a86,roughness:.73}),
+  shade:new THREE.MeshStandardMaterial({color:0x33393d,roughness:.78}),
   precast:new THREE.MeshStandardMaterial({color:0xb9b4a7,roughness:.85}),
   limestone:new THREE.MeshStandardMaterial({color:0x696d68,roughness:.9}),
   render:new THREE.MeshStandardMaterial({color:0xc0bbac,roughness:1}),
@@ -15,16 +27,65 @@ const materials = {
 export function buildingPalette(feature) {
   const name = feature.name || '';
   if (/central quad/i.test(name)) return 'central';
-  if (/academic hub/i.test(name) || feature.id==='way/1361416599') return 'library';
+  if (/academic hub/i.test(name) || ['way/1361416599','way/1457282385'].includes(feature.id)) return 'library';
   if (/greenway hub|goirtín/i.test(name)) return 'contemporary';
   if (/laurence|glassmanogue|rathdown|clocktower|orchard|all saints|north house|bradogue|stanhope|grianán|lower house/i.test(name) ||
       feature.id==='way/307799384') return 'heritage';
   return 'context';
 }
 
-export function shellMaterial(palette) {
-  return {central:materials.brick,library:materials.render,heritage:materials.historic,
-    contemporary:materials.steel,context:materials.precast}[palette];
+const masonryTypes={
+ centralBrick:[32,8,5,2], harling:[100,62,20,1],
+ lowerStone:[19,11,14,4], wardStone:[18,9,18,4],
+ infirmaryStone:[20,10,22,4], chapelStone:[18,11,20,4], clockStone:[16,9,20,4],
+};
+function setMasonryMap(key,material){
+ if(material.map||!masonryTypes[key])return;
+ const [courses,bays,variation,joint]=masonryTypes[key];
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
+ const ctx=canvas.getContext('2d');
+ ctx.fillStyle='#98938c';ctx.fillRect(0,0,512,256);
+ let seed=7301;
+ const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ const rubble=['wardStone','infirmaryStone','chapelStone'].includes(key);
+ const rows=Array.from({length:courses},()=>rubble?.70+random()*.60:1);
+ const height=256/rows.reduce((sum,h)=>sum+h,0),width=512/bays;
+ let y=0;
+ for(const [row,scale] of rows.entries()){
+  let x=-width*(row%2)*.5;
+  while(x<512){
+   const cut=width*(key==='harling'?1:rubble?.48+random()*.98:.78+random()*.42);
+   const tone=Math.round(231+(random()-.5)*variation*2);
+   ctx.fillStyle=`rgb(${tone},${tone},${tone})`;
+   const end=y+scale*height;
+   if(rubble){
+    ctx.beginPath();
+    ctx.moveTo(x+joint*.4,y+random()*2);
+    ctx.lineTo(x+cut-joint*.35,y+random()*2);
+    ctx.lineTo(x+cut-joint*.45,end-joint*.42);
+    ctx.lineTo(x+joint*.36,end-joint*.50);
+    ctx.closePath();ctx.fill();
+   }else ctx.fillRect(x+joint/2,y,cut-joint,scale*height-joint/2);
+   if(joint>1){
+    ctx.fillStyle='#ffffff19';
+    ctx.fillRect(x+joint,y+.5,Math.max(0,cut-joint*2.3),1.0);
+   }
+   x+=cut;
+  }
+  y+=scale*height;
+ }
+ material.map=new THREE.CanvasTexture(canvas);
+ material.map.colorSpace=THREE.SRGBColorSpace;
+ material.map.wrapS=material.map.wrapT=THREE.RepeatWrapping;
+ material.map.repeat.set(.34,.39);
+ material.map.anisotropy=8;
+}
+export function shellMaterial(palette,feature,height) {
+ const design=buildingDesign(feature,palette,height);
+ const key=design.stone||{heritage:'historic',contemporary:'steel',context:'precast'}[palette];
+ const material=materials[key];
+ setMasonryMap(key,material);
+ return material;
 }
 
 export function outsideNormal(a,b,orientation) {
@@ -59,59 +120,109 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
     prototype.updateMatrix();
     (batches[key]??=[]).push(prototype.matrix.clone());
   }
-  for (const {feature,height,base,palette} of buildings) {
+  for (const {feature,height,base,palette,design} of buildings) {
     const poly=feature.coords, orientation=winding(poly);
     const door=entrances.find(e=>e.source===feature.id);
-    const tall=palette==='central'||palette==='library';
-    const historic=palette==='heritage';
-    const chapel=/laurence/i.test(feature.name||'');
-    const levels=tall?(palette==='central'?6:5):chapel?1:
-      /glassmanogue|rathdown/i.test(feature.name||'')?2:Math.max(1,Math.min(4,Math.floor(height/3.1)));
-    if(chapel)addChapelRoof(scene,poly,base+height);
-    const floor=height/levels;
-    const windows=[];
+    const historic=palette==='heritage',chapel=feature.id==='way/310375420';
+    const roof=addBuildingRoof(scene,feature,design,base,shellMaterial(palette,feature,height));
+    const levels=design.levels||Math.max(1,Math.min(5,Math.floor(height/3.1)));
+    const floor=(historic?design.eaves:height)/levels;
+    let windowCount=0;
     for(let i=1;i<poly.length;i++) {
       const a=poly[i-1], b=poly[i], [ox,on]=outsideNormal(a,b,orientation);
       const len=Math.hypot(a[0]-b[0],a[1]-b[1]);
-      if(len<3.5)continue;
+      if(len<2.8)continue;
       const yaw=Math.atan2(ox,-on);
-      const point=(t,offset)=>[a[0]+(b[0]-a[0])*t+ox*offset,a[1]+(b[1]-a[1])*t+on*offset];
-      const count=Math.max(1,Math.floor(len/(tall?4.15:3.8)));
+      const point=(s,offset)=>[a[0]+(b[0]-a[0])*s+ox*offset,a[1]+(b[1]-a[1])*s+on*offset];
+      const part=(key,s,offset,y,w,h,d)=>{
+       const [x,n]=point(s,offset);
+       panel(key,x,base+y,n,w,h,d,yaw);
+      };
+      const count=Math.max(1,Math.floor(len/(palette==='central'?3.65:palette==='library'?3.1:3.35)));
       const bay=len/count;
+      const high=roofLevel(design,point(.5,0));
+      const libraryFront=palette==='library'&&on<-.48&&len>14;
+      const centralFront=palette==='central'&&len>14;
       for(let j=0;j<count;j++) {
         const t=(j+.5)/count;
-        const [x,n]=point(t,.11);
-        const nearDoor=door&&Math.hypot(x-door.door[0],n-door.door[1])<door.dimensions.width*.55+1;
+        const [x,n]=point(t,0);
+        const nearDoor=door&&Math.hypot(x-door.door[0],n-door.door[1])<door.dimensions.width*.58+1.25;
+        const top=roofLevel(design,point(t,0));
         for(let k=0;k<levels;k++){
           if(k===0&&nearDoor)continue;
-          const broadlyGlazed=palette==='central'||palette==='contemporary'||(palette==='library'&&(k===0||i%5===0));
-          const width=bay*(broadlyGlazed?.69:historic?.34:(j+k)%3===0?.37:.23);
-          const h=floor*(broadlyGlazed?.63:historic?.47:.55);
-          const y=base+floor*(k+.56);
-          const frame=palette==='library'?'limestone':historic?'historic':'precast';
-          panel(chapel?'arch historic':frame,x+(chapel?ox*.132:0),y,n+(chapel?on*.132:0),width+.21,h+.19,.23,yaw);
-          const [gx,gn]=point(t,.26);
-          panel(chapel?'arch glass':(j+k+i)%4===0?'glassLight':'glass',gx,y,gn,width,h,.06,yaw);
-          if(broadlyGlazed)panel('steel',gx+ox*.035,y,gn+on*.035,.055,h,.07,yaw);
-          windows.push([gx,gn]);
+          const y=floor*(k+.55);
+          if(y+floor*.40>top+.05)continue;
+          if(palette==='central'){
+            const width=bay*.81,h=floor*.80;
+            part('shade',t,.075,y,width,h,.16);
+            part((j+k)%5?'glass':'glassLight',t,.19,y,width-.22,h-.19,.07);
+            part('steel',t+.10/count,.25,y,.055,h,.07);
+            part('steel',t,.25,y-h*.20,width,.06,.05);
+            if((j+k)%3===0)part('precast',t-.37/count,.31,y,.17,h,.34);
+          }else if(palette==='library'){
+            const horizontal=k===2||k===3;
+            const wide=libraryFront&&(k===0||k===1);
+            const width=bay*(wide?.82:horizontal?.74:k===4?.66:.28);
+            const h=floor*(horizontal?.29:wide?.66:.69);
+            part('shade',t,.105,y,width+.24,h+.26,.28);
+            part((j+k)%4?'glass':'glassLight',t,.262,y,width,h,.052);
+            part('polishedStone',t,.25,y-h*.55,width+.27,.16,.40);
+            if(libraryFront&&(k===0||k===1||k===4))
+             part('steel',t-.39/count,.40,y,.11,h+.25,.59);
+          }else{
+            const width=bay*(historic?.38:palette==='contemporary'?.64:.36);
+            const h=floor*(chapel?.52:historic?.51:.58);
+            if(chapel){
+             part('arch historic',t,.255,y,width+.24,h+.26,1);
+             part('arch glass',t,.28,y,width,h,1);
+             part('sash',t,.30,y-.17,.052,h*.76,.05);
+             part('historic',t,.21,y-h*.54,width+.29,.18,.42);
+            }else{
+             part(historic?'historic':'precast',t,.09,y,width+.20,h+.17,.20);
+             part(historic?'glass':(j+k+i)%4?'glass':'glassLight',t,.223,y,width,h,.055);
+             if(historic){
+              part('sash',t,.264,y,.065,h,.053);
+              part('sash',t,.267,y+h*.12,width,.06,.055);
+              part('historic',t,.16,y-h*.54,width+.24,.17,.34);
+             }
+            }
+          }
+          windowCount++;
         }
-        if(palette==='central'&&j>0) {
-          const [ux,un]=point(j/count,.10);
-          panel('precast',ux,base+height/2,un,.32,height,.35,yaw);
+        if(palette==='central'){
+          const column=j/count,[east,north]=point(column,0);
+          const clearDoor=door&&Math.hypot(east-door.door[0],north-door.door[1])<door.dimensions.width/2+.70;
+          const start=clearDoor?door.dimensions.height+1.65:0;
+          part('precast',column,.26,(top+start)/2,.43,top-start,.62);
+          for(let k=0;k<=levels;k++){
+           const level=k*floor;
+           if(level<=top-.1)part('precast',t,.30,level+.17,bay,.29,.67);
+          }
         }
       }
-      const [x,n]=point(.5,.08);
-      if(historic||tall||palette==='contemporary') {
-        panel(historic?'slate':palette==='library'?'limestone':'precast',x,base+height-.12,n,len,.31,.36,yaw);
-        if(palette==='central')for(let k=1;k<levels;k++)
-          panel('precast',x,base+k*floor,n,len,.22,.32,yaw);
-        if(palette==='library'){
-          const [sx,sn]=point(.5,.12);
-          panel('limestone',sx,base+.55,sn,len,1.06,.28,yaw);
+      if(centralFront)part('precast',.5,.26,high-.18,len,.32,.5);
+      if(palette==='library'){
+        part('polishedStone',.5,.16,.72,len,1.40,.32);
+        if(libraryFront){
+          part('harling',.5,.34,5.0,len,.63,.69);
+          part('polishedStone',.5,.35,8.5,len,.25,.70);
+          part('harling',.5,.21,12.55,len,.29,.40);
+          part('harling',.5,.21,16.25,len,.26,.40);
         }
+      }
+      if(historic){
+       part('slate',.5,.13,design.eaves-.06,len,.19,.42);
+       for(const side of [.07,.93]){
+        if(chapel)part('historic',side,.19,2.28,.52,4.56,.38);
+        else for(let course=0;course<Math.ceil(design.eaves/.58);course++){
+         part(feature.id==='way/396704721'?'terracotta':'historic',side,.084,course*.58+.24,
+          course%2?.34:.53,.47,.13);
+        }
+       }
       }
     }
-    labels.push({id:feature.id,name:feature.name||(palette==='library'?'Academic Hub & Library':null),palette,windowCount:windows.length});
+    const name=feature.name||(palette==='library'?(feature.id==='way/1457282385'?'Academic Hub · north wing':'Academic Hub & Library'):null);
+    labels.push({id:feature.id,name,palette,windowCount,wallMaterial:design.stone??palette,roof});
   }
   for (const [key,matrices] of Object.entries(batches)) {
     const gothic=key.startsWith('arch ');
@@ -122,35 +233,6 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
     scene.add(mesh);
   }
   return labels;
-}
-
-function addChapelRoof(scene,poly,eave) {
-  const longest=poly.slice(1).map((b,i)=>{
-    const a=poly[i];
-    return [b[0]-a[0],b[1]-a[1]];
-  }).sort((a,b)=>Math.hypot(...b)-Math.hypot(...a))[0];
-  const length=Math.hypot(...longest);
-  const dx=-longest[1]/length,dn=longest[0]/length;
-  const offset=point=>point[0]*dx+point[1]*dn;
-  const ymin=Math.min(...poly.map(offset)),ymax=Math.max(...poly.map(offset)),ridge=(ymin+ymax)/2;
-  const rise=Math.min(4,(ymax-ymin)*.31);
-  const height=p=>eave+rise*Math.max(0,1-Math.abs(offset(p)-ridge)/(ymax-ridge));
-  for(const side of [-1,1]){
-    const face=[];
-    for(let i=1;i<poly.length;i++){
-      const a=poly[i-1],b=poly[i],u=offset(a)-ridge,v=offset(b)-ridge;
-      if(u*side>=0)face.push(a);
-      if(u*v<0)face.push(a.map((value,j)=>value+(b[j]-value)*u/(u-v)));
-    }
-    if(face.length<3)continue;
-    const roofGeometry=new THREE.ShapeGeometry(new THREE.Shape(face.map(p=>new THREE.Vector2(...p))));
-    roofGeometry.rotateX(-Math.PI/2);
-    const points=roofGeometry.attributes.position;
-    for(let i=0;i<points.count;i++)points.setY(i,height([points.getX(i),-points.getZ(i)]));
-    roofGeometry.computeVertexNormals();
-    const roof=new THREE.Mesh(roofGeometry,materials.slate);
-    roof.castShadow=true;roof.receiveShadow=true;scene.add(roof);
-  }
 }
 
 // Provisional deck over the mapped track and the adjoining pedestrian corridor.

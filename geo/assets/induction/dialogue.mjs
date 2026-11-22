@@ -44,7 +44,7 @@ Today is about getting oriented: meeting other first years, finding out what the
 
 “Those conversations help Operations build the initial module allocations and timetables. Your preferences are important, but they're not a guarantee of a place in every subject. The first timetables will be published on the Friday before teaching begins.”
 
-She points towards the advisers beside the entrance. “Go and have a chat. Then the sustainability team will help you discover the rest of Grangegorman.”`,
+“Your adviser is outside Central Quad. Go and have a chat. Then the sustainability team will help you discover the rest of Grangegorman.”`,
       choices: ["Meet my academic adviser"]},
     inductionAdviser: {speaker: "Dr Aoife Byrne · academic adviser", title: "Which directions interest you?",
       text: `Dr Byrne welcomes you to Arts. “We don't need you to decide on a Major today. I'd like to understand what you'd most like to explore during your first semester, and what options you hope to keep open.”
@@ -132,7 +132,7 @@ He isn't panicking, but you can tell he is worried. He shows you his list of pre
     cian2: {speaker: "Cian · fellow student", title: "First step: ask the right question",
       text: `You and Cian agree to find out what the timetable represents, rather than assuming it is wrong. You already know that one conversation won't change module registration.
 
-Dr Aoife Byrne is nearby at East Quad. Go over and ask how the current position connects to future pathways.`,
+Dr Aoife Byrne is outside Central Quad. Go over and ask how the current position connects to future pathways.`,
       choices: [
         "Go and find Dr Byrne",
         "Open my phone and review the mission",
@@ -170,7 +170,7 @@ She points you towards the programme team for a formal allocation or registratio
         "Open my phone",
       ]},
     adviserReturn: {speaker: "Dr Aoife Byrne · academic adviser", title: "Your advising record and timetable",
-      text: `Back at East Quad, Dr Byrne helps you separate the actions. The registration query belongs to programme operations; advising can consider what the current timetable may mean for future pathways. “We can decide what needs checking now and what can wait,” she says.
+      text: `Back at Central Quad, Dr Byrne helps you separate the actions. The registration query belongs to programme operations; advising can consider what the current timetable may mean for future pathways. “We can decide what needs checking now and what can wait,” she says.
 
 She notes the present interests, the uncertainty that came up, and the practical watchpoint about not confusing preferences with registration. The timetable Programme Operations published on Friday is still on your phone, with six modules spread across the week. You can review it alongside the interests you recorded at induction.`,
       choices: [
@@ -217,7 +217,7 @@ Róisín, the subject lecturer, is at East Quad. Go over and ask what the subjec
     lecturer2: {speaker: "Róisín · subject lecturer", title: "Information to bring along",
       text: "You leave with a clearer picture of the subject's learning activities and a list of questions for academic advising. One enjoyable class has opened a possibility without requiring an immediate final decision.",
       choices: [
-        "Return to East Quad",
+        "Go to Central Quad",
         "Check the phone map",
       ]},
     adviserSecond: {speaker: "Dr Aoife Byrne · academic adviser", title: "Exploration with a plan",

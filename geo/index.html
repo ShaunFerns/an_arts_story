@@ -47,7 +47,7 @@ import {characters, createInduction, places} from './assets/induction/induction.
 import {createProgress} from './assets/semester/progress.mjs';
 import {locationNames} from './assets/semester/locations.mjs';
 import {phoneLabels, presentScene, phoneEntries, resourceMarkup} from './assets/semester/presentation.mjs';
-import {addCampusFacades, addUnderpass, bridgeSupports, buildingPalette, shellMaterial, outsideNormal, winding, openLibraryApproach} from './assets/world/campus.mjs';
+import {addCampusFacades, addUnderpass, bridgeSupports, buildingDesign, buildingPalette, shellMaterial, outsideNormal, winding, openLibraryApproach} from './assets/world/campus.mjs';
 import {createLuas} from './assets/world/arrival.mjs';
 const $=id=>document.getElementById(id),data=await fetch('./data.json').then(r=>{if(!r.ok)throw Error('No OSM snapshot (HTTP '+r.status+')');return r.json()}).catch(e=>{ $('error').hidden=false;$('errorText').textContent=e.message;throw e});
 if(!data.features?.length||!data.anchor||data.radius!==1000){$('error').hidden=false;$('errorText').textContent='Geographic snapshot is incomplete.';throw Error('Invalid OSM snapshot')}
@@ -178,10 +178,21 @@ function visualBuildingHeight(f){
  let height=known>1&&known<120?known:levels>0&&levels<30?levels*3.2:8,source='osm_or_default';
  if(f.id==='way/810540713'||/\beast quad\b/.test(name)){height=existingQuadHeightEstimates.eastQuad.height;source='visual_estimate_east_quad';}
  else if(/\bcentral quad\b/.test(name)){height=existingQuadHeightEstimates.centralQuad.height;source='visual_estimate_central_quad';}
- else if(buildingPalette(f)==='library'){height=existingQuadHeightEstimates.academicHub.height;source='visual_estimate_academic_hub';}
+ else if(buildingPalette(f)==='library'){height=f.id==='way/1457282385'?16.3:existingQuadHeightEstimates.academicHub.height;source='visual_estimate_academic_hub';}
  return {height,source};
 }
 const visualHeightAudit=[], facadeBuildings=[];
+const retainedStoneSites=zone.filter(f=>f.kind==='building'&&buildingPalette(f)==='heritage'&&
+ buildingDesign(f,'heritage',8).stone)
+ .map(f=>({centre:midpoint(f.coords),material:shellMaterial('heritage',f,8)}));
+function districtStone(point){
+ let closest=oldStone,distance=31;
+ for(const site of retainedStoneSites){
+  const d=Math.hypot(point[0]-site.centre[0],point[1]-site.centre[1]);
+  if(d<distance){closest=site.material;distance=d;}
+ }
+ return closest;
+}
 const counts={building:0,road:0,barrier:0,land:0};
 for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MAX+50)continue;const t=f.tags||{};
  if(f.kind==='land'&&f.coords.length>3&&dist<470){const m=polygonMesh(f.coords,.035,lawn,'land');if(m)counts.land++;}
@@ -202,14 +213,19 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
    lineMesh(scene,offset(a),offset(b),.075,.115,railHead);
   }
  }
- if(f.kind==='barrier'&&dist<540){const k=t.barrier||'wall',dimensions=barrierDimensions(t),h=dimensions.height,w=dimensions.width;for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],w,h,k==='hedge'?hedgeMat:k==='fence'?railMat:oldStone);counts.barrier++;}
+ if(f.kind==='barrier'&&dist<540){
+  const k=t.barrier||'wall', {height,width}=barrierDimensions(t);
+  const material=k==='hedge'?hedgeMat:k==='fence'?railMat:k==='wall'?districtStone(c):oldStone;
+  for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],width,height,material);
+  counts.barrier++;
+ }
  if(f.kind==='building'&&dist<510&&f.coords.length>3){
  const {height,source}=visualBuildingHeight(f);
  if(source.startsWith('visual_estimate'))visualHeightAudit.push({id:f.id,name:f.name,height,source});
- const palette=buildingPalette(f);
- const mesh=polygonMesh(f.coords,height,f.id==='way/810540713'?mat(0x77736d):shellMaterial(palette));
+ const palette=buildingPalette(f),design=buildingDesign(f,palette,height);
+ const mesh=polygonMesh(f.coords,design.eaves,f.id==='way/810540713'?mat(0x77736d):shellMaterial(palette,f,height));
  if(mesh&&f.id!=='way/810540713'&&(dist<186||palette!=='context')&&dist<430)
-  facadeBuildings.push({feature:f,height,base:mesh.base,palette});
+  facadeBuildings.push({feature:f,height,base:mesh.base,palette,design});
  if(mesh)counts.building++;
 }
 }
@@ -915,8 +931,7 @@ function registerDoor(mission,door,interaction,outward,dimensions) {
  missionDoorRegistry.push({
   id:landmarkIds.get(mission.name),name:mission.name,source:mission.source,provisional:true,
   dimensions,door,interaction, radius:1.5,outward,exit,
-  destination:'scene at '+mission.name,entrySpawn:interaction,exitSpawn:exit,
-  onEnter:place=>semester.enter(place),
+  destination:'entrance at '+mission.name,entrySpawn:interaction,exitSpawn:exit,
  });
 }
 function buildMissionBuildingDoors(){
@@ -929,8 +944,10 @@ function buildMissionBuildingDoors(){
   if(!footprint||!mission.position)throw Error('No mapped footprint for '+mission.name);
   const points=footprint.coords,orientation=winding(points);
   const historic=buildingPalette(footprint)==='heritage';
-  const width=historic?2.0:mission.name==='Academic Hub & Library'?3.7:3.0;
-  const height=historic?2.42:3.15;
+  const library=mission.name==='Academic Hub & Library',central=mission.name==='Central Quad';
+  const chapel=mission.name==='St Laurence’s';
+  const width=historic?2.0:library?3.7:3.0;
+  const height=historic?2.42:library?3.65:3.15;
   const faces=[];
   for(let i=1;i<points.length;i++){
    const a=points[i-1],b=points[i],dx=b[0]-a[0],dn=b[1]-a[1],len=Math.hypot(dx,dn);
@@ -960,8 +977,8 @@ function buildMissionBuildingDoors(){
   const g=new THREE.Group();
   g.position.set(x+ox*.20,groundHeight(x,n),-n-on*.20);
   g.rotation.y=Math.atan2(ox,-on);
-  const frame=mat(historic?0x716a5e:0x545b5b,.58);
-  const glazing=new THREE.MeshPhysicalMaterial({color:historic?0x4d6265:0x5a8791,metalness:.15,
+  const frame=mat(historic?0x6d6a63:library?0x2d3436:0x52595b,.58);
+  const glazing=new THREE.MeshPhysicalMaterial({color:historic?0x465359:library?0x344952:0x597e89,metalness:.15,
     roughness:.24,transparent:true,opacity:.86,side:THREE.DoubleSide});
   const threshold=mat(0xaaa69c,.95);
   const add=(geo,material,x,y,z)=>{
@@ -976,11 +993,33 @@ function buildMissionBuildingDoors(){
   }
   add(new THREE.BoxGeometry(width+.85,.08,1.12),threshold,0,.027,.55);
   const signWidth=mission.name==='Academic Hub & Library'?5.1:3.3;
-  const sign=add(new THREE.PlaneGeometry(signWidth,.43),
-    new THREE.MeshBasicMaterial({map:doorSignTexture(mission.name,signWidth/.43)}),0,height+.37,.245);
+  const labelWidth=chapel?1.65:signWidth;
+  const sign=add(new THREE.PlaneGeometry(labelWidth,.43),
+    new THREE.MeshBasicMaterial({map:doorSignTexture(mission.name,labelWidth/.43)}),chapel?1.95:0,chapel?1.56:height+.37,.245);
   sign.name='Entrance sign · '+mission.name;
-  if(!historic){
-   add(new THREE.BoxGeometry(width+1.6,.17,1.55),frame,0,height+.76,.62);
+  if(chapel){
+   const arch=new THREE.Shape();
+   arch.moveTo(-1.42,0);arch.lineTo(-1.42,2.0);
+   arch.quadraticCurveTo(-1.20,2.84,0,3.51);arch.quadraticCurveTo(1.20,2.84,1.42,2.0);
+   arch.lineTo(1.42,0);arch.closePath();
+   const opening=new THREE.Path();
+   opening.moveTo(-.99,0);opening.lineTo(.99,0);opening.lineTo(.99,1.98);opening.quadraticCurveTo(.85,2.56,0,3.08);
+   opening.quadraticCurveTo(-.85,2.56,-.99,1.98);opening.closePath();
+   arch.holes.push(opening);
+   const stone=mat(0x84817a,.92);
+   add(new THREE.ExtrudeGeometry(arch,{depth:.13,bevelEnabled:false,curveSegments:8}),stone,0,0,.065);
+  }else if(library){
+   const limestone=mat(0x8f918b,.86),harling=mat(0xbdbeb3,.93);
+   add(new THREE.BoxGeometry(width+4.2,.75,1.95),harling,0,height+.90,.74);
+   for(const side of [-1,1]){
+    add(new THREE.BoxGeometry(.79,height+.69,.67),limestone,side*(width/2+.87),(height+.69)/2,.31);
+    add(new THREE.BoxGeometry(1.15,2.68,.10),glazing,side*(width/2+1.89),1.46,.08);
+   }
+   add(new THREE.BoxGeometry(width+4.4,.09,2.57),threshold,0,.014,1.18);
+  }else if(central){
+   const precast=mat(0xd5d1c4,.85);
+   add(new THREE.BoxGeometry(width+2.1,.42,1.35),precast,0,height+.80,.51);
+   for(const side of [-1,1])add(new THREE.BoxGeometry(.35,height+.63,.48),precast,side*(width/2+.82),(height+.63)/2,.36);
    add(new THREE.BoxGeometry(width+2.1,.09,2.36),threshold,0,.014,1.13);
   }
   g.name='MissionDoor-'+mission.name.replace(/\s+/g,'-');
@@ -1162,7 +1201,7 @@ function addCampusSignAt(m,kind,label){
 }
 // The East Quad identity is now represented on its actual façade family above; no duplicate freestanding blue sign.
 addCampusSignAt(missions.find(m=>m.name==='Rathdown House'),'wayfinding','Rathdown House');
-const huntMarkers=Object.entries(landmarksByPlace).filter(([id])=>id!=='east').map(([id,m])=>{
+const huntMarkers=Object.entries(landmarksByPlace).filter(([id])=>!['east','central'].includes(id)).map(([id,m])=>{
  if(!m)throw Error('Missing campus landmark for '+id);
  const entry=missionDoorRegistry.find(e=>e.id===id);
  const position=clearPoint(entry?.interaction||m.position,[[0,0],[0,1],[1,0],[-1,0],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]);
@@ -1174,6 +1213,28 @@ const huntMarkers=Object.entries(landmarksByPlace).filter(([id])=>id!=='east').m
  scene.add(marker);
  return {id,position,marker};
 });
+// Semester conversations use an exterior contact beside the entrance.
+const semesterMeetings=new Map();
+for(const id of ['central','east','lower','library','rathdown']){
+ const door=missionDoorRegistry.find(e=>e.id===id);
+ const [ox,on]=door.outward;
+ const offsets=[];
+ for(const distance of [2.5,3.2,4.0,1.85])for(const side of [1.15,-1.15,0])
+  offsets.push([ox*distance+on*side,on*distance-ox*side]);
+ const position=clearPoint(door.interaction,offsets);
+ if(!position)throw Error('No outdoor meeting point for '+door.name);
+ const [x,n]=position;
+ const body=new THREE.Group();
+ body.position.set(x,groundHeight(x,n)+.05,-n);
+ body.rotation.y=Math.atan2(ox,-on);
+ addClothedNpc(body,semesterMeetings.size+1);
+ const marker=new THREE.Mesh(new THREE.OctahedronGeometry(.13),mat(0xecc580));
+ marker.position.y=1.96;
+ body.add(marker);
+ body.visible=false;
+ scene.add(body);
+ semesterMeetings.set(id,{position,body});
+}
 const params=new URLSearchParams(location.search);
 const reviewStartAtLuas=params.get('start')!=='east-quad';
 const review=params.has('review')||!reviewStartAtLuas;
@@ -1202,7 +1263,6 @@ const story=createInduction({
   openPhone:()=>setMap(true),
  },
 });
-if(!review&&!savedSemester&&story.savedPose)semester.state.mode='orientation';
 function setModal(){
  const modal=[$('arrival'),$('overlay'),$('npcDialog')].find(el=>!el.hidden);
  $('hud').inert=!!modal;
@@ -1323,10 +1383,6 @@ function enterBuilding(entry){
  if(entry.available&&!entry.available(semester.state))return;
  activeEntry=entry;
  moveTo(entry.entrySpawn);
- if(!orientation()&&entry.onEnter(entry.id)){
-  showSemester();
-  return;
- }
  const m=missions.find(m=>m.name===entry.name);
  showDialogue({speaker:entry.name,title:entry.name+' entrance',
   text:m.description+'.',
@@ -1357,12 +1413,19 @@ function nearestObservation(){
 function interaction(){
  const entrance=nearbyDoor();
  if(!orientation()){
+  const task=semester.task(),meeting=semesterMeetings.get(task?.place);
+  if(meeting&&Math.hypot(meeting.position[0]-player.position.x,meeting.position[1]+player.position.z)<2.35){
+   const talk=task.speaker&&task.speaker!=='Narrator';
+   const name=talk?task.speaker.split(' · ')[0]:locationNames[task.place];
+   return {label:talk?'E — Talk to '+name:'E — Continue outside '+name,select:()=>{
+    if(semester.enter(task.place))showSemester();
+   }};
+  }
   if(entrance){
    const available=!entrance.available||entrance.available(semester.state);
    return {label:available?'E — Enter '+entrance.name:entrance.name+' · unavailable',
     select:()=>enterBuilding(entrance)};
   }
-  const task=semester.task();
   if(task?.place==='luas'&&Math.hypot(player.position.x-spawnPoint[0],-player.position.z-spawnPoint[1])<3)
    return {label:'E — Continue at Broadstone–University',select:()=>{semester.enter('luas');showSemester();}};
   return null;
@@ -1450,7 +1513,7 @@ function placeAtArrival(){
  }
 }
 placeAtArrival();
-const pose=orientation()?story.savedPose:(savedSemester?.pose||story.savedPose);
+const pose=orientation()?story.savedPose:savedSemester?.pose;
 if(reviewStartAtLuas&&pose&&[pose.x,pose.n,pose.yaw,pose.pitch].every(Number.isFinite)&&
  !collision.query(pose.x,pose.n)&&!intersectsPlanter(pose.x,pose.n)){
  player.position.set(pose.x,groundHeight(pose.x,pose.n)+.05,-pose.n);
@@ -1468,7 +1531,10 @@ function refreshStory(followObjective){
   selected=target?missions.indexOf(target):null;
  }
  for(const stop of huntMarkers)stop.marker.visible=orientation()&&story.stopAvailable(stop.id);
+ const task=semester.task();
+ for(const [place,meeting] of semesterMeetings)meeting.body.visible=!orientation()&&task?.place===place;
  for(const npc of npcs){
+  npc.body.visible=orientation();
   npc.marker.visible=orientation()&&!!story.nodeFor(npc.id);
   npc.marker.scale.setScalar(npc.id===story.targetCharacter?1.8:1);
  }
@@ -1573,12 +1639,15 @@ function mapPosition(m){
   const stop=huntMarkers.find(s=>s.id===id&&story.stopAvailable(s.id));
   return stop?.position||npcs.find(n=>n.id===story.targetCharacter)?.position||m.position;
  }
+ if(!orientation()&&semester.task()?.place===id){
+  return semesterMeetings.get(id)?.position||m.position;
+ }
  return missionDoorRegistry.find(door=>door.id===id)?.interaction||m.position;
 }
 function updateObjective(){
  const task=semester.task();
  $('objective').textContent=orientation()?story.objective():task
-  ? 'Go to '+locationNames[task.place]+' · '+task.title
+  ? (task.place==='luas'?'Go to ':'Meet outside ')+locationNames[task.place]+' · '+task.title
   : semester.state.started?'Explore campus':'Broadstone–University arrival';
  const count=orientation()?0:semester.unread;
  $('mapBtn').textContent=count?'Phone (M) · '+count+' new':'Phone (M)';
@@ -1860,7 +1929,7 @@ else if(!semester.state.started){
 }
 addEventListener('pagehide',()=>{if(orientation())story.persist();saveSemester();});
 $('status').textContent=review?`${zone.length} OSM features · ${counts.building} 3D building blocks`:'Campus routes follow the mapped site.';
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.id==='induction');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get missionDoorRegistry(){return missionDoorRegistry.map(({onEnter,available,...d})=>d)},get campusFacadeAudit(){return campusFacadeAudit},get underpass(){return underpass},get semester(){return structuredClone(semester.state)},get activeTask(){return semester.task()},get mapPlayer(){const p=mapProjection($map,1000/mapZoom,false);return {x:p.x(player.position.x),y:p.y(-player.position.z),centre:p.centre,scale:p.scale}},get arrivalElapsed(){return arrivalElapsed},get tramPosition(){return luas.car.position.toArray()},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get eastQuadPavingAudit(){return eastQuadPavingAudit},get eastQuadSignRelativeScreenPosition(){
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.id==='induction');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get missionDoorRegistry(){return missionDoorRegistry.map(({available,...d})=>d)},get semesterMeetingPlaces(){return Object.fromEntries([...semesterMeetings].map(([id,m])=>[id,{position:m.position,visible:m.body.visible}]))},get campusFacadeAudit(){return campusFacadeAudit},get underpass(){return underpass},get semester(){return structuredClone(semester.state)},get activeTask(){return semester.task()},get mapPlayer(){const p=mapProjection($map,1000/mapZoom,false);return {x:p.x(player.position.x),y:p.y(-player.position.z),centre:p.centre,scale:p.scale}},get arrivalElapsed(){return arrivalElapsed},get tramPosition(){return luas.car.position.toArray()},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get eastQuadPavingAudit(){return eastQuadPavingAudit},get eastQuadSignRelativeScreenPosition(){
  const sign=scene.getObjectByName('EastQuadGoldNorthEntranceWallSign');
  if(!sign||!eastQuadEntrance)return null;
  scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);
