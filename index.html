@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>First Semester: An Arts Story — 3D v0.7 · Induction hunt</title>
+  <title>First Semester: An Arts Story — 3D v0.9 · Campus rebuild</title>
   <style>
     :root{
       --bg:#0f2027; --panel:#112d36ee; --panel2:#1f3d47ee; --accent:#e0b86b; --text:#eef4f3; --muted:#c7d4d2; --soft:#6e8a8d;
@@ -226,14 +226,14 @@
   <div id="startScreen" class="launch-screen" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
     <div class="launch-art" aria-hidden="true"><div class="launch-building left"></div><div class="launch-building right"></div><div class="launch-floor"></div></div>
     <div class="launch-panel">
-      <div class="launch-kicker">BA ARTS · AN INTERACTIVE STORY · DEVELOPMENT EDITION 0.8.2</div>
+      <div class="launch-kicker">BA ARTS · AN INTERACTIVE STORY · CAMPUS REBUILD · 0.9</div>
       <h2 id="launchTitle">Your first semester begins here.</h2>
       <p>Arrive by Luas, find your way to East Quad and discover Grangegorman through the sustainability team's induction challenge. Along the way you'll meet people who help you make sense of Arts.</p>
       <div class="launch-actions"><button id="startFull" class="launch-primary" type="button">Explore the campus <span aria-hidden="true">→</span></button><button id="startContinue" class="launch-secondary" type="button" hidden>Continue my story ↗</button><button id="startDemo" class="launch-secondary" type="button">Guided tour ↗</button><button id="startReset" class="launch-secondary" type="button" hidden>Start again</button></div>
-      <div class="launch-foot">Use <strong>WASD</strong> to move, <strong>drag</strong> to look around, <strong>scroll</strong> to zoom and <strong>C</strong> to reset the camera. Walk freely or use the phone to travel between buildings. Progress stays on this device. <strong id="engineStatus" role="status" aria-live="polite">Preparing the 3D campus…</strong></div>
+      <div class="launch-foot">Use <strong>WASD</strong> to move, <strong>drag</strong> to look, <strong>scroll</strong> to zoom and <strong>C</strong> to reset the camera. Walk freely or use the phone to travel between buildings. Progress stays on this device. <strong id="engineStatus" role="status" aria-live="polite">Preparing the 3D campus…</strong></div>
       <div id="threeHelp" hidden style="margin-top:14px;background:#193c46;color:#e5f0ef;border:1px solid #74959c;border-radius:12px;padding:14px;line-height:1.55">
         <strong>The 3D engine could not start in this browser.</strong>
-        <p style="margin:7px 0">This website serves Three.js locally. If the 3D scene cannot start, the technical error will appear above. Please use a current Chrome, Edge, Firefox or Safari browser.</p>
+        <p style="margin:7px 0">The game serves Three.js from its own website. If it fails to load, the problem may be a graphics or JavaScript error rather than your internet connection.</p>
         <p style="margin:7px 0">For a more reliable experience, open the <strong>complete project on a local web server</strong> or publish it to GitHub Pages. Instructions are included with the ZIP.</p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" id="retryThree" class="launch-secondary">Retry 3D</button><button type="button" id="startStoryAlternative" class="launch-secondary">Use story alternative</button></div>
       </div>
@@ -458,21 +458,25 @@
     sunDisc.position.set(-68, 82, -110); sunDisc.lookAt(0,0,0); scene.add(sunDisc);
 
     const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(220, 220),
+      new THREE.PlaneGeometry(520, 520),
       new THREE.MeshStandardMaterial({ color: 0x789071, roughness: 1 })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Campus paths and planting: richer materials, curbs, planted areas and more visual structure.
+    const CAMPUS_SPREAD=2.15;
+    const XY=(x,z)=>[x*CAMPUS_SPREAD,z*CAMPUS_SPREAD];
+    // Scale only ground-plane positions and long routes, keeping people and landmark height readable.
+    // Campus paths and planting.
     function addPath(x,z,w,d,color=0xcdb89d){
+      [x,z]=XY(x,z);w=w>14?w*CAMPUS_SPREAD:w*1.3;d=d>14?d*CAMPUS_SPREAD:d*1.5;
       const base = new THREE.Mesh(new THREE.BoxGeometry(w+.34, 0.06, d+.34), new THREE.MeshStandardMaterial({color:0xe6ddd1,roughness:1}));
       base.position.set(x,0.02,z); base.receiveShadow=true; scene.add(base);
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 0.07, d), new THREE.MeshStandardMaterial({color,roughness:1}));
       mesh.position.set(x, 0.05, z); mesh.receiveShadow=true; scene.add(mesh); return mesh;
     }
-    function addLawn(x,z,w,d,color=0x85a974){ const lawn=new THREE.Mesh(new THREE.BoxGeometry(w,.05,d),new THREE.MeshStandardMaterial({color,roughness:1})); lawn.position.set(x,.03,z); lawn.receiveShadow=true; scene.add(lawn); return lawn; }
+    function addLawn(x,z,w,d,color=0x85a974){[x,z]=XY(x,z);w*=CAMPUS_SPREAD*.9;d*=CAMPUS_SPREAD*.9;const lawn=new THREE.Mesh(new THREE.BoxGeometry(w,.05,d),new THREE.MeshStandardMaterial({color,roughness:1})); lawn.position.set(x,.03,z); lawn.receiveShadow=true; scene.add(lawn); return lawn; }
     addPath(-3,-8,52,11);  // Main central pedestrian concourse
     addPath(12,4,10,72);  // North-south campus connection
     addPath(-14,-14,28,6); // Central Quad / library connection
@@ -487,7 +491,11 @@
     addPath(-4,24,21,5);  // Rathdown-to-Gym link
     addLawn(-18,7,30,20,0x85ab7b); addLawn(26,-8,24,14,0x7ea36f); addLawn(25,38,28,14,0x7ba06d); addLawn(-18,26,14,10,0x88ac79);
     const greens = addLawn(-18,7,18,11,0x78a06b);
-    function addTree(x,z,size=1,leaf=0x537e51){
+    addPath(-34,-5,30,6,0xc7c2b5); // An Croi to western playing fields
+    addPath(-49,8,6,50,0xc4b8a6); // sports field perimeter
+    addLawn(-53,0,42,74,0x668953); // coherent large playing-field zone
+    addPath(-42,23,23,5,0xbcb5a7); // sports and campus link
+    function addTree(x,z,size=1,leaf=0x537e51){[x,z]=XY(x,z);
       const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18*size,.25*size,2.6*size,8),new THREE.MeshStandardMaterial({color:0x71503b,roughness:1}));
       trunk.position.set(x,1.3*size,z);trunk.castShadow=true;scene.add(trunk);
       const crown1=new THREE.Mesh(new THREE.IcosahedronGeometry(1.45*size,1),new THREE.MeshStandardMaterial({color:leaf,roughness:1}));
@@ -495,10 +503,10 @@
       const crown2=new THREE.Mesh(new THREE.IcosahedronGeometry(.92*size,0),new THREE.MeshStandardMaterial({color:leaf,roughness:1}));
       crown2.position.set(x+.8*size,3.55*size,z+.15*size);crown2.castShadow=true;scene.add(crown2);
     }
-    function addShrub(x,z,scale=1,color=0x6f945d){ const bush=new THREE.Mesh(new THREE.SphereGeometry(.55*scale,10,10),new THREE.MeshStandardMaterial({color,roughness:1})); bush.position.set(x,.45*scale,z); bush.castShadow=true; scene.add(bush);} 
+    function addShrub(x,z,scale=1,color=0x6f945d){[x,z]=XY(x,z);const bush=new THREE.Mesh(new THREE.SphereGeometry(.55*scale,10,10),new THREE.MeshStandardMaterial({color,roughness:1})); bush.position.set(x,.45*scale,z); bush.castShadow=true; scene.add(bush);} 
     [[-36,-8],[-33,-15],[-32,1],[-28,23],[-13,9],[-24,8],[-33,30],[-2,24],[25,17],[35,20],[36,-9],[-10,-34],[11,-37],[37,33],[-6,-2],[21,-22],[-21,33],[7,46],[31,31]].forEach((p,i)=>addTree(p[0],p[1],1+(i%4)*.08,[0x537e51,0x5b8758,0x6a9156,0x4d7748][i%4]));
     [[-14,3],[-16,6],[-22,11],[-26,10],[6,6],[9,6],[15,23],[18,23],[-13,26],[-17,27],[7,39],[13,34],[27,18],[31,18]].forEach((p,i)=>addShrub(p[0],p[1],1+(i%3)*.18,[0x6f945d,0x7ea36c,0x628455][i%3]));
-    function addBench(x,z,rot=0){
+    function addBench(x,z,rot=0){[x,z]=XY(x,z);
       const wood=new THREE.MeshStandardMaterial({color:0x8d6545,roughness:.95}),metal=new THREE.MeshStandardMaterial({color:0x3d5154,metalness:.25,roughness:.7});
       const g=new THREE.Group();const seat=new THREE.Mesh(new THREE.BoxGeometry(3,.18,.7),wood);seat.position.y=.7;g.add(seat);
       const back=new THREE.Mesh(new THREE.BoxGeometry(3,.75,.17),wood);back.position.set(0,1.12,-.29);g.add(back);
@@ -506,20 +514,20 @@
       g.rotation.y=rot;g.position.set(x,0,z);scene.add(g);
     }
     [[-12,5],[0,13],[-23,15],[20,16],[18,-14],[8,36],[-15,26]].forEach(([x,z],i)=>addBench(x,z,i*.5));
-    function addLamp(x,z){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,5.2,10),new THREE.MeshStandardMaterial({color:0x57666a,metalness:.35,roughness:.6}));pole.position.set(x,2.6,z);scene.add(pole);
+    function addLamp(x,z){[x,z]=XY(x,z);const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,5.2,10),new THREE.MeshStandardMaterial({color:0x57666a,metalness:.35,roughness:.6}));pole.position.set(x,2.6,z);scene.add(pole);
       const arm=new THREE.Mesh(new THREE.BoxGeometry(.6,.08,.08),new THREE.MeshStandardMaterial({color:0x57666a})); arm.position.set(x+.28,4.82,z); scene.add(arm);
       const globe=new THREE.Mesh(new THREE.SphereGeometry(.3,10,10),new THREE.MeshStandardMaterial({color:0xf5e3ae,emissive:0xd7bb70,emissiveIntensity:.22}));globe.position.set(x+.55,4.75,z);scene.add(globe)}
     [[-18,0],[-4,0],[12,1],[28,10],[-17,25],[11,26],[3,35],[24,34],[-25,-10]].forEach(p=>addLamp(...p));
-    function addBanner(x,z,text,color=0x224852){const post=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,4.8,8),new THREE.MeshStandardMaterial({color:0x5a6769}));post.position.set(x,2.4,z);scene.add(post);const banner=new THREE.Mesh(new THREE.PlaneGeometry(1.3,2.2),new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide}));banner.position.set(x+.72,3.4,z);scene.add(banner);const tag=makeTextBillboard(text,190,80,'#16343d','#f3f6f5');tag.scale.set(2.1,.85,1);tag.position.set(x+.72,3.4,z+.02);scene.add(tag)}
+    function addBanner(x,z,text,color=0x224852){[x,z]=XY(x,z);const post=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,4.8,8),new THREE.MeshStandardMaterial({color:0x5a6769}));post.position.set(x,2.4,z);scene.add(post);const banner=new THREE.Mesh(new THREE.PlaneGeometry(1.3,2.2),new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide}));banner.position.set(x+.72,3.4,z);scene.add(banner);const tag=makeTextBillboard(text,190,80,'#16343d','#f3f6f5');tag.scale.set(2.1,.85,1);tag.position.set(x+.72,3.4,z+.02);scene.add(tag)}
     addBanner(23,24,'BA Arts'); addBanner(1,14,'Student\nHub',0x5b4742); addBanner(10,41,'SU',0x385640);
 
     // Stainless bollards outside East Quad: high-contrast but grounded wayfinding detail.
     for(let i=0;i<9;i++){
       const b=new THREE.Mesh(new THREE.CylinderGeometry(.10,.12,1.1,12),new THREE.MeshStandardMaterial({color:0x9ca6a5,metalness:.8,roughness:.3}));
-      b.position.set(18+i*2.35,.58,32.7);b.castShadow=true;scene.add(b);
+      b.position.set((18+i*2.35)*CAMPUS_SPREAD,.58,32.7*CAMPUS_SPREAD);b.castShadow=true;scene.add(b);
     }
     // A modest raised planter defines pedestrian space without blocking routes.
-    function flowerbed(x,z,w,d){
+    function flowerbed(x,z,w,d){[x,z]=XY(x,z);
       const bed=new THREE.Mesh(new THREE.BoxGeometry(w,.35,d),new THREE.MeshStandardMaterial({color:0x989b8d,roughness:.9}));bed.position.set(x,.18,z);scene.add(bed);
       const soil=new THREE.Mesh(new THREE.BoxGeometry(w-.4,.06,d-.4),new THREE.MeshStandardMaterial({color:0x574d3e}));soil.position.set(x,.38,z);scene.add(soil);
       for(let i=0;i<8;i++){const leaf=new THREE.Mesh(new THREE.IcosahedronGeometry(.32,0),new THREE.MeshStandardMaterial({color:[0x63815a,0x7d9857,0x648c6a][i%3]}));leaf.position.set(x-w*.38+(i%4)*w*.25,.54,z+(i<4?-.25:.25));scene.add(leaf)}
@@ -527,14 +535,16 @@
     flowerbed(35,24,6,1.8);flowerbed(-29,-11,5,1.6);
     // Building silhouettes inspired by real campus architecture, not detailed survey models.
     const places = {
-      central:{name:'Central Quad',label:'Teaching and shared classes',pos:new THREE.Vector3(0,0,-23),map:{x:53,y:24},size:[23,10,11],arrival:[-4,-12]},
+      central:{name:'Central Quad',label:'Teaching and shared classes',pos:new THREE.Vector3(0,0,-23),map:{x:53,y:24},size:[34,16,23],arrival:[-4,-12]},
       library:{name:'Academic Hub & Library',label:'Library and learning support',pos:new THREE.Vector3(-22,0,-25),map:{x:20,y:24},size:[15,10,10],arrival:[-22,-14]},
-      east:{name:'East Quad',label:'Arts home · induction · advising',pos:new THREE.Vector3(28,0,16),map:{x:81,y:65},size:[17,9,12],arrival:[28,26]},
+      east:{name:'East Quad',label:'Arts home · induction · advising',pos:new THREE.Vector3(28,0,16),map:{x:81,y:65},size:[24,16,17],arrival:[28,26]},
       rathdown:{name:'Rathdown House',label:'Student Hub and student services',pos:new THREE.Vector3(1,0,10),map:{x:54,y:48},size:[12,8,9],arrival:[-4,16]},
       glass:{name:'Glassmanogue',label:'Gym and fitness',pos:new THREE.Vector3(-18,0,20),map:{x:28,y:58},size:[12,7,8],arrival:[-18,26]},
       laurence:{name:"St Laurence's",label:'Historic landmark and events space',pos:new THREE.Vector3(-15,0,34),map:{x:27,y:80},size:[12,10,8],arrival:[-15,40]},
       lower:{name:'Lower House',label:"Students' Union and common spaces",pos:new THREE.Vector3(12,0,39),map:{x:60,y:86},size:[23,7,8],arrival:[12,46]},
     };
+    Object.values(places).forEach(p=>{p.pos.x*=CAMPUS_SPREAD;p.pos.z*=CAMPUS_SPREAD;p.arrival=p.arrival.map(v=>v*CAMPUS_SPREAD);});
+    sun.shadow.camera.left=-180;sun.shadow.camera.right=180;sun.shadow.camera.top=180;sun.shadow.camera.bottom=-180;sun.shadow.camera.updateProjectionMatrix();
     function makeTextBillboard(text,width=256,height=90,bg='#123',fg='white'){
       const cv=document.createElement('canvas');cv.width=width;cv.height=height;const c=cv.getContext('2d');
       c.fillStyle=bg;c.beginPath();c.roundRect(2,2,width-4,height-4,16);c.fill();
@@ -565,9 +575,9 @@
     const paleStone=masonryTexture('#ada69b',['#c4bcb0','#d1c8b9','#bdb8b0','#d9d0c0','#aea79d']);
     const pavingTex=masonryTexture('#b6a89a',['#c6b9a7','#d0c4b1','#bdb3a6','#d8cbb8']);
     pavingTex.repeat.set(3,2);
-    // Distinctive paving around East Quad and the main campus concourse.
-    const pavedArea=new THREE.Mesh(new THREE.PlaneGeometry(23,10),new THREE.MeshStandardMaterial({map:pavingTex,roughness:1}));
-    pavedArea.rotation.x=-Math.PI/2;pavedArea.position.set(27,.095,27);pavedArea.receiveShadow=true;scene.add(pavedArea);
+    // Broad paved area between the East Quad entrance and the campus walkway.
+    const pavedArea=new THREE.Mesh(new THREE.PlaneGeometry(47,25),new THREE.MeshStandardMaterial({map:pavingTex,roughness:1}));
+    pavedArea.rotation.x=-Math.PI/2;pavedArea.position.set(58,.105,56);pavedArea.receiveShadow=true;scene.add(pavedArea);
     const darkBrickMat=new THREE.MeshStandardMaterial({map:darkBrick,roughness:.98});
     const lightStoneMat=new THREE.MeshStandardMaterial({map:lightStone,roughness:.97});
     const paleStoneMat=new THREE.MeshStandardMaterial({map:paleStone,roughness:.97});
@@ -593,11 +603,36 @@
       const facade=new THREE.Group();facade.position.y=h/2+.5;addWindows(facade,w,h,d,modern?7:6,modern?4:3,'front'); if(modern) addWindows(facade,d,h,w,3,4,'side'); g.add(facade);
       const steps = new THREE.Mesh(new THREE.BoxGeometry(4.8,.36,2.4), stoneMat(0xd8d1c2)); steps.position.set(0,.18,d/2+1.55); g.add(steps);
       if(key==='central'){
+        // The real Central Quad consists of multiple connected masses around a courtyard.
+        m.visible=false;roof.visible=false;facade.visible=false;
+        const warmWhite=new THREE.MeshStandardMaterial({color:0xd4d3cb,roughness:.68,metalness:.04});
+        [[-11,8,11,23],[11,8,11,23],[0,-7,34,8]].forEach(([bx,bz,bw,bd])=>{
+          const vol=new THREE.Mesh(new THREE.BoxGeometry(bw,h,bd),warmWhite);
+          vol.position.set(bx,h/2+.5,bz);vol.castShadow=true;vol.receiveShadow=true;g.add(vol);
+          for(let floor=1;floor<=5;floor++) for(let col=0;col<Math.floor(bw/2.2);col++){
+            const pane=new THREE.Mesh(new THREE.BoxGeometry(1.25,1.8,.10),glassMat);
+            pane.position.set(bx-bw/2+1.15+col*2.2,.5+floor*2.55,bz+bd/2+.09);g.add(pane);
+          }
+        });
+        for(let i=-4;i<=4;i++){
+          const col=new THREE.Mesh(new THREE.BoxGeometry(.38,5.8,.5),warmWhite);
+          col.position.set(i*2.22,3.4,13.2);g.add(col);
+        }
         const band=new THREE.Mesh(new THREE.BoxGeometry(w,.45,.24),stoneMat(0xd1c9b8));band.position.set(0,h*.58+.5,d/2+.2);g.add(band);
         for(let i=-1;i<=1;i++) {const col=new THREE.Mesh(new THREE.BoxGeometry(.55,h*.64,.55),stoneMat(0xd8d5c9));col.position.set(i*3.6,h*.32+.5,d/2+1.1);g.add(col)}
         const canopy=new THREE.Mesh(new THREE.BoxGeometry(8,.22,2.5), stoneMat(0xe2ddd3)); canopy.position.set(0,3.9,d/2+1.42); g.add(canopy);
       }
       if(key==='east'){
+        // Recesses and asymmetric brick wings make the East Quad readable in silhouette.
+        for(const [bx,bz,bw,bh,bd] of [[-8,-4,6,16,10],[8,-3,6,13,12],[0,-6,8,16,7]]){
+          const wing=new THREE.Mesh(new THREE.BoxGeometry(bw,bh,bd),darkBrickMat);
+          wing.position.set(bx,bh/2+.5,bz);wing.castShadow=true;g.add(wing);
+        }
+        const bronze=new THREE.MeshStandardMaterial({color:0xa77b42,metalness:.62,roughness:.35});
+        for(let i=-8;i<=8;i++){
+          const fin=new THREE.Mesh(new THREE.BoxGeometry(.12,12,.26),bronze);
+          fin.position.set(i*1.31,8.3,d/2+.31);g.add(fin);
+        }
         const glass=new THREE.Mesh(new THREE.BoxGeometry(4.2,h*.8,.22),glassMat);glass.position.set(-w*.26,h*.48+.5,d/2+.18);g.add(glass);
         const gold=new THREE.Mesh(new THREE.BoxGeometry(1.0,h*.75,.3),brickMat(0xcaa35b));gold.position.set(-w*.05,h*.47+.5,d/2+.22);g.add(gold);
         const canopy=new THREE.Mesh(new THREE.BoxGeometry(6,.22,2.2), stoneMat(0xd5cec2)); canopy.position.set(0,3.3,d/2+1.36); g.add(canopy);
@@ -625,7 +660,15 @@
         const frontGable=new THREE.Mesh(new THREE.ShapeGeometry(roofShape),paleStoneMat);
         frontGable.position.set(0,h+.5,d/2+.32);g.add(frontGable);
       }
-      if(key==='lower'){ for(let i=-2;i<=2;i++){const chimney=new THREE.Mesh(new THREE.BoxGeometry(.6,2.4,.65),brickMat(0xaa9584));chimney.position.set(i*3.6,h+3.0,0);g.add(chimney)} }
+      if(key==='lower'){
+        // A southern entrance facing the open-air seating area.
+        const southDoor=new THREE.Mesh(new THREE.BoxGeometry(3.0,3.2,.22),stoneMat(0x4b5754));
+        southDoor.position.set(0,2.1,-d/2-.17);g.add(southDoor);
+        for(const offset of [-w/2+2.8,w/2-2.8]){
+          const pavilion=new THREE.Mesh(new THREE.BoxGeometry(4.5,5.8,d+1.0),lightStoneMat);
+          pavilion.position.set(offset,3.4,0);pavilion.castShadow=true;g.add(pavilion);
+        }
+        for(let i=-2;i<=2;i++){const chimney=new THREE.Mesh(new THREE.BoxGeometry(.6,2.4,.65),brickMat(0xaa9584));chimney.position.set(i*3.6,h+3.0,0);g.add(chimney)} }
       if(key==='glass'){ const awning=new THREE.Mesh(new THREE.BoxGeometry(5.8,.2,1.8), brickMat(0x7d6d60)); awning.position.set(0,3.05,d/2+1.2); g.add(awning); }
       if(key==='laurence'){
         const tower = new THREE.Mesh(new THREE.BoxGeometry(3.8,6.8,3.8), stoneMat(0xb8a694)); tower.position.set(-w*.24, h+3.4, 0); tower.castShadow=true; tower.receiveShadow=true; g.add(tower);
@@ -753,7 +796,7 @@
     }
     // Soft cloud sprites to give the sky a little life.
     function makeCloud(x,y,z,s=1){ const g=new THREE.Group(); const mat=new THREE.MeshStandardMaterial({color:0xf5f7f6,transparent:true,opacity:.92}); [[0,0,0,2.8],[2.1,.2,.4,2.2],[-2.1,.1,.2,2.1],[.3,.55,.8,1.8]].forEach(p=>{ const m=new THREE.Mesh(new THREE.SphereGeometry(p[3]*s,12,12),mat); m.position.set(p[0]*s,p[1]*s,p[2]*s); g.add(m);}); g.position.set(x,y,z); scene.add(g); animatedDecor.push({type:'cloud',obj:g,drift:.2+Math.random()*.18}); }
-    makeCloud(-38,44,-34,1.3); makeCloud(-6,48,-80,1.7); makeCloud(48,42,-56,1.5); makeCloud(10,52,12,1.1);
+    makeCloud(-105,44,-88,1.3); makeCloud(-6,48,-155,1.7); makeCloud(110,42,-115,1.5); makeCloud(10,52,72,1.1);
 
     // v0.6: Stylised articulated characters. Their joints are animated every frame,
     // rather than simply sliding static capsules across the campus.
@@ -803,7 +846,7 @@
     // collision, world-space mission pointers and map travel behaviour.
     const player=new THREE.Group();
     const body=makeAvatar({shirt:0x365d70,trousers:0x273f4d,skin:skinPalette[1],hair:hairPalette[0],hairStyle:3,backpack:true});
-    player.add(body);player.position.set(40,.05,35);scene.add(player);
+    player.add(body);player.position.set(40*CAMPUS_SPREAD,.05,35*CAMPUS_SPREAD);scene.add(player);
     const playerVel=new THREE.Vector3();let playerStride=0,playerMoving=false;
 
     function makeNPC(color,name,placeKey,posOffset=[0,0],index=0){
@@ -826,6 +869,103 @@
       gym: makeNPC(0x8a97c1, 'Gym staff', 'glass', [0, 8],7),
     };
 
+
+    // TWO CAMPUS SOCIAL HUBS. Approximate position until surveyed against the campus plan.
+    const socialAvatars=[];
+    function concretePad(x,z,w,d){
+      const stone=new THREE.Mesh(new THREE.BoxGeometry(w,.13,d),new THREE.MeshStandardMaterial({color:0xb9b3a6,roughness:.94}));
+      stone.position.set(x,.13,z);stone.receiveShadow=true;scene.add(stone);
+      for(let i=1;i<Math.floor(w/3);i++){
+        const line=new THREE.Mesh(new THREE.BoxGeometry(.025,.012,d),new THREE.MeshBasicMaterial({color:0xd0cbc0}));line.position.set(x-w/2+i*3,.21,z);scene.add(line);
+      }
+    }
+    function campusTable(x,z,rotation=0){
+      const group=new THREE.Group();group.position.set(x,.2,z);group.rotation.y=rotation;
+      const metal=new THREE.MeshStandardMaterial({color:0x46575a,metalness:.48,roughness:.64});
+      const timber=new THREE.MeshStandardMaterial({color:0x98795c,roughness:.78});
+      const top=new THREE.Mesh(new THREE.CylinderGeometry(.72,.72,.09,18),timber);top.position.y=1;top.receiveShadow=true;group.add(top);
+      const stem=new THREE.Mesh(new THREE.CylinderGeometry(.09,.10,1.0,10),metal);stem.position.y=.50;group.add(stem);
+      for(let side of [-1,1]){
+        const seat=new THREE.Mesh(new THREE.BoxGeometry(1.4,.1,.38),timber);seat.position.set(0,.53,side*1.05);group.add(seat);
+      }
+      scene.add(group);
+    }
+    function seatedStudent(x,z,i,heading=0){
+      const av=makeAvatar({shirt:[0x65817e,0x9d795e,0x827c98,0x4e7194,0x897f68][i%5],trousers:0x343f47,
+        skin:skinPalette[i%skinPalette.length],hair:hairPalette[(i+2)%hairPalette.length],hairStyle:i%4,scale:.95,coat:i%3===1});
+      av.position.set(x,.13,z);av.rotation.y=heading;
+      av.userData.seated=true;av.userData.legs.forEach(leg=>leg.rotation.x=-1.15);
+      av.userData.figure.position.y=-.25;scene.add(av);socialAvatars.push({av,kind:'sitting',phase:i*.6});
+    }
+    function standingStudent(x,z,i,heading=0){
+      const av=makeAvatar({shirt:[0x535f79,0xa57b6e,0x558a79,0xb19b71][i%4],trousers:0x34424b,
+        skin:skinPalette[(i+2)%skinPalette.length],hair:hairPalette[i%hairPalette.length],hairStyle:i%4,backpack:i%2===0});
+      av.position.set(x,.08,z);av.rotation.y=heading;scene.add(av);socialAvatars.push({av,kind:'standing',phase:i*1.1});
+      if(i%3===0){const phone=new THREE.Mesh(new THREE.BoxGeometry(.12,.23,.035),new THREE.MeshStandardMaterial({color:0x152936,metalness:.3}));
+        phone.position.set(.33,1.32,.3);av.userData.figure.add(phone);}
+    }
+    function socialHub(name,x,z){
+      concretePad(x,z,19,15);
+      for(const [dx,dz,rot] of [[-5.8,-4.3,.12],[5.8,4.2,-.18],[5.0,-4.2,.34]])campusTable(x+dx,z+dz,rot);
+      for(let k=0;k<4;k++)seatedStudent(x-5.8+(k%2)*11.5,z-3.6+(k>1?8:0),k,k*1.6);
+      for(let k=0;k<5;k++)standingStudent(x-2+(k%3)*1.55,z+.7+Math.floor(k/3)*2.1,k,Math.PI*.5+(k%2)*.6);
+      const sign=makeTextBillboard(name,300,60,'#28434a','#efe6cd');sign.position.set(x,4.3,z-7.5);sign.scale.set(4.0,.8,1);scene.add(sign);
+      for(const [dx,dz] of [[-11,-7],[-11,7],[11,-7],[11,7]])addShrub((x+dx)/CAMPUS_SPREAD,(z+dz)/CAMPUS_SPREAD,2,.0+0x64855e);
+    }
+    socialHub('EAST QUAD · ARRIVAL PLAZA',61,54);
+    socialHub('LOWER HOUSE · SOUTH TERRACE',28,69);
+
+    // Large pitches communicate the extent of the campus — beyond the quads.
+    function sportsPitch(x,z,w,d,kind='soccer'){
+      const g=new THREE.Group();g.position.set(x,.12,z);
+      const fieldMat=new THREE.MeshStandardMaterial({color:kind==='synthetic'?0x3f8069:0x43894c,roughness:1});
+      const pitch=new THREE.Mesh(new THREE.BoxGeometry(w,.10,d),fieldMat);pitch.receiveShadow=true;g.add(pitch);
+      const white=new THREE.MeshBasicMaterial({color:0xf0f2e7});
+      const stripe=(a,b,c,e)=>{const line=new THREE.Mesh(new THREE.BoxGeometry(a,.012,b),white);line.position.set(c,.068,e);g.add(line)};
+      stripe(w-.7,.13,0,-d/2+.35);stripe(w-.7,.13,0,d/2-.35);
+      stripe(.13,d-.7,-w/2+.35,0);stripe(.13,d-.7,w/2-.35,0);
+      stripe(w-.7,.1,0,0);
+      const circle=new THREE.Mesh(new THREE.TorusGeometry(4,.09,6,64),white);circle.rotation.x=Math.PI/2;circle.position.y=.07;g.add(circle);
+      for(const side of [-1,1]){
+        const goal=new THREE.Group();const metal=new THREE.MeshStandardMaterial({color:0xe8e8e2,roughness:.75});
+        const rod=(wx,wy,wz,hx,hy,hz)=>{const a=new THREE.Vector3(wx,wy,wz),b=new THREE.Vector3(hx,hy,hz),dir=b.clone().sub(a);
+          const mesh=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,dir.length(),8),metal);mesh.position.copy(a.add(b).multiplyScalar(.5));mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());goal.add(mesh)};
+        rod(-3,0,0,-3,2.4,0);rod(3,0,0,3,2.4,0);rod(-3,2.4,0,3,2.4,0);goal.position.z=side*(d/2-.65);g.add(goal);
+      }
+      scene.add(g);
+      for(let pole=0;pole<6;pole++){
+        const px=x+(pole%2?1:-1)*(w/2+3),pz=z+(-1+Math.floor(pole/2))*d*.43;
+        const light=new THREE.Mesh(new THREE.CylinderGeometry(.1,.13,9.5,8),new THREE.MeshStandardMaterial({color:0x69757b,metalness:.4}));
+        light.position.set(px,4.75,pz);scene.add(light);
+        const fixture=new THREE.Mesh(new THREE.BoxGeometry(1,.3,.55),new THREE.MeshStandardMaterial({color:0xbfc9cb,emissive:0x666b73,emissiveIntensity:.1}));fixture.position.set(px,9.6,pz);scene.add(fixture);
+      }
+    }
+    sportsPitch(-133,-36,69,43,'soccer');sportsPitch(-133,22,69,43,'synthetic');
+    sportsPitch(-133,82,69,43,'rugby');
+
+    // Golden Bandstand: functional public artwork between Central Quad and Greenway Hub.
+    // A recognisable gold open structure, rather than a claimed survey-accurate model.
+    const bandstand=new THREE.Group();bandstand.position.set(-38,.3,-40);
+    const goldMat=new THREE.MeshStandardMaterial({color:0xd8a329,metalness:.74,roughness:.33});
+    const bandBase=new THREE.Mesh(new THREE.CylinderGeometry(6.2,6.2,.34,10),new THREE.MeshStandardMaterial({color:0xb9aca0,roughness:.85}));bandstand.add(bandBase);
+    for(let i=0;i<10;i++){
+      const angle=i*Math.PI/5;
+      const pillar=new THREE.Mesh(new THREE.CylinderGeometry(.12,.14,5.5,9),goldMat);
+      pillar.position.set(Math.cos(angle)*5,2.8,Math.sin(angle)*5);pillar.rotation.z=.06*Math.sin(i);bandstand.add(pillar);
+    }
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(5.1,.23,10,40),goldMat);ring.rotation.x=Math.PI/2;ring.position.y=5.5;bandstand.add(ring);
+    const cap=new THREE.Mesh(new THREE.ConeGeometry(5.5,1.5,10,1,true),goldMat);cap.position.y=6.25;bandstand.add(cap);
+    scene.add(bandstand);
+    const bandstandSign=makeTextBillboard('THE GOLDEN BANDSTAND',300,65,'#243f40','#ecd082');bandstandSign.position.set(-38,8.3,-40);scene.add(bandstandSign);
+    for(let i=0;i<5;i++)standingStudent(-41+i*1.6,-32+(i%2)*1.6,25+i,i*.7);
+    // Keep the revised campus inhabited with gentle idle movement.
+    function animateSocial(time){for(const item of socialAvatars){const a=item.av;
+       if(item.kind==='sitting'){
+         a.userData.figure.rotation.y=Math.sin(time*.5+item.phase)*.055;
+         a.userData.arms[0].rotation.x=Math.sin(time*.8+item.phase)*.08;
+       }else animateAvatar(a,time*.55+item.phase,false);
+    }}
+
     const npcInfo = {
       induction:{name:'Bríd',title:'Arts induction'},
       cian: { name:'Cian', title:'Fellow student' },
@@ -840,17 +980,17 @@
     // Broadstone–University arrival: a short tram platform and a stylised Luas vehicle.
     // The platform is an arrival device, not a survey-accurate railway model.
     const platform=new THREE.Mesh(new THREE.BoxGeometry(20,.24,4),brickMat(0xc8c7bc));
-    platform.position.set(42,.14,36);scene.add(platform);
-    for(const tz of [34.2,37.8]){const line=new THREE.Mesh(new THREE.BoxGeometry(20,.055,.11),brickMat(0x6a7779));line.position.set(42,.28,tz);scene.add(line);}
+    platform.position.set(42*CAMPUS_SPREAD,.14,36*CAMPUS_SPREAD);scene.add(platform);
+    for(const tz of [34.2,37.8]){const line=new THREE.Mesh(new THREE.BoxGeometry(20,.055,.11),brickMat(0x6a7779));line.position.set(42*CAMPUS_SPREAD,.28,tz*CAMPUS_SPREAD);scene.add(line);}
     const tram=new THREE.Group();
     for(let k=0;k<3;k++){
       const coach=new THREE.Mesh(new THREE.BoxGeometry(7.2,2.8,2.7),brickMat(k===1?0xf2f2e9:0xcfe3eb));coach.position.set((k-1)*7.05,1.6,36);coach.castShadow=true;tram.add(coach);
       const stripe=new THREE.Mesh(new THREE.BoxGeometry(6.8,.5,2.75),brickMat(0x8862a6));stripe.position.set((k-1)*7.05,1.0,36);tram.add(stripe);
       for(const xoff of [-2.1,0,2.1]){const win=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.0,.07),glassMat);win.position.set((k-1)*7.05+xoff,2.0,34.62);tram.add(win);}
     }
-    scene.add(tram);
-    const tramStopSign=makeTextBillboard('Broadstone – University\nLuas',330,100,'#243c44','#fff4f2');tramStopSign.position.set(42,4,39);scene.add(tramStopSign);
-    const routeSign=makeTextBillboard('EAST QUAD → ARTS INDUCTION',440,70,'#263e40','#ffe5a7');routeSign.position.set(31,4.4,32);scene.add(routeSign);
+    tram.position.set(42*(CAMPUS_SPREAD-1),0,36*(CAMPUS_SPREAD-1));scene.add(tram);
+    const tramStopSign=makeTextBillboard('Broadstone – University\nLuas',330,100,'#243c44','#fff4f2');tramStopSign.position.set(42*CAMPUS_SPREAD,4,39*CAMPUS_SPREAD);scene.add(tramStopSign);
+    const routeSign=makeTextBillboard('EAST QUAD → ARTS INDUCTION',440,70,'#263e40','#ffe5a7');routeSign.position.set(31*CAMPUS_SPREAD,4.4,32*CAMPUS_SPREAD);scene.add(routeSign);
 
     // Background walkers and cyclists move along repeated paths. These are atmosphere, not quest characters.
     const ambientRoutes=[
@@ -882,6 +1022,7 @@
       }
       scene.add(group);return group;
     }
+    ambientRoutes.forEach(route=>route.forEach(point=>{point[0]*=CAMPUS_SPREAD;point[1]*=CAMPUS_SPREAD;}));
     const ambience=Array.from({length:30},(_,i)=>{
       const cycle=i%9===0,route=ambientRoutes[i%ambientRoutes.length];
       const obj=makeWalker([0x6e8996,0x987c5d,0x7b9c89,0x8b7597,0xb3a378,0x5b7f90,0x8e6970][i%7],cycle,i);
@@ -934,8 +1075,15 @@
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
     renderer.domElement.style.touchAction='none';
     renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
-    renderer.domElement.addEventListener('pointerdown',e=>{if(state.dialogueOpen||state.phoneOpen||demoActive)return;pointerDown=true;prevPointer={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,button:e.button};renderer.domElement.setPointerCapture(e.pointerId);});
-    renderer.domElement.addEventListener('wheel',e=>{if(state.dialogueOpen||state.phoneOpen||demoActive)return;e.preventDefault();cameraDistance=THREE.MathUtils.clamp(cameraDistance+Math.sign(e.deltaY)*1.2,5,19);},{passive:false});
+    renderer.domElement.addEventListener('pointerdown',e=>{
+      if(state.dialogueOpen||state.phoneOpen||demoActive)return;
+      pointerDown=true;prevPointer={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,button:e.button};
+      renderer.domElement.setPointerCapture(e.pointerId);
+    });
+    renderer.domElement.addEventListener('wheel',e=>{
+      if(state.dialogueOpen||state.phoneOpen||demoActive)return;
+      e.preventDefault();cameraDistance=THREE.MathUtils.clamp(cameraDistance+Math.sign(e.deltaY)*1.2,5,19);
+    },{passive:false});
     window.addEventListener('pointerup',e=>{
       if(pointerDown&&prevPointer&&prevPointer.button!==2&&!state.dialogueOpen&&!state.phoneOpen&&Math.hypot(e.clientX-prevPointer.startX,e.clientY-prevPointer.startY)<8){
         const k=getNearestNpc();if(k)interactWith(k);
@@ -1295,7 +1443,7 @@ You look around and make a mental note that some people are here for the first t
     }
     function updatePlayer(dt){
       if(state.dialogueOpen || state.phoneOpen || demoActive || !document.getElementById('startScreen').hidden) return;
-      const speed = (keys['shift'] ? 9 : 5.8);
+      const speed = (keys['shift'] ? 15 : 8.1);
       const move = new THREE.Vector3();
       if(keys['w']||keys['arrowup']) move.z -= 1;
       if(keys['s']||keys['arrowdown']) move.z += 1;
@@ -1317,8 +1465,8 @@ You look around and make a mental note that some people are here for the first t
         lastTravelHeading=body.rotation.y;
         playerMoving=true;playerStride += dt;
       }
-      player.position.x = THREE.MathUtils.clamp(player.position.x, -48, 49);
-      player.position.z = THREE.MathUtils.clamp(player.position.z, -40, 53);
+      player.position.x = THREE.MathUtils.clamp(player.position.x, -205, 120);
+      player.position.z = THREE.MathUtils.clamp(player.position.z, -132, 150);
 
       // update current place by closest building
       let closest = 'east', closestDist = Infinity;
@@ -1366,6 +1514,7 @@ You look around and make a mental note that some people are here for the first t
       const now=performance.now()*.001;Object.values(npcs).forEach((n,i)=>animateAvatar(n,now+i*.33,false));
       updateCamera();
       animateAmbience(dt);
+      animateSocial(performance.now()*.001);
       animateTram(dt);
       nearestNpc = getNearestNpc();
       Object.entries(huntMarkers).forEach(([id,obj])=>{obj.visible=state.mission==='scavenger'&&!state.huntDone.includes(id);if(obj.visible)obj.rotation.y+=dt*(state.huntTarget===id?.4:.15);});
@@ -1403,7 +1552,7 @@ You look around and make a mental note that some people are here for the first t
       demoIndex=Math.max(0,Math.min(demoScenes.length-1,index));
       const step=demoScenes[demoIndex];
       demoOverlay.hidden=false;
-      player.position.set(step.at[0],step.at[1],step.at[2]);yaw=step.angle;pitch=.44;keys['w']=keys['a']=keys['s']=keys['d']=false;
+      player.position.set(step.at[0]*CAMPUS_SPREAD,step.at[1],step.at[2]*CAMPUS_SPREAD);yaw=step.angle;pitch=.44;keys['w']=keys['a']=keys['s']=keys['d']=false;
       state.currentPlace=step.place;
       document.getElementById('demoCount').textContent=String(demoIndex+1).padStart(2,'0')+' / '+String(demoScenes.length).padStart(2,'0');
       document.getElementById('demoTitle').textContent=step.headline;
@@ -1457,7 +1606,7 @@ You look around and make a mental note that some people are here for the first t
     } catch(startError) {
       window.__artsThreeReady=false;
       window.__artsEngineFailed=true;
-      document.getElementById('engineStatus').textContent='3D setup failed: '+(startError?.message || String(startError));
+      document.getElementById('engineStatus').textContent='3D setup failed. Please report this to the developer.';
       document.getElementById('threeHelp').hidden=false;
       console.error('3D startup failed',startError);
     } }
