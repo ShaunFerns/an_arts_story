@@ -6,6 +6,7 @@ const materials = {
   centralBrick:new THREE.MeshStandardMaterial({color:0xc9beb0,roughness:.92}),
   harling:new THREE.MeshStandardMaterial({color:0xc5c2b7,roughness:1}),
   lowerStone:new THREE.MeshStandardMaterial({color:0xb5a38b,roughness:.96}),
+  rathdownStone:new THREE.MeshStandardMaterial({color:0xb4a994,roughness:.96}),
   wardStone:new THREE.MeshStandardMaterial({color:0xa9a69a,roughness:.96}),
   infirmaryStone:new THREE.MeshStandardMaterial({color:0x959698,roughness:.96}),
   chapelStone:new THREE.MeshStandardMaterial({color:0x817f7a,roughness:.96}),
@@ -37,7 +38,7 @@ export function buildingPalette(feature) {
 
 const masonryTypes={
  centralBrick:[32,8,5,2], harling:[100,62,20,1],
- lowerStone:[19,11,14,4], wardStone:[18,9,18,4],
+ lowerStone:[19,11,14,4], rathdownStone:[15,9,29,3], wardStone:[18,9,18,4],
  infirmaryStone:[20,10,22,4], chapelStone:[18,11,20,4], clockStone:[16,9,20,4],
 };
 function setMasonryMap(key,material){
@@ -48,7 +49,7 @@ function setMasonryMap(key,material){
  ctx.fillStyle='#98938c';ctx.fillRect(0,0,512,256);
  let seed=7301;
  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
- const rubble=['wardStone','infirmaryStone','chapelStone'].includes(key);
+ const rubble=['wardStone','rathdownStone','infirmaryStone','chapelStone'].includes(key);
  const rows=Array.from({length:courses},()=>rubble?.70+random()*.60:1);
  const height=256/rows.reduce((sum,h)=>sum+h,0),width=512/bays;
  let y=0;
@@ -111,6 +112,11 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
   pointed.quadraticCurveTo(-.37,.3,-.5,.05);
   pointed.closePath();
   const arch = new THREE.ShapeGeometry(pointed);
+  const rounded=new THREE.Shape();
+  rounded.moveTo(-.5,-.5);rounded.lineTo(.5,-.5);rounded.lineTo(.5,.34);
+  rounded.quadraticCurveTo(.21,.57,0,.5);rounded.quadraticCurveTo(-.21,.57,-.5,.34);
+  rounded.closePath();
+  const segmental=new THREE.ShapeGeometry(rounded);
   const prototype = new THREE.Object3D();
   const batches = {};
   const labels = [];
@@ -144,27 +150,59 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
       const entryFace=rathdown&&door&&Math.hypot(...point(.5,0).map((v,j)=>v-door.door[j]))<1.1;
       if(entryFace){
        const gable=new THREE.Group();
-       const [x,n]=point(.5,.13);
-       gable.position.set(x,base+design.eaves,-n);
+       const [x,n]=point(.5,.49);
+       gable.position.set(x,base,-n);
        gable.rotation.y=yaw;
-       const gableShape=new THREE.Shape();
-       gableShape.moveTo(-len/2,-.14);gableShape.lineTo(len/2,-.14);
-       gableShape.lineTo(0,3.45);gableShape.closePath();
-       const stone=shellMaterial(palette,feature,height);
-       const face=new THREE.Mesh(new THREE.ExtrudeGeometry(gableShape,{depth:3.7,bevelEnabled:false}),stone);
-       face.position.z=-3.7;gable.add(face);
-       for(const side of [-1,1]){
-        const rake=new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(len/2,3.45)+.38,.21,4.0),materials.slate);
-        rake.rotation.z=side*Math.atan2(3.45,len/2);rake.position.set(-side*len/4,1.73,-1.85);gable.add(rake);
+       const span=5.0,eaves=design.eaves,rise=2.62;
+       const finish=shellMaterial(palette,feature,height);
+       const limestone=materials.historic;
+       function block(w,h,d,x,y,z,material){
+        const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
+        mesh.position.set(x,y,z);mesh.receiveShadow=true;gable.add(mesh);
+        return mesh;
        }
-       const oculus=new THREE.Mesh(new THREE.CircleGeometry(.51,24),materials.glass);
-       oculus.position.set(0,1.39,.034);gable.add(oculus);
-       const ring=new THREE.Mesh(new THREE.RingGeometry(.49,.64,24),materials.historic);
-       ring.position.set(0,1.39,.038);gable.add(ring);
-       gable.name='Rathdown House · south entrance gable and oculus';
+       const body=block(span,eaves,.61,0,eaves/2,-.27,finish);
+       const uv=body.geometry.attributes.uv;
+       for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*span,uv.getY(i)*eaves);
+       const shape=new THREE.Shape();
+       shape.moveTo(-span/2,-.08);shape.lineTo(span/2,-.08);
+       shape.lineTo(0,rise);shape.closePath();
+       const pediment=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:2.60,bevelEnabled:false}),finish);
+       pediment.position.set(0,eaves,-2.59);gable.add(pediment);
+       for(const side of [-1,1]){
+        const rake=block(Math.hypot(span/2,rise)+.20,.14,2.74,-side*span/4,eaves+rise/2,-1.26,materials.slate);
+        rake.rotation.z=side*Math.atan2(rise,span/2);
+        for(let row=0;row<12;row++)
+         block(row%2?.22:.39,.43,.13,side*(span/2-.18),.46+row*.50,.101,limestone);
+       }
+       block(5.11,.17,.255,0,eaves-.13,.08,limestone);
+       block(5.15,.16,.26,0,3.49,.10,limestone);
+       const oculus=new THREE.Mesh(new THREE.CircleGeometry(.35,24),materials.glassLight);
+       oculus.position.set(0,eaves+1.12,.022);gable.add(oculus);
+       const ring=new THREE.Mesh(new THREE.RingGeometry(.34,.49,24),limestone);
+       ring.position.set(0,eaves+1.12,.036);gable.add(ring);
+       for(const [sx,width] of [[-1.25,.65],[0,1.19],[1.25,.65]]){
+        block(width+.23,1.88,.19,sx,5.03,.12,limestone);
+        block(width,1.66,.043,sx,5.03,.23,materials.glassLight);
+        block(width,.049,.043,sx,5.22,.262,materials.sash);
+        block(width+.31,.105,.26,sx,4.12,.18,limestone);
+       }
+       for(const side of [-1,1]){
+        const t=.5+side*.373;
+        part('historic',t,.13,2.05,1.12,2.02,.20);
+        part('glassLight',t,.247,2.05,.86,1.79,.042);
+        part('sash',t,.279,2.36,.86,.055,.039);
+        part('historic',t,.16,1.05,1.23,.15,.25);
+        part('historic',t,.13,5.03,.94,1.86,.20);
+        part('glassLight',t,.247,5.03,.73,1.66,.049);
+        part('sash',t,.279,5.22,.73,.052,.04);
+       }
+       gable.name='Rathdown House · projecting reception gable and three-light window';
        scene.add(gable);
+       windowCount+=7;
+       continue;
       }
-      const count=Math.max(1,Math.floor(len/(entryFace?2.7:palette==='central'?3.65:palette==='library'?3.1:3.35)));
+      const count=Math.max(1,Math.floor(len/(palette==='central'?3.65:palette==='library'?3.1:3.35)));
       const bay=len/count;
       const libraryFront=palette==='library'&&on<-.48&&len>14;
       for(let j=0;j<count;j++) {
@@ -203,6 +241,12 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
              part('arch glass',t,.28,y,width,h,1);
              part('sash',t,.30,y-.17,.052,h*.76,.05);
              part('historic',t,.21,y-h*.54,width+.29,.18,.42);
+            }else if(rathdown&&k===0&&on<-.19){
+             part('segmental historic',t,.19,y,width+.24,h+.25,1);
+             part('segmental glassLight',t,.221,y,width,h,1);
+             part('sash',t,.248,y-.07,.045,h*.88,.043);
+             part('sash',t,.249,y+.05,width,.048,.043);
+             part('historic',t,.14,y-h*.57,width+.27,.12,.28);
             }else{
              part(historic?'historic':'precast',t,.09,y,width+.20,h+.17,.20);
              part(historic?'glass':(j+k+i)%4?'glass':'glassLight',t,.223,y,width,h,.055);
@@ -256,8 +300,9 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
     labels.push({id:feature.id,name,palette,windowCount,wallMaterial:design.stone??palette,roof});
   }
   for (const [key,matrices] of Object.entries(batches)) {
-    const gothic=key.startsWith('arch ');
-    const mesh=new THREE.InstancedMesh(gothic?arch:box,materials[gothic?key.slice(5):key],matrices.length);
+    const [type,finish]=key.split(' ');
+    const geometry=type==='arch'?arch:type==='segmental'?segmental:box;
+    const mesh=new THREE.InstancedMesh(geometry,materials[finish??type],matrices.length);
     for(const [i,matrix] of matrices.entries())mesh.setMatrixAt(i,matrix);
     mesh.receiveShadow=true;
     mesh.name='Campus façade '+key;

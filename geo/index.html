@@ -50,7 +50,7 @@ import {phoneLabels, presentScene, phoneEntries, resourceMarkup} from './assets/
 import {addCampusFacades, addUnderpass, bridgeSupports, buildingDesign, buildingPalette, shellMaterial, outsideNormal, winding, openLibraryApproach} from './assets/world/campus.mjs';
 import {addEntrancePaving, groundFinish} from './assets/world/surfaces.mjs';
 import {addClockTower,clockTowerId} from './assets/world/clocktower.mjs';
-import {addRathdownApproach,rathdownBarriers,rathdownRise} from './assets/world/rathdown.mjs';
+import {addRathdownApproach,rathdownFenceIds,rathdownRise,rathdownTreeObstacle} from './assets/world/rathdown.mjs';
 import {addLuasForecourt,createLuas} from './assets/world/arrival.mjs';
 const $=id=>document.getElementById(id),data=await fetch('./data.json').then(r=>{if(!r.ok)throw Error('No OSM snapshot (HTTP '+r.status+')');return r.json()}).catch(e=>{ $('error').hidden=false;$('errorText').textContent=e.message;throw e});
 if(!data.features?.length||!data.anchor||data.radius!==1000){$('error').hidden=false;$('errorText').textContent='Geographic snapshot is incomplete.';throw Error('Invalid OSM snapshot')}
@@ -237,6 +237,7 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
  if(f.kind==='barrier'&&dist<540){
   const k=t.barrier||'wall', {height,width}=barrierDimensions(t);
   const stopWall=['way/530721241','way/998785438'].includes(f.id);
+  if(rathdownFenceIds.has(f.id)){counts.barrier++;continue;}
   if(f.id==='way/1331424713')continue; // Same line as the clock-tower garden masonry.
   if(f.id==='way/1342953792'){
    for(let i=1;i<f.coords.length;i++){
@@ -254,7 +255,12 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
   }
   if(clockTowerBoundaryWalls.has(f.id)){
    for(let i=1;i<f.coords.length;i++){
-    const a=f.coords[i-1],b=f.coords[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    const a=f.coords[i-1],end=f.coords[i];
+    const length=Math.hypot(end[0]-a[0],end[1]-a[1]);
+    const gateReturn=f.id==='way/1502766423'&&i===f.coords.length-1;
+    const len=gateReturn?length-12:length;
+    const b=gateReturn?a.map((value,j)=>value+(end[j]-value)*len/length):end;
+    if(gateReturn)lineMesh(scene,b,end,width,1.63,districtStone([34,-29]));
     lineMesh(scene,a,b,width,.43,districtStone(c));
     lineMesh(scene,a,b,.064,.047,railMat,false,1.35);
     const bars=Math.ceil(len/.19);
@@ -431,7 +437,7 @@ const missions=landmarkMatches.map(([name,re,description,fallback])=>{
 // The player is represented by a 1.74-metre upright capsule; its ground
 // contact is a circular 0.34m radius. Building footprints and *thick* wall,
  // railing and hedge volumes share the same metre-based coordinates as the map.
-const collision=makeCollisionWorld([...zone,...bridgeSupports,...rathdownBarriers],{playerRadius:.34,worldRadius:990,worldExtent:550,cellSize:18});
+const collision=makeCollisionWorld([...zone,...bridgeSupports,rathdownTreeObstacle],{playerRadius:.34,worldRadius:990,worldExtent:550,cellSize:18});
 
 // East Quad exterior entry prototype: source-faithful footprint, provisional
 // door composition informed by the user's observation (door / revolving / door).
@@ -1043,7 +1049,8 @@ function buildMissionBuildingDoors(){
   if(!faces.length)throw Error('No accessible doorway for '+mission.name);
   const {x,n,ox,on,interaction}=faces[0];
   const g=new THREE.Group();
-  g.position.set(x+ox*.20,groundHeight(x,n),-n-on*.20);
+  const faceOffset=rathdown?.64:.20;
+  g.position.set(x+ox*faceOffset,groundHeight(x,n),-n-on*faceOffset);
   g.rotation.y=Math.atan2(ox,-on);
   const frame=mat(historic?0x6d6a63:library?0x2d3436:0x52595b,.58);
   const glazing=new THREE.MeshPhysicalMaterial({color:glassmanogue?0x385e73:historic?0x465359:library?0x344952:0x597e89,metalness:.15,
@@ -1084,11 +1091,13 @@ function buildMissionBuildingDoors(){
   const signWidth=mission.name==='Academic Hub & Library'?5.1:3.3;
   const labelWidth=chapel?1.65:signWidth;
   const signHeight=central?.31:.43;
-  const sign=add(new THREE.PlaneGeometry(labelWidth,signHeight),
+  if(!rathdown){
+   const sign=add(new THREE.PlaneGeometry(labelWidth,signHeight),
     new THREE.MeshBasicMaterial({map:doorSignTexture(mission.name,labelWidth/signHeight)}),
     chapel?1.95:0,chapel?1.56:height+(library?.90:central?.80:.37),
     library?1.728:central?1.20:.245);
-  sign.name='Entrance sign · '+mission.name;
+   sign.name='Entrance sign · '+mission.name;
+  }
   if(chapel){
    const arch=new THREE.Shape();
    arch.moveTo(-1.42,0);arch.lineTo(-1.42,2.0);
@@ -1135,8 +1144,8 @@ addEntrancePaving(scene,missionDoorRegistry,groundHeight,(x,n,door)=>{
  // Leave the planted centre of the Central Quad court between its walkways.
  return door.id==='central'&&x<-136&&x>-159&&n>118&&n<132;
 });
-const rathdownApproach=addRathdownApproach(scene,groundHeight,districtStone([12,-26]),(x,n)=>
- collision.query(x,n,0)?.kind==='building'||((x-.2)/5.2)**2+((n+31.7)/4.0)**2<1);
+const rathdownApproach=addRathdownApproach(scene,groundHeight,districtStone([12,-26]),zone,
+ (x,n)=>collision.query(x,n,0)?.kind==='building');
 const campusFacadeAudit=addCampusFacades(scene,facadeBuildings,groundHeight,missionDoorRegistry);
 const clockTower=zone.find(feature=>feature.id===clockTowerId);
 if(clockTower)campusFacadeAudit.push(addClockTower(scene,clockTower,groundHeight,

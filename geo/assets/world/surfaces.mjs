@@ -44,7 +44,6 @@ export function groundFinish(type){
 
 // Local approach extents follow the photographed façades and existing pedestrian edges.
 const plazas={
- rathdown:{width:19,depth:10,finish:'setts'},
  lower:{width:24,depth:11,finish:'granite',band:true},
  central:{width:16,depth:13,finish:'granite',band:true},
  glass:{width:12,depth:7,finish:'setts'},

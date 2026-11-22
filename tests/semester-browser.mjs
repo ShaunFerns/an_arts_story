@@ -142,6 +142,8 @@ try {
     return {rise:g.terrain.heightAt(...head)-g.terrain.heightAt(...foot),midpoint};
   });
   assert(Math.abs(ramp.rise-audit.rathdown.rise)<.04);
+  assert(audit.rathdown.foot[0]>43&&audit.rathdown.foot[1]<-54&&audit.rathdown.head[0]<35);
+  assert.deepEqual([...audit.rathdown.railSources].sort(),['way/1355378351','way/1355378352','way/1355378353']);
   const rathdown=audit.doors.find(d=>d.id==='rathdown');
   assert(rathdown.outward[1]<-.85&&rathdown.door[1]<-24);
 

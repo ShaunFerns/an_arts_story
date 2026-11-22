@@ -6,7 +6,7 @@ const slate=new THREE.MeshStandardMaterial({color:0x454a52,roughness:.91});
 const heritage={
  'way/281880562':{stone:'lowerStone',levels:2,eaves:9.5,roof:'hip',rise:1.65},
  'way/310375420':{stone:'chapelStone',levels:1,eaves:7.4,roof:'gable',rise:3.9},
- 'way/310375422':{stone:'wardStone',levels:2,eaves:8.8,roof:'gable',rise:3.25},
+ 'way/310375422':{stone:'rathdownStone',levels:2,eaves:6.85,roof:'gable',rise:4.12,ranges:true},
  'way/516821746':{stone:'infirmaryStone',levels:2,eaves:7.8,roof:'hip',rise:3.0},
  'way/516821745':{stone:'infirmaryStone',levels:2,eaves:7.8,roof:'gable',rise:3.15},
  'way/396704720':{stone:'wardStone',levels:3,eaves:11.2,roof:'gable',rise:3.7},
@@ -85,7 +85,56 @@ export function addBuildingRoof(scene,feature,design,base,wallMaterial) {
    [a,lowA],[b,topB],[b,lowB],[a,lowA],[a,topA],[b,topB]])v(walls,p,h);
  };
  let ridgeHeight=design.eaves;
- if(design.roof==='terrace'){
+ if(design.ranges){
+  // Each wing gets its own ridge. All slopes are trimmed against the mapped outline.
+  const axis=[8.8,-3.6].map(v=>v/Math.hypot(8.8,3.6));
+  const side=[-axis[1],axis[0]];
+  const offset=p=>[p[0]-2,p[1]+25.6];
+  const u=p=>dot(offset(p),axis),d=p=>dot(offset(p),side);
+  const wings=[
+   {width:[-63.4,-26.8],depth:[20.5,33.8],pitch:'cross',rise:4.02},
+   {width:[-27.5,27.25],depth:[14.35,24.3],pitch:'cross',rise:3.23},
+   {width:[-27.6,-15.0],depth:[9.5,24.1],pitch:'long',rise:4.00,hip:true},
+   {width:[18.3,27.25],depth:[10,27.72],pitch:'long',rise:3.85,hip:true},
+   {width:[-4.85,4.85],depth:[-.1,20.4],pitch:'long',rise:3.92,hip:true},
+   {width:[-6.8,5.9],depth:[20,34.05],pitch:'long',rise:4.10,hip:true},
+   {width:[-15.4,-6.5],depth:[20.8,34.1],pitch:'cross',rise:3.03,hip:true},
+   {width:[-28.8,-19.3],depth:[26.2,37.7],pitch:'long',rise:3.65},
+   {width:[-46.6,-35],depth:[27.6,42.4],pitch:'long',rise:3.72,hip:true},
+   {width:[-56.2,-46.9],depth:[28,37.6],pitch:'long',rise:3.58},
+  ];
+  const perimeter=plan.map((a,j)=>[a,plan[(j+1)%plan.length]]);
+  const onPerimeter=(a,b)=>perimeter.some(([q,r])=>{
+   const dx=r[0]-q[0],dn=r[1]-q[1],span=dx*dx+dn*dn;
+   if(span<1e-9)return false;
+   return [a,b].every(([x,n])=>{
+    const t=((x-q[0])*dx+(n-q[1])*dn)/span;
+    return t>=-.0001&&t<=1.0001&&Math.abs((x-q[0])*dn-(n-q[1])*dx)<.01;
+   });
+  });
+  for(const {width:[w0,w1],depth:[d0,d1],pitch,rise,hip} of wings){
+   const cross=pitch==='long'?u:d,along=pitch==='long'?d:u;
+   const [min,max]=pitch==='long'?[w0,w1]:[d0,d1];
+   const [start,end]=pitch==='long'?[d0,d1]:[w0,w1];
+   const slope=rise/((max-min)/2);
+   const planes=[p=>(cross(p)-min)*slope,p=>(max-cross(p))*slope];
+   if(hip)planes.push(p=>(along(p)-start)*slope,p=>(end-along(p))*slope);
+   for(const tri of triangles){
+    const bounds=clip(clip(clip(clip(tri,u,w0,true),u,w1,false),d,d0,true),d,d1,false);
+    for(const plane of planes){
+     const face=planes.filter(next=>next!==plane).reduce((poly,next)=>clip(poly,p=>next(p)-plane(p),0,true),bounds);
+     horizontal(face,p=>design.eaves+Math.max(0,plane(p)));
+     for(let j=0;j<face.length;j++){
+      const a=face[j],b=face[(j+1)%face.length];
+      const va=[u(a),d(a)],vb=[u(b),d(b)];
+      const atEdge=[w0,w1,d0,d1].some((edge,k)=>Math.abs(va[k>>1]-edge)<.001&&Math.abs(vb[k>>1]-edge)<.001);
+      if(atEdge||onPerimeter(a,b))upright(a,b,design.eaves,design.eaves,design.eaves+Math.max(0,plane(a)),design.eaves+Math.max(0,plane(b)));
+     }
+    }
+   }
+  }
+  ridgeHeight=design.eaves+design.rise;
+ }else if(design.roof==='terrace'){
   const value=p=>dot(p,design.axis);
   for(const tri of triangles){
    for(let i=0;i<design.tiers.length;i++){
