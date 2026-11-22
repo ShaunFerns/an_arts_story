@@ -505,14 +505,19 @@ function buildEastQuadFacade(){
    const da=Math.hypot(a[0]-doorEnd[0],a[1]-doorEnd[1]);
    const db=Math.hypot(b[0]-doorEnd[0],b[1]-doorEnd[1]);
    if(Math.min(da,db)<5){
-    const signLocalX=(da<db?1:-1)*(len/2-4.7);
+    // Place the sign beside the doorway return (not far along the long wing).
+    // This wall is the original mapped masonry surface, not a projecting bay.
+    // 3.05 m from the connected end keeps the 5.4 m lettering on this wall.
+    const signLocalX=(da<db?1:-1)*(len/2-3.05);
     // Existing wall plane is at local z=0, lettering sits only 3cm clear.
     const sign=new THREE.Mesh(new THREE.PlaneGeometry(5.4,5.0),
       new THREE.MeshBasicMaterial({map:eastQuadGoldTexture,transparent:true,
         depthWrite:false,side:THREE.DoubleSide,alphaTest:.05}));
     sign.name='EastQuadGoldNorthEntranceWallSign';
-    sign.position.set(signLocalX,5.3,.035);wall.add(sign);
+    sign.position.set(signLocalX,5.3,.055);wall.add(sign);
+    // Use the original dark brick tone directly behind the sign in the reference.
     const brickWall=wall.children.find(o=>o.geometry?.type==='PlaneGeometry'&&o!==sign);
+    if(brickWall?.material)brickWall.material.color.set(0x89756c);
     if(brickWall)brickWall.name='EastQuadRightSignBrickWall';
     const gpos=new THREE.Vector3(signLocalX,5.3,.035);
     const world=wall.localToWorld(gpos.clone());
@@ -726,7 +731,9 @@ function createEastQuadCurvedSeating(number=0){
  return info;
 }
 createEastQuadCurvedSeating(0);
-createEastQuadCurvedSeating(1);
+// A second curved planter appeared in the concept interpretation, but its
+// real position is not established by the available reference photography.
+// Do not generate an arbitrary second island until its location is confirmed.
 function intersectsPlanter(x,n){
  return blockedPlazaAreas.some(o=>{
   const dx=x-o.x,dn=n-o.n;
