@@ -340,16 +340,73 @@ function createEastQuadEntry(){
  // Plaza paving and dark threshold channel visible in the source photograph.
  add(new THREE.BoxGeometry(8.6,.08,2.65),threshold,0,.014,1.25);
  add(new THREE.BoxGeometry(8.6,.035,.11),darkMetal,0,.063,2.35);
- // The photo also shows DUBLIN / university lettering on the adjacent brick
- // façade, *not* a floating road sign. Keep this modest and legible.
- const plaqueCanvas=document.createElement('canvas');plaqueCanvas.width=512;plaqueCanvas.height=512;
- const pc=plaqueCanvas.getContext('2d');pc.fillStyle='#927d69';pc.fillRect(0,0,512,512);
- for(let y=0;y<512;y+=24){pc.strokeStyle=y%48===0?'#6f6457':'#aa9582';pc.lineWidth=1.5;pc.beginPath();pc.moveTo(0,y);pc.lineTo(512,y);pc.stroke()}
- pc.fillStyle='#353332';pc.font='bold 80px Arial,sans-serif';pc.fillText('DUBLIN',45,228);
- pc.font='bold 34px Arial,sans-serif';pc.fillText('TECHNOLOGICAL',45,282);pc.fillText('UNIVERSITY',45,324);
- const plaqueTexture=new THREE.CanvasTexture(plaqueCanvas);plaqueTexture.colorSpace=THREE.SRGBColorSpace;
- const brickPanel=new THREE.Mesh(new THREE.PlaneGeometry(5.2,8),new THREE.MeshStandardMaterial({map:plaqueTexture,roughness:.92,side:THREE.DoubleSide}));
- brickPanel.position.set(7.05,4,.02);group.add(brickPanel);
+ // East Quad's real identity sign is the recognition cue: individual warm
+ // gold raised T / DUBLIN lettering against *dark variegated brick*, with
+ // bilingual small lettering and AN CHEARNÓG THOIR — EAST QUAD below.
+ // Reference photos:
+ // https://www.ste.ie/east-quad-grangegorman-ahr-architects
+ // https://www.ndfa.ie/projects/p2 (East Quad building-signage photograph)
+ // Canvas supplies high-resolution surface markings; offset overlay
+ // approximates dimensional metal letters without custom downloaded fonts.
+ const brickCanvas=document.createElement('canvas');
+ brickCanvas.width=1024;brickCanvas.height=1024;
+ const pc=brickCanvas.getContext('2d');
+ pc.fillStyle='#625a50';pc.fillRect(0,0,1024,1024);
+ // Repeated Clifton-Grey-like brick coursing. Stylised, not a proprietary
+ // masonry image or a claim of surveyed individual brick positions.
+ let seed=5732;
+ const noise=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ for(let row=0;row<53;row++){
+  const yy=row*20,offset=row%2?39:0;
+  for(let x=-80+offset;x<1060;x+=78){
+   const v=noise(),warm=noise()>.68;
+   const rgb=warm?[94+v*22,83+v*18,68+v*15]:[78+v*31,76+v*27,72+v*24];
+   pc.fillStyle='rgb('+rgb.map(Math.round).join(',')+')';
+   pc.fillRect(x+1,yy+1,76,17);
+   pc.fillStyle='rgba(18,17,16,.09)';pc.fillRect(x+1,yy+15,76,3);
+  }
+ }
+ const brickTexture=new THREE.CanvasTexture(brickCanvas);
+ brickTexture.colorSpace=THREE.SRGBColorSpace;
+ brickTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+ const brickPanel=new THREE.Mesh(
+  new THREE.PlaneGeometry(5.6,12.3),
+  new THREE.MeshStandardMaterial({map:brickTexture,roughness:.94,side:THREE.DoubleSide})
+ );
+ brickPanel.position.set(7.25,6.15,.01);group.add(brickPanel);
+ // Tall narrow metal-framed windows above the wall-mounted lettering.
+ const windowMat=new THREE.MeshPhysicalMaterial({color:0x465c66,roughness:.23,metalness:.18,transparent:true,opacity:.87,side:THREE.DoubleSide});
+ for(const x of [5.55,7.14,8.73]){
+  const frame=add(new THREE.BoxGeometry(1.20,3.65,.14),darkMetal,x,9.9,.10);
+  add(new THREE.BoxGeometry(1.04,3.48,.018),windowMat,x,9.9,.185);
+ }
+ // Transparent canvas lets the lettering sit on the brick and shadow
+ // independently: no background rectangle/advertising-board effect.
+ const lettersCanvas=document.createElement('canvas');
+ lettersCanvas.width=1200;lettersCanvas.height=1100;
+ const lc=lettersCanvas.getContext('2d');
+ const gold='#e4cc94',labelColor='#b5a99c';
+ lc.textBaseline='alphabetic';
+ lc.fillStyle=gold;
+ lc.font='900 180px Arial,Helvetica,sans-serif';lc.fillText('T',105,430);
+ lc.font='900 200px Arial,Helvetica,sans-serif';lc.fillText('DUBLIN',102,635);
+ lc.font='bold 36px Arial,Helvetica,sans-serif';
+ lc.fillText('OLLSCOIL TEICNEOLAÍOCHTA',355,384);
+ lc.fillText('BHAILE ÁTHA CLIATH',355,428);
+ lc.font='bold 30px Arial,Helvetica,sans-serif';
+ lc.fillText('TECHNOLOGICAL',570,684);
+ lc.fillText('UNIVERSITY DUBLIN',570,723);
+ lc.fillStyle=labelColor;lc.font='bold 32px Arial,Helvetica,sans-serif';
+ lc.fillText('AN CHEARNÓG THOIR – EAST QUAD',122,855);
+ const lettersTexture=new THREE.CanvasTexture(lettersCanvas);
+ lettersTexture.colorSpace=THREE.SRGBColorSpace;
+ const faceMaterial=new THREE.MeshBasicMaterial({map:lettersTexture,transparent:true,depthWrite:false,side:THREE.DoubleSide,alphaTest:.04});
+ const signFace=new THREE.Mesh(new THREE.PlaneGeometry(5.60,5.1),faceMaterial);
+ signFace.position.set(7.25,4.9,.145);group.add(signFace);
+ // Give letters a soft backing shadow to suggest raised metal lettering.
+ const shadow=new THREE.Mesh(new THREE.PlaneGeometry(5.60,5.1),
+  new THREE.MeshBasicMaterial({map:lettersTexture,color:0x443a32,transparent:true,opacity:.25,depthWrite:false,side:THREE.DoubleSide,alphaTest:.04}));
+ shadow.position.set(7.27,4.87,.116);group.add(shadow);
  scene.add(group);
  // Path-side interaction node: prefer pedestrian position outside the entry.
  let target=null;
@@ -456,7 +513,7 @@ function addCampusSignAt(m,kind,label){
  sign.rotation.y=Math.atan2(-(m.centre?.[0]??x)+x,-(m.centre?.[1]??n)+n);
  scene.add(sign);campusSigns.push({kind,label,location:m.name});
 }
-addCampusSignAt(missions.find(m=>m.name==='East Quad'),'identity','East Quad');
+// The East Quad identity is now represented on its actual façade family above; no duplicate freestanding blue sign.
 addCampusSignAt(missions.find(m=>m.name==='Rathdown House'),'wayfinding','Rathdown House');
 function closeConversation(){$('npcDialog').hidden=true;nearbyNpc=null;}
 $('npcClose').onclick=closeConversation;
