@@ -161,6 +161,10 @@ const review=await eqReview.evaluate(()=>({location:window.__artsGeo.spawnLocati
 console.log('East Quad direct-review spawn:',JSON.stringify(review));
 const signLine=await eqReview.evaluate(()=>window.__artsGeo.eastQuadSignSightline);
 console.log('North entrance sign visibility ray:',JSON.stringify(signLine));
+if(!signLine||!signLine.hits.some(h=>h.sign))throw Error('Gold wall sign cannot be seen along the north entrance sightline');
+const signHit=signLine.hits.findIndex(h=>h.sign);
+if(signLine.hits.slice(0,signHit).some(h=>h.distance<signLine.distance-.5))throw Error('Gold East Quad identity sign is occluded from entrance approach');
+
 
 const calibration=await eqReview.evaluate(()=>{
  const g=window.__artsGeo;
