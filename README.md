@@ -6,7 +6,7 @@ An independently developed educational narrative-game prototype exploring a new 
 
 **[OPEN THE CURRENT GAME — GEOGRAPHIC BUILD](https://shaunferns.github.io/an_arts_story/geo/)**
 
-This is the **active working version**. It uses a Rathdown-centred OpenStreetMap geographic snapshot, scaled campus footprints, boundaries, a mission map, NPC encounters, and **first-person movement by default**. Press **V** to switch to third-person for testing; **M** opens the mission map. It is still incomplete and parts of the campus require location verification.
+This is the **active working version**. It uses a Rathdown-centred OpenStreetMap geographic snapshot, scaled campus footprints, boundaries, a mission map, NPC encounters, and **first-person movement by default**. Players **start at Broadstone–University Luas**, while Rathdown remains the geographic coordinate origin; the mission map opens at a closer campus scale. Press **V** to switch to third-person for testing; **M** opens the mission map. It is still incomplete and parts of the campus require location verification.
 
 The [project homepage](https://shaunferns.github.io/an_arts_story/) directs visitors to this same active build. Keep this link and the homepage current whenever the active build changes. Do not describe an older build as the latest.
 
@@ -22,8 +22,8 @@ Our aim is to test whether story-based participation can help students navigate 
 
 - **Active build:** the `geo/` experience; the superseded `review/` walking prototype has been removed.
 - **Perspective:** first-person by default. This avoids assigning the player a particular gender, clothing or appearance and helps foreground their own experience. Third-person remains a testable option, not the default.
-- **Characters:** focus representation and natural clothing/posing on the people the player meets. Existing rigged characters and animations need further visual quality review.
-- **Environment:** geographic plausibility, walkable routes, site boundaries, campus recognition, access and performance come before detailed façades.
+- **Characters:** current NPCs have simple, coloured prototype clothing overlays on the existing Quaternius rig. These overlays are not finished skinned garments and need proportion, animation and appearance review. Use properly rigged outfits before a student-facing release.
+- **Environment:** geographic plausibility, walkable routes, site boundaries, campus recognition, access and performance come before detailed façades. East Quad is documented as five floors; its current 20 m overall height is provisional and should be checked against drawings.
 - **Integration:** migrate the meaningful induction and advising narrative from the archived story into the active environment rather than operating two competing games.
 - **Validation:** review screenshots and routes with people who know the campus, then test with students; automated browser checks alone do not establish geographic or educational quality.
 
