@@ -45,6 +45,13 @@ if(entries.length!==2||!entries.some(e=>e.northFacing&&e.provisional&&e.interact
 if(entries.some(e=>e.wallLength<7))throw Error('Entrances not grounded in the mapped East Quad perimeter');
 if(JSON.stringify(entries[0].face)===JSON.stringify(entries[1].face))throw Error('Photo-referenced northern entrance and retained secondary doors overlap');
 if(entries[0].sign?.side!=='right when facing main entrance'||!entries[0].sign.mountedOnBrick)throw Error('Photo-referenced wall lettering must be to the right of the northern door');
+const signBuild=await page.evaluate(()=>window.__artsGeo.eastQuadSignGeometry);
+console.log('Mounted gold lettering and right-hand brick bay:',JSON.stringify(signBuild));
+if(!signBuild||!signBuild.visible||!signBuild.wallVisible||signBuild.width<5||signBuild.height<4)throw Error('East Quad gold sign missing from scene');
+if(Math.hypot(signBuild.position[0]-entries[0].mainWallMidpoint[0],signBuild.position[2]-entries[0].mainWallMidpoint[1])>12)throw Error('East Quad signage is not adjacent to northern doorway');
+const paving=await page.evaluate(()=>window.__artsGeo.eastQuadPavingAudit);
+console.log('East Quad paved forecourt:',JSON.stringify(paving));
+if(!paving.created||paving.width<25||paving.lightMarkers<4)throw Error('Entrance forecourt is still bare grass');
 const facade=await page.evaluate(()=>window.__artsGeo.eastQuadFacadeAudit);
 console.log('Full East Quad facade build:',JSON.stringify(facade));
 if(facade.wallFaces<4||facade.windowBays<20||facade.brickCoverageM<40)throw Error('East Quad still has untextured building sides');
