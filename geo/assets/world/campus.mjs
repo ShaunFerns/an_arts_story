@@ -9,7 +9,7 @@ const materials = {
   wardStone:new THREE.MeshStandardMaterial({color:0xa9a69a,roughness:.96}),
   infirmaryStone:new THREE.MeshStandardMaterial({color:0x959698,roughness:.96}),
   chapelStone:new THREE.MeshStandardMaterial({color:0x817f7a,roughness:.96}),
-  clockStone:new THREE.MeshStandardMaterial({color:0xa59a86,roughness:.96}),
+  clockStone:new THREE.MeshStandardMaterial({color:0xa9a593,roughness:.96}),
   sash:new THREE.MeshStandardMaterial({color:0x70716d,roughness:.75}),
   terracotta:new THREE.MeshStandardMaterial({color:0x9d7850,roughness:.85}),
   polishedStone:new THREE.MeshStandardMaterial({color:0x858a86,roughness:.73}),

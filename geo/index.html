@@ -126,7 +126,7 @@ function collect(batch,key,make,value){
  if(!batch.has(key))batch.set(key,make());
  batch.get(key).values.push(value);
 }
-function lineMesh(p,a,b,width,height,material,topSurface=false){
+function lineMesh(p,a,b,width,height,material,topSurface=false,offset=0){
  const dx=b[0]-a[0],dn=b[1]-a[1],len=Math.hypot(dx,dn);
  if(len<.15)return;
  // Subdivide long mapped lines, following the same provisional height
@@ -140,7 +140,7 @@ function lineMesh(p,a,b,width,height,material,topSurface=false){
   const segLen=direction.length();
   if(segLen<.01)continue;
   const x=(ax+bx)/2,n=(an+bn)/2;
-  const placement=new THREE.Vector3(x,(y1+y2)/2+(topSurface?height/2-.01:height/2),-n);
+  const placement=new THREE.Vector3(x,(y1+y2)/2+(topSurface?height/2-.01:height/2)+offset,-n);
   const rotation=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),direction.normalize());
   if(buildTerrain&&p===scene){
    const matrix=new THREE.Matrix4().compose(placement,rotation,new THREE.Vector3(width,height,segLen+.03));
@@ -238,10 +238,25 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
   const k=t.barrier||'wall', {height,width}=barrierDimensions(t);
   const stopWall=['way/530721241','way/998785438'].includes(f.id);
   if(f.id==='way/1331424713')continue; // Same line as the clock-tower garden masonry.
+  if(f.id==='way/1342953792'){
+   for(let i=1;i<f.coords.length;i++){
+    const [ax,an]=f.coords[i-1],[bx,bn]=f.coords[i];
+    const positions=Math.ceil(Math.hypot(bx-ax,bn-an)/1.4);
+    for(let j=0;j<=positions;j++){
+     const x=ax+(bx-ax)*j/positions,n=an+(bn-an)*j/positions;
+     const matrix=new THREE.Matrix4().makeScale(.11,.77,.11);
+     matrix.setPosition(x,groundHeight(x,n)+.385,-n);
+     collect(terrainLines,tile(x,n)+':'+railMat.id,()=>({material:railMat,values:[]}),matrix);
+    }
+   }
+   counts.barrier++;
+   continue;
+  }
   if(clockTowerBoundaryWalls.has(f.id)){
    for(let i=1;i<f.coords.length;i++){
     const a=f.coords[i-1],b=f.coords[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);
     lineMesh(scene,a,b,width,.43,districtStone(c));
+    lineMesh(scene,a,b,.064,.047,railMat,false,1.35);
     const bars=Math.ceil(len/.19);
     for(let j=0;j<=bars;j++){
      const t=j/bars;
