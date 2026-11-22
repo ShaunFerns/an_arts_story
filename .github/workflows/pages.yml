@@ -23,8 +23,10 @@ jobs:
           node-version: '22'
       - name: Install pinned Three.js library
         run: npm install --no-audit --no-fund --no-save three@0.160.0 playwright@1.56.1
-      - name: Source Rathdown-centred OpenStreetMap snapshot
-        run: python3 scripts/build-geodata-osm.py
+      - name: Verify vendored Rathdown geographic snapshot
+        run: |
+          test -s geo/data.json || { echo 'Missing fixed OSM snapshot. Generate with python3 scripts/build-geodata-osm.py then commit the source data.'; exit 1; }
+          python3 -c "import json; d=json.load(open('geo/data.json')); assert d['anchor']['id']=='way/310375422' and d['counts']['barrier']>0"
       - name: Prepare self-contained site assets
         run: |
           test -f index.html || { echo "::error::Upload the current game as index.html at repository root."; exit 1; }
@@ -59,12 +61,15 @@ jobs:
           sleep 2
           node tests/smoke-test.mjs
           node tests/route-review-smoke.mjs
+          node tests/geo-smoke.mjs
       - name: Attach location-review screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: location-review-screenshots
-          path: /tmp/arts-route-*.png
+          path: |
+            /tmp/arts-route-*.png
+            /tmp/arts-geo-*.png
           if-no-files-found: ignore
       - uses: actions/upload-pages-artifact@v3
         with:
