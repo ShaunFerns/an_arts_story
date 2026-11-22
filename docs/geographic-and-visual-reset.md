@@ -62,3 +62,47 @@ Photographs and maps are **design references**, not approved game textures. Chec
 ## Decision point
 
 Review a small, high-quality *vertical slice* from Broadstone → East Quad → Lower House → Rathdown crossing. If it is convincingly navigable, attractive and performant, extend it to the rest of the campus and story. If repeated visual reviews fail, scope a top-down/isometric version that still conveys route, places and choices, rather than increasing 3D complexity without educational return.
+
+
+## Approved geographic production standard — 1 km Rathdown-centred world (22 November 2026)
+
+The project owner has agreed that **plain, low-detail building blocks are acceptable at this stage**, provided their **footprints, heights, orientation and relationships to the walking routes are plausible and measured**. Prioritise terrain, streets, boundaries and accessibility over elaborate façades.
+
+### Spatial foundation
+
+- Use Rathdown House as origin `(0,0)` in the horizontal game coordinate system. Geographic coordinates/CRS and the exact anchor position must be recorded from an inspected map or geospatial dataset before generating any placements. **1 world unit = 1 metre**.
+- Use **1 km radius** from the Rathdown origin for the geographic context; near-campus geometry may use richer detail, while the outer ring is inexpensive backdrop. A radius is not permission to invent boundary features at 1 km.
+- Building data model: source, source date, provenance/licence, footprint polygon, ground elevation, measured height or a clearly marked height estimate, entrances and orientation. Only render a block if its footprint is grounded. If height is unknown, mark it estimated rather than claiming accuracy.
+- At minimum align the Broadstone Luas cutting and pedestrian ramp, the overhead road underpass, East Quad (with north/south main openings relative to an approximately east–west path), Serpentine Walk, Lower House, road crossing, Rathdown House, and the open playing-field landscape. Calibrate elevations separately from plan positions.
+
+### Boundaries and garden barriers are **required early features**
+
+These determine legible walking routes and historically distinctive campus character; add them in the first georeferenced base scene, before façade detailing.
+
+| Geometry type | Source and rendering treatment | Gameplay effect |
+| --- | --- | --- |
+| Historic **stone/brick boundary walls** | Footprint/alignment from campus plans, verified OSM walls and GDA conservation references; plausible measured height; coursed masonry texture | Solid barriers; wall openings only at documented gates |
+| **Metal fences and railings** | OSM `barrier=fence` where available; current photographs / site drawings otherwise | Collision where applicable; visibility through rails |
+| **Garden walls, hedges and planted edges** | OSM `barrier=hedge`, garden/landscape geometry and verified site observations | Low/soft barriers, visually distinct from historic perimeter walls |
+| **Entrance gates and carriageway gates** | Building and estate reference drawings; preserve openings and distinctive pillars | Walkable connections on the verified pedestrian network |
+| **Raised planters, seating and garden beds** | High-detail focal points at East Quad entrances and southern Lower House entrance | Social encounter locations; avoid obstructing accessible routes |
+| **Retaining walls and underpass abutments** | Elevation/cross-section where available, supplemented by site-grounded photographic checking | Explain ramps and vertical changes; maintain walkable clearance |
+
+OpenStreetMap tags alone are not enough to establish a feature's present-day existence: record `confidence: surveyed | authoritative_map | current_image | historic_reference | provisional` and avoid promoting historic proposals into the present-day campus. The 2012 GDA boundary-wall inventory and current GDA Green Fingers / Ivy Avenue materials are useful supplementary references, but are not substitutes for a modern site survey.
+
+Keep boundary geometry separately editable as `walls`, `railings`, `hedges`, `gates`, `planters`, `retaining_walls` and `paths`. For sourced vector input, preserve feature IDs and tags. Respect accessible crossings, paths and gate gaps; do not close a usable pedestrian route with a decorative wall. Make boundary footprints both visible and collidable where required.
+
+### Acceptance gate
+
+1. A known 1.70–1.80 m human avatar stands at credible scale against building blocks, standard exterior doors, boundary walls and benches.
+2. The entire walk from Broadstone–University through East Quad, Lower House and Rathdown crossing is connected by plausible traversable geometry; opening positions agree with reviewed evidence.
+3. The original estate's historic boundaries and the main garden barriers are visible and in approximately correct locations, with their certainty noted.
+4. A plan view and ground-level screenshots expose differences between observed facts and estimates; no claim of geographic accuracy until the site-familiar reviewer has signed off.
+
+**Status:** explicit production requirements. The existing `/review/` geometry was made before georeferencing and does *not* satisfy this gate yet. Do not present it as the completed Rathdown-centred 1 km model.
+
+### Reference additions
+
+- [GDA conservation assessment: existing Grangegorman boundary walls and entrances](https://ggda.ie/media/a3vnvuc2/13_gg-appendix_2a.pdf)
+- [GDA Green Finger, Playscape & Ivy Avenue](https://ggda.ie/what-we-do/projects/green-finger-playscape-ivy-avenue/)
+- [OpenStreetMap: barrier=wall](https://wiki.openstreetmap.org/wiki/Wall) and [barrier=hedge](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dhedge)
