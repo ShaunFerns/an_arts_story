@@ -1,4 +1,4 @@
-// Collision system for the flat, georeferenced Grangegorman prototype.
+// Plan-view collision system for the georeferenced Grangegorman prototype. Terrain elevation is handled by the shared groundHeight function in geo/index.html; collisions use horizontal footprints.
 // A vertical 1.74m player capsule has a circular 0.34m horizontal footprint.
 // Geometry is measured in metres in OSM east/north coordinates.
 export const DEFAULT_RADIUS = 0.34;

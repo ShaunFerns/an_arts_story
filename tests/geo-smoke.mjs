@@ -14,6 +14,19 @@ const eyeHeight=await page.evaluate(()=>window.__artsGeo.cameraHeight);
 console.log('Initial camera eye height and nearest NPC:',eyeHeight,spawnNpcDistance);
 if(spawnNpcDistance<3.5)throw Error('First-person starts too close to an NPC');
 if(eyeHeight<1.45||eyeHeight>2.0)throw Error('First-person eye height is outside expected standing range');
+const terrainChecks=await page.evaluate(()=>{
+ const t=window.__artsGeo.terrain;
+ return {source:t.model.source,grade:t.model.difference,routeLength:t.routeLength,
+  luasY:t.heightAt(...t.luas),eastY:t.heightAt(...t.eastQuad),
+  eyeAboveGround:window.__artsGeo.eyeHeightAboveGround,
+  playerGround:window.__artsGeo.terrainPlayerHeight};
+});
+console.log('Provisional 3D terrain and player:',JSON.stringify(terrainChecks));
+if(terrainChecks.source!=='provisional_luas_to_east_quad')throw Error('Missing graded terrain implementation');
+if(Math.abs(terrainChecks.luasY+4)>.05||Math.abs(terrainChecks.eastY)>.05)throw Error('Provisional Luas-to-East Quad grade does not match model anchors');
+if(terrainChecks.eyeAboveGround<1.45||terrainChecks.eyeAboveGround>1.8)throw Error('Player eyes must track local terrain');
+if(terrainChecks.routeLength<40||terrainChecks.routeLength>900)throw Error('Unreasonable route anchor distance');
+
 const arrival=await page.evaluate(()=>({
  location:window.__artsGeo.spawnLocation,
  distance:window.__artsGeo.startDistanceFromLuas,
@@ -64,6 +77,8 @@ if(await page.locator('#overlay').getAttribute('hidden')===null)throw Error('M d
 const eastIndex=g.missions.findIndex(m=>m.name==='East Quad');
 await page.evaluate(i=>window.__artsGeo.visit(i),eastIndex);
 const pos=await page.evaluate(()=>window.__artsGeo.position);
+const eastHeight=await page.evaluate(()=>window.__artsGeo.terrainPlayerHeight);
+if(Math.abs(eastHeight)>.7)throw Error('East Quad player floor did not track terrain');
 console.log('Player location after east-quad waypoint:',JSON.stringify(pos));
 await page.screenshot({path:'/tmp/arts-geo-east-quad.png',fullPage:true});
 const numberOfNpcs=await page.evaluate(()=>window.__artsGeo.npcs);

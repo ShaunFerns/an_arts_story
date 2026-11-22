@@ -41,4 +41,4 @@ User-supplied provisional modelling scenario (not engineering fact):
 
 ## Current implementation status
 
-**Documented for development; not yet applied to the live game's terrain.** Source evidence supports that level changes matter, but the supplied site-specific numerical elevations remain estimates. Do not silently present this as a surveyed reconstruction.
+**Implementation added in November 2026:** the 4 m provisional rise now drives the ground mesh, subdivided sloping road/path/barrier strips, building and landscape base positions, NPC placement and the player's eye/feet, all through one continuous terrain function. Actual longitudinal path grade and building entrances still require site review. This is deliberately a localized, smoothly fading grade between OSM mapped horizontal endpoints, not surveyed digital terrain. Source evidence supports that level changes matter, but the supplied site-specific numerical elevations remain estimates. Do not silently present this as a surveyed reconstruction.
