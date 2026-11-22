@@ -111,7 +111,16 @@ function createAnimations(root,bones){
  return {update(dt,next){
     if(next!==current&&actions[next]){actions[current].fadeOut(.18);actions[next].reset().fadeIn(.18).play();current=next}
     mixer.update(dt);
-   },get state(){return current},names:Object.keys(actions)};
+   },get state(){return current},names:Object.keys(actions),
+   get armVerticalities(){
+    root.updateWorldMatrix(true,true);
+    return ['leftarm','rightarm'].map(role=>bones[role]).filter(Boolean).map(b=>{
+      const elbow=b.children.find(c=>c.isBone&&c.position.lengthSq()>.000001)||b.children.find(c=>c.isBone);
+      if(!elbow)return null;
+      const start=b.getWorldPosition(new THREE.Vector3()),finish=elbow.getWorldPosition(new THREE.Vector3());
+      return finish.sub(start).normalize().y;
+    }).filter(v=>v!==null);
+   }};
 }
 const animationController=riggedPlayer?createAnimations(modelRig,rigBones):null;
 player.position.set(0,.05,0);let yaw=.4,pitch=.08,follow=16,angle=0,playing=true,selected=null,mapOpen=false,mapZoom=.6,firstPerson=true;
@@ -211,6 +220,6 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
  for(const npc of npcs)npc.body.userData.animation?.update(dt,'idle');
  const target=player.position.clone().add(new THREE.Vector3(0,1.6,0));if(firstPerson){camera.position.copy(target);camera.lookAt(target.clone().add(new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch),-Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch))));}else{const pos=target.clone().add(new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*follow,Math.sin(pitch)*follow,Math.cos(yaw)*Math.cos(pitch)*follow));camera.position.lerp(pos,.13);camera.lookAt(target);}renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=available.length?missions.indexOf(available[0]):null;missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
