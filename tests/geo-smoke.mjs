@@ -12,6 +12,7 @@ if(!g.rigged)throw Error('Geo player must use actual rigged GLB, not capsule fal
 const spawnNpcDistance=await page.evaluate(()=>window.__artsGeo.nearestNpcDistance);
 const eyeHeight=await page.evaluate(()=>window.__artsGeo.cameraHeight);
 console.log('Initial camera eye height and nearest NPC:',eyeHeight,spawnNpcDistance);
+console.log('NPC RENDERED RIG BOUNDS:',JSON.stringify(await page.evaluate(()=>window.__artsGeo.npcVisualDiagnostics)));
 if(spawnNpcDistance<3.5)throw Error('First-person starts too close to an NPC');
 if(!Number.isFinite(eyeHeight))throw Error('First-person camera height is not finite');
 const terrainChecks=await page.evaluate(()=>{
