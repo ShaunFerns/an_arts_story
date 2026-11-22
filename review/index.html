@@ -37,9 +37,40 @@ function flat(x,z,w,d,material=m.stone,y=.08,rot=0){const o=box(x,y,z,w,.12,d,ma
 function curveWalk(points,width,material=pavingMat){const L=[];for(let i=0;i<points.length-1;i++){const a=points[i],b=points[i+1],dx=b[0]-a[0],dz=b[2]-a[2],len=Math.hypot(dx,dz);const nx=-dz/len,nz=dx/len;const vertices=new Float32Array([a[0]-nx*width/2,a[1],a[2]-nz*width/2,a[0]+nx*width/2,a[1],a[2]+nz*width/2,b[0]-nx*width/2,b[1],b[2]-nz*width/2,b[0]+nx*width/2,b[1],b[2]+nz*width/2]);const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(vertices,3));geo.setIndex([0,1,2,2,1,3]);geo.computeVertexNormals();const mesh=new THREE.Mesh(geo,material);mesh.material.side=THREE.DoubleSide;mesh.receiveShadow=true;scene.add(mesh);L.push(mesh)}return L}
 const route=[[8,.12,116],[5,.18,99],[3,.40,83],[0,.91,66],[-1,1.40,49],[-2,2.10,31],[-3,2.75,13],[-4,3.45,-7],[-5,3.8,-20]];
 curveWalk(route,9);curveWalk([[-5,3.8,-20],[-20,3.8,-20]],7);const pathEast=[[-20,3.8,-20],[-26,3.8,-28],[-29,3.75,-41],[-30,3.3,-51],[-39,2.55,-64],[-51,1.8,-77]];curveWalk(pathEast,11);curveWalk([[-51,1.8,-77],[-67,.4,-82],[-82,.22,-84],[-100,.18,-86]],8);
-// Road over the Broadstone cutting. The walk passes *beneath*, with an intentionally legible underpass.
-const bridge=box(0,8.1,60,57,1.15,13.6,m.stone);const road=box(0,8.85,60,57,.15,12.4,mat(0x45494a,.97),scene,false);for(const z of [53.3,66.6])box(0,9.85,z,57,1.55,.35,m.stone);for(const x of [-28,28])box(x,4,60,2.4,8,15,m.stone);
-for(const z of [56,64]){box(-23,4.3,z,2.6,8,2.6,stoneMat);box(22,4.3,z,2.6,8,2.6,stoneMat)}
+// Broadstone road underpass: independent calibrated dimensions in world metres.
+// Bridge SOFFIT 11.0 m above local datum; walking grade near 0.9 m at this crossing.
+// Character is approximately 1.74 m tall: ~8.3 m of head-to-soffit clearance.
+const bridgeSoffit=11.0,bridgeDeckThickness=1.2,bridgeRoadTop=bridgeSoffit+bridgeDeckThickness;
+const bridgeWidth=57,bridgeDepth=16,bridgeZ=60;
+const bridgeConcrete=mat(0x979995,.92),soffitConcrete=mat(0x646b6a,.91),
+      weatheredMasonry=stoneMat,asphalt=mat(0x45484a,.97);
+const bridge=box(0,bridgeSoffit+bridgeDeckThickness/2,bridgeZ,bridgeWidth,bridgeDeckThickness,bridgeDepth,bridgeConcrete);
+const road=box(0,bridgeRoadTop+.09,bridgeZ,bridgeWidth,.18,bridgeDepth-.9,asphalt,scene,false);
+for(const z of [bridgeZ-bridgeDepth/2+.3,bridgeZ+bridgeDepth/2-.3]){
+  box(0,bridgeRoadTop+.9,z,bridgeWidth,1.8,.55,bridgeConcrete);
+  box(0,bridgeRoadTop+1.86,z,bridgeWidth,.12,.23,m.metal);
+}
+// The underside is visibly articulated rather than one flat slab.
+box(0,bridgeSoffit+.08,bridgeZ,bridgeWidth-2,.16,bridgeDepth-1.4,soffitConcrete,scene,false);
+for(let x=-21;x<=21;x+=10.5){
+  box(x,bridgeSoffit-.25,bridgeZ,.55,.62,bridgeDepth-1.2,soffitConcrete);
+}
+// Road abutments and stone retaining structure frame the pedestrian opening.
+for(const x of [-bridgeWidth/2+1.2,bridgeWidth/2-1.2]){
+  box(x,bridgeSoffit/2,bridgeZ,2.4,bridgeSoffit,bridgeDepth+1.8,weatheredMasonry);
+  box(x,bridgeSoffit-.15,bridgeZ,3.1,.6,bridgeDepth+2,bridgeConcrete);
+}
+for(const z of [bridgeZ-bridgeDepth/2-2,bridgeZ+bridgeDepth/2+2]){
+  for(const x of [-24,24]){
+    box(x,bridgeSoffit/2,z,2.2,bridgeSoffit,2.4,weatheredMasonry);
+  }
+}
+// Recessed lights and warmer light reflected from the underpass stonework.
+for(const x of [-13,0,13]){
+  box(x,bridgeSoffit-.36,bridgeZ,.65,.12,2.5,m.white,scene,false);
+  const glow=new THREE.PointLight(0xffe5b7,10,20,2);
+  glow.position.set(x,bridgeSoffit-1.25,bridgeZ);scene.add(glow);
+}
 function rampY(z){for(let i=0;i<route.length-1;i++){const a=route[i],b=route[i+1];if(z<=a[2]&&z>=b[2])return THREE.MathUtils.lerp(a[1],b[1],(a[2]-z)/(a[2]-b[2]))}return z>116?.12:3.8}
 // Retaining walls with stone texture and metal handrails.
 for(let i=0;i<route.length-1;i++){const a=route[i],b=route[i+1],dx=b[0]-a[0],dz=b[2]-a[2],len=Math.hypot(dx,dz),nx=-dz/len,nz=dx/len;for(const side of [-1,1]){const midx=(a[0]+b[0])/2+nx*5.6*side,midz=(a[2]+b[2])/2+nz*5.6*side,wall=box(midx,(a[1]+b[1])/2+.95,midz,len,1.7,.55,stoneMat);wall.rotation.y=-Math.atan2(dz,dx);const rail=box(midx,(a[1]+b[1])/2+1.95,midz,len,.10,.14,m.metal);rail.rotation.y=wall.rotation.y}}
@@ -99,6 +130,6 @@ if(player.userData.bones)animateRig(player,time,!!player.userData.walk);for(let 
 for(let i=0;i<stops.length;i++){const s=stops[i];if(Math.hypot(player.position.x-s.x,player.position.z-s.z)<11&&activeStop!==i)setStop(i)}
 renderer.render(scene,camera)}const clock=new THREE.Clock();tick();
 $('status').textContent=rigAvailable?'Playable scene ready · rigged GLB characters loaded':'Playable scene ready · character asset fallback';
-window.__artsRouteReview={ready:true,rigged:rigAvailable,diagnostics:()=>({characterHeight:playerModel?new THREE.Box3().setFromObject(playerModel).getSize(new THREE.Vector3()).y:null,characterBottom:playerModel?new THREE.Box3().setFromObject(playerModel).min.y:null,playerScale:playerModel?.scale.x,doorHeight:{east:2.5,lower:2.7,rathdown:2.64},cameraDistance:distance,lowerBuildingHeight:12,rathdownBuildingHeight:14,approachFacing:{from:[-3,13],towards:[-5,-20]},eastQuadCentre:[-41,-26]}),stops:stops.map(v=>v.name),get player(){return {x:player.position.x,y:player.position.y,z:player.position.z}},visit:i=>setStop(i,true),start};
+window.__artsRouteReview={ready:true,rigged:rigAvailable,diagnostics:()=>({underpass:{soffit:bridgeSoffit,roadTop:bridgeRoadTop,walkingGrade:rampY(bridgeZ),playerHeight:1.74},characterHeight:playerModel?new THREE.Box3().setFromObject(playerModel).getSize(new THREE.Vector3()).y:null,characterBottom:playerModel?new THREE.Box3().setFromObject(playerModel).min.y:null,playerScale:playerModel?.scale.x,doorHeight:{east:2.5,lower:2.7,rathdown:2.64},cameraDistance:distance,lowerBuildingHeight:12,rathdownBuildingHeight:14,approachFacing:{from:[-3,13],towards:[-5,-20]},eastQuadCentre:[-41,-26]}),stops:stops.map(v=>v.name),get player(){return {x:player.position.x,y:player.position.y,z:player.position.z}},visit:i=>setStop(i,true),start};
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)})
 </script></body></html>
