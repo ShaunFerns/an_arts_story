@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
 const page=await browser.newPage({viewport:{width:1365,height:768}});
 const errors=[];page.on('pageerror',e=>errors.push(e.stack||e.message));page.on('console',e=>{if(e.type()==='error')errors.push(e.text())});
-const response=await page.goto('http://127.0.0.1:8765/geo/',{waitUntil:'domcontentloaded',timeout:40000});
+const response=await page.goto('http://127.0.0.1:8765/geo/?start=luas',{waitUntil:'domcontentloaded',timeout:40000});
 if(response.status()!==200)throw Error('Geo page returned '+response.status());
 await page.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
 const g=await page.evaluate(()=>window.__artsGeo&&({rigged:window.__artsGeo.rigged,anchor:window.__artsGeo.origin,features:window.__artsGeo.features,counts:window.__artsGeo.counts,missions:window.__artsGeo.missions}));
@@ -41,8 +41,8 @@ if(arrival.zoom<1.7)throw Error('Main campus mission map should be zoomed in fro
 if(arrival.height<23||arrival.height>27)throw Error('East Quad revised provisional 22-28m height missing');
 const entries=await page.evaluate(()=>window.__artsGeo.entrancePrototypes);
 console.log('East Quad exterior entrance:',JSON.stringify(entries));
-if(entries.length!==1||entries[0].provisional!==true||!entries[0].interaction)throw Error('East Quad exterior entry missing');
-if(entries[0].wallLength<7||entries[0].distanceFromOriginalApproach>60)throw Error('Entrance not grounded in OSM East Quad approach');
+if(entries.length!==2||!entries.some(e=>e.northFacing&&e.provisional&&e.interaction)||!entries.some(e=>!e.northFacing))throw Error('North main entrance and preserved secondary entry required');
+if(entries.some(e=>e.wallLength<7))throw Error('Entrances not grounded in the mapped East Quad perimeter');
 const plaza=await page.evaluate(()=>window.__artsGeo.plazaFeatures);
 console.log('Photo-referenced East Quad curved seating:',JSON.stringify(plaza));
 if(plaza.length!==1||plaza[0].slats<30||plaza[0].dimensions.length<8)throw Error('Curved East Quad seating not built');
@@ -129,6 +129,16 @@ if(!spoken.includes('Semester 1')&&!spoken.includes('preferences'))throw Error('
 await page.locator('#npcClose').click();
 if(await page.locator('#npcDialog').getAttribute('hidden')===null)throw Error('Closing NPC dialogue failed');
 
+// Default game URL should now be a practical East Quad façade test, while
+// ?start=luas preserves the original full-walk induction experience.
+const eqReview=await browser.newPage({viewport:{width:1365,height:768}});
+await eqReview.goto('http://127.0.0.1:8765/geo/',{waitUntil:'domcontentloaded',timeout:40000});
+await eqReview.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
+const review=await eqReview.evaluate(()=>({location:window.__artsGeo.spawnLocation,distance:window.__artsGeo.startDistanceFromEastQuad,entries:window.__artsGeo.entrancePrototypes}));
+console.log('East Quad direct-review spawn:',JSON.stringify(review));
+if(review.location!=='East Quad review'||review.distance>30)throw Error('Default direct test spawn must face north entrance of East Quad');
+await eqReview.screenshot({path:'/tmp/arts-geo-north-entrance-review.png',fullPage:true});
+await eqReview.close();
 if(errors.length)throw Error('Browser errors: '+JSON.stringify(errors.slice(0,8)));
 console.log('Georeferenced 3D world, mission map and source-faithful map markers passed.');
 await browser.close();
