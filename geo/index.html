@@ -33,7 +33,8 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
  if(f.kind==='land'&&f.coords.length>3&&dist<470){const m=polygonMesh(f.coords,.035,lawn,'land');if(m)counts.land++;}
  if(f.kind==='road'&&dist<640){const w=roadWidth(t.highway);const material=['footway','pedestrian','path','steps','cycleway'].includes(t.highway)?pathMat:t.railway?tramMat:roadMat;for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],w,.075,material);counts.road++;}
  if(f.kind==='barrier'&&dist<540){const k=t.barrier||'wall',h=k==='hedge'?1.35:k==='fence'?1.6:1.9,w=k==='hedge'?.7:k==='fence'?.1:.42;for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],w,h,k==='hedge'?hedgeMat:k==='fence'?railMat:oldStone);counts.barrier++;}
- if(f.kind==='building'&&dist<510&&f.coords.length>3){const levels=Number(t['building:levels']),known=Number(String(t.height||'').replace(/[^0-9.]/g,'')),h=known>1&&known<120?known:levels>0&&levels<30?levels*3.2:8;const mesh=polygonMesh(f.coords,h,(/Quad/i.test(f.name)?newBrick:grey));if(mesh)counts.building++;}
+ if(f.kind==='building'&&dist<510&&f.coords.length>3){const levels=Number(t['building:levels']),known=Number(String(t.height||'').replace(/[^0-9.]/g,''));let h=known>1&&known<120?known:levels>0&&levels<30?levels*3.2:8;
+ if(f.id==='way/810540713')h=17.5; // East Quad: five floors documented by TU Dublin; 3.5m floor-to-floor remains an estimate.const mesh=polygonMesh(f.coords,h,(/Quad/i.test(f.name)?newBrick:grey));if(mesh)counts.building++;}
 }
 // Core field remains an entirely local metre-based plane. The wider 1km ring is map context.
 const player=new THREE.Group();scene.add(player);const human=new THREE.Mesh(new THREE.CapsuleGeometry(.28,1.1,5,12),mat(0x264e61));human.position.y=.88;human.castShadow=true;player.add(human);
