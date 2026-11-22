@@ -97,7 +97,7 @@ console.log('NPC shoulder-to-elbow downward orientation (-1 = vertical down):',J
 // are no imported NPC rig shoulders to assert in the clothed prototype.
 const npcVariant=await page.evaluate(()=>window.__artsGeo.npcVariant);
 if(npcVariant==='original-mannequin'&&(npcArmVerticalities.length<2||npcArmVerticalities.some(v=>v>-.65)))throw Error('Original NPC rig retains a T-pose');
-if(npcVariant!=='clothed-82-percent')throw Error('Default NPC comparison variant not active');
+if(npcVariant!=='clothed-adult')throw Error('Default NPC comparison variant not active');
 const animationStates=await page.evaluate(()=>window.__artsGeo.animationStates);
 console.log('Rigged player animation states:',JSON.stringify(animationStates));
 if(!['idle','walk','run'].every(x=>animationStates.includes(x)))throw Error('Rigged player missing idle/walk/run AnimationMixer clips');
@@ -146,8 +146,8 @@ const calibration=await eqReview.evaluate(()=>{
  return {npc:g.eastQuadNpcDimensions,variant:g.npcVariant,scale:g.npcPrototypeScale,eye:g.eyeHeightAboveGround};
 });
 console.log('East Quad NPC vs reference 2.10m door:',JSON.stringify(calibration));
-if(calibration.variant!=='clothed-82-percent')throw Error('Wrong default NPC variant');
-if(!calibration.npc||!(calibration.npc.height>1.1&&calibration.npc.height<2.10))throw Error('NPC is not shorter than reference 2.10m door');
+if(calibration.variant!=='clothed-adult')throw Error('Wrong default NPC variant');
+if(!calibration.npc||!(calibration.npc.height>1.55&&calibration.npc.height<1.80))throw Error('NPC is not shorter than reference 2.10m door');
 if(calibration.npc.width>.9)throw Error('NPC shoulder width still disproportionate');
 const thirdPerson=await eqReview.evaluate(()=>{
  const g=window.__artsGeo;
