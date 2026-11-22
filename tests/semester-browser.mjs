@@ -229,9 +229,20 @@ try {
   assert.equal((await state()).completion,'week3End');
   await button('Back to campus').click();
   for(const door of [central,library,...audit.doors.filter(d=>['glass','laurence'].includes(d.id))])await lookAtFacade(door);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.keyboard.press('m');
+  await button('Notes').click();
+  page.once('dialog',dialog=>dialog.accept());
+  const reloaded=page.waitForNavigation({waitUntil:'domcontentloaded'});
+  await button('Clear this semester’s progress').click();
+  await reloaded;
+  await page.waitForFunction(()=>window.__artsGeo?.ready);
+  assert.deepEqual((await state()).chapterDone,[]);
+  assert.equal(await panelTitle(),'Your story so far');
+  assert(await page.locator('#arrival').isHidden());
   assert.deepEqual(errors,[]);
   console.log('PASS: animated arrival, W/S, underpass, '+segments+
-    ' walked segments, eight entrances, full semester and two reflections, Form A, phone, resizing and save/resume.');
+    ' walked segments, eight entrances, full semester and two reflections, Form A, phone, resizing and save/resume/reset.');
 } catch(error) {
   if(errors.length)console.error(errors);
   throw error;
