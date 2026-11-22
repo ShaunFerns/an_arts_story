@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>An Arts Story — Geographic mission map</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>First Semester: An Arts Story</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#f4f4ed;background:#0e2025}*{box-sizing:border-box}body{margin:0;overflow:hidden}#stage{position:fixed;inset:0}#heads{position:fixed;top:16px;left:18px;right:18px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:18px}.pane{border:1px solid #aec2ae80;background:#102a30eb;box-shadow:0 10px 40px #0007;border-radius:12px;padding:13px 17px;max-width:380px}.pane small{font-size:10px;letter-spacing:.18em;color:#eccf98;font-weight:800}.pane h1{font:normal 27px Georgia,serif;margin:4px 0}.pane p{font-size:12px;color:#d3e1d9;margin:5px 0;line-height:1.5}.right{max-width:300px;text-align:right}#foot{position:fixed;left:18px;bottom:20px;right:18px;display:flex;justify-content:space-between;align-items:flex-end;gap:14px;pointer-events:none}.controls{font-size:12px;line-height:1.9}.controls strong{color:#edcf8f}.buttons{display:flex;gap:8px;pointer-events:auto}.buttons button,#closeMap,#missionList button{border:1px solid #849f93;color:#f7f5e9;background:#21444b;border-radius:8px;padding:11px 15px;cursor:pointer;font:inherit}.buttons button:hover,#missionList button:hover{background:#386069}.buttons button:focus-visible,#closeMap:focus-visible,#missionList button:focus-visible{outline:3px solid #e7bd70}#mini{position:fixed;right:18px;bottom:92px;width:195px;height:195px;border:2px solid #7ba39c;background:#203e37ec;border-radius:50%;box-shadow:0 8px 28px #0007;cursor:pointer}#overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#041b23e9;z-index:8;padding:20px}#overlay[hidden]{display:none}#mapShell{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;width:min(1140px,96vw);height:min(780px,91vh)}#mapFrame{position:relative;min-height:0;border:2px solid #69867d;border-radius:12px;overflow:hidden;background:#263e37}#map{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}#side{min-height:0;display:flex;flex-direction:column;gap:9px}#side .pane{overflow:auto;max-width:none}#closeMap{font-weight:800}#missionList{overflow:auto;flex:1}#missionList button{display:block;width:100%;text-align:left;margin:7px 0;font-size:13px}#missionList button.active{border-color:#eed394;background:#6c5538}#mapNote{font-size:12px;line-height:1.5;color:#c6d9ce}#attribution{font-size:11px;color:#c7d5cc}#error{position:fixed;inset:0;background:#132b34;display:flex;align-items:center;justify-content:center;padding:28px;z-index:15}#error[hidden]{display:none}#error article{max-width:680px}#error a{color:#f0ce8f}@media(max-width:720px){#heads .right{display:none}.pane h1{font-size:20px}#mapShell{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}#side{max-height:230px}#missionList{max-height:120px}#mini{width:130px;height:130px;bottom:108px}.controls{display:none}}
 #npcHint{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#15343beb;border:1px solid #d4bf8c;border-radius:9px;color:white;padding:12px 16px;z-index:5;font-size:13px}#npcHint[hidden],#npcDialog[hidden]{display:none}#npcDialog{position:fixed;inset:0;z-index:9;background:#031921c9;display:grid;place-items:center;padding:16px}#npcDialog article{background:#18343c;border:1px solid #e1c38f;border-radius:13px;padding:28px;max-width:610px;color:white}#npcDialog h2{font:normal 32px Georgia,serif;margin:0 0 12px}#npcDialog p{font-size:16px;line-height:1.7}#npcDialog button{padding:12px 18px;border:0;border-radius:8px;background:#e1bb75;color:#122932;font-weight:750;cursor:pointer}
@@ -16,26 +16,48 @@
 #phoneTabs [aria-pressed=true]{background:#6c5538;border-color:#eed394}
 #missionList h2{font-size:16px;margin:10px 0 4px}#missionList p{font-size:14px}
 @media (max-width:720px){#side{max-height:42vh}}
-</style></head><body><div id="stage" tabindex="-1"></div>
-<button id="npcHint" hidden type="button"></button><div id="npcDialog" hidden role="dialog" aria-modal="true" aria-labelledby="npcTitle"><article><p id="npcSpeaker"></p><h2 id="npcTitle"></h2><p id="npcText"></p><div id="npcConstraints" hidden><label for="constraintNote">Practical constraints (optional)</label><textarea id="constraintNote" rows="2" maxlength="240"></textarea></div><div id="npcChoices"></div><button id="npcClose" type="button">Close conversation</button></article></div><div id="heads"><div class="pane"><small>FIRST SEMESTER · AN ARTS STORY</small><h1>Grangegorman · Mission Map</h1><p id="objective">Rathdown-centred world · provisional Luas–East Quad slope</p></div><div class="pane right"><small>GEOGRAPHIC BASE · OSM</small><p id="status">Reading Rathdown map data…</p><p><b>WASD</b> walk · hold <b>Space + WASD</b> look · <b>Shift</b> run · <b>E</b> talk · <b>M</b> map · <b>V</b> view</p></div></div>
-<canvas id="mini" width="390" height="390" aria-label="Open the mission map" role="button" tabindex="0"></canvas>
-<div id="foot"><div class="pane controls">1 world unit = <strong>1 metre</strong> · provisional graded terrain (unsurveyed)<br>Buildings: scaled footprints · walls and hedges: solid widths + heights<br><span id="pos"></span></div><div class="buttons"><button id="mapBtn">☰ Phone / map (M)</button><button id="viewMode" aria-pressed="true">Switch to third person (V)</button><button id="restart">Restart at Luas</button></div></div>
-<div id="overlay" hidden role="dialog" aria-modal="true" aria-label="Phone and campus map"><div id="mapShell"><div id="mapFrame"><canvas id="map" width="1000" height="1000" aria-label="Mapped campus with mission markers"></canvas></div><div id="side"><button id="closeMap">✕ Return to game (M)</button><div class="pane"><small>RATHDOWN ORIGIN · 1 KM RADIUS</small><h1>Mission map</h1><p>One game unit equals one metre. Click a marker or select a mission. The dashed gold line is a <b>bearing, not a verified walking route</b>. Terrain elevation is a provisional 21→25 m OD scenario, not surveyed.</p><p id="attribution">© OpenStreetMap contributors · ODbL</p></div><nav id="phoneTabs" aria-label="Phone sections"></nav><div id="missionList" class="pane"></div><div id="mapNote">Mapped footprints and walls are based on OpenStreetMap tags. Heights are estimates. Lower House is a provisional mapping of the Sports and Student Facility footprint pending campus-plan verification; elevations are not yet surveyed.</div></div></div></div>
-<div id="error" hidden><article><h1>Verified geographic data unavailable</h1><p id="errorText"></p><p>The game will not substitute invented geography for missing OpenStreetMap data. <a href="../review/">Open the older experimental route</a> or review the <a href="https://github.com/ShaunFerns/an_arts_story/blob/main/docs/geographic-and-visual-reset.md">geographic specification</a>.</p></article></div>
+</style><link rel="stylesheet" href="./assets/semester/interface.css"></head><body><div id="stage" tabindex="-1"></div>
+<button id="npcHint" hidden type="button"></button><div id="npcDialog" hidden role="dialog" aria-modal="true" aria-labelledby="npcTitle"><article><p id="npcSpeaker"></p><h2 id="npcTitle"></h2><p id="npcLocation" hidden></p><p id="npcText"></p><div id="npcMarkup" hidden></div><div id="npcConstraints" hidden><label for="constraintNote">Practical constraints (optional)</label><textarea id="constraintNote" rows="2" maxlength="240"></textarea></div><div id="npcChoices"></div><button id="npcClose" type="button">Close conversation</button><button id="dialoguePhone" class="secondary-action" type="button">Phone (M)</button></article></div>
+<div id="arrival" hidden role="dialog" aria-modal="true" aria-labelledby="arrivalTitle"><article>
+ <h1 id="arrivalTitle">Broadstone–University</h1><p id="arrivalLine">The Luas is pulling in. Grangegorman is just up the ramp.</p>
+ <button id="skipArrival" type="button">Skip arrival</button>
+</article></div>
+<div id="hud"><div id="heads"><div class="pane"><small>FIRST SEMESTER · AN ARTS STORY</small><h1>Grangegorman</h1><p id="objective">Broadstone–University</p></div><div class="pane right"><small>GEOGRAPHIC BASE · OSM</small><p id="status">Reading Rathdown map data…</p><p><b>WASD</b> walk · hold <b>Space + WASD</b> look · <b>Shift</b> run · <b>E</b> interact · <b>M</b> phone · <b>V</b> view</p></div></div>
+<canvas id="mini" width="390" height="390" aria-label="Open the student phone and map" role="button" tabindex="0"></canvas>
+<div id="foot"><div class="pane controls">1 world unit = <strong>1 metre</strong> · provisional graded terrain (unsurveyed)<br>Buildings: scaled footprints · walls and hedges: solid widths + heights<br><span id="pos"></span></div><div class="buttons"><button id="mapBtn">Phone (M)</button><button id="viewMode" aria-pressed="true">Switch to third person (V)</button><button id="restart">Restart at Luas</button></div></div>
+</div>
+<div id="overlay" hidden role="dialog" aria-modal="true" aria-label="Student phone">
+ <div id="mapShell">
+  <header id="phoneHeader"><h1>Student phone</h1><button id="closeMap" type="button">Close (M)</button></header>
+  <nav id="phoneTabs" aria-label="Phone apps"></nav>
+  <div id="mapFrame"><canvas id="map" width="1000" height="1000" aria-label="North-up campus map. Select a building from the list below."></canvas></div>
+  <div id="mapTools"><span>▲ You are here</span><button id="zoomOut" type="button" aria-label="Zoom out">−</button><button id="zoomIn" type="button" aria-label="Zoom in">+</button></div>
+  <div id="side"><div id="missionList" class="pane"></div><p id="mapNote">Gold line shows direction. © OpenStreetMap contributors · ODbL</p></div>
+ </div>
+</div>
+<div id="error" hidden><article><h1>Verified geographic data unavailable</h1><p id="errorText"></p><p>The game will not substitute invented geography for missing OpenStreetMap data. <a href="../story/">Open the earlier narrative build</a> or review the <a href="https://github.com/ShaunFerns/an_arts_story/blob/main/docs/geographic-and-visual-reset.md">geographic specification</a>.</p></article></div>
 <script type="importmap">{"imports":{"three":"../vendor/three.module.js","three/addons/":"../vendor/addons/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone as cloneSkinned} from 'three/addons/utils/SkeletonUtils.js';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {makeCollisionWorld,barrierDimensions} from './collision.mjs';
 import {characters, createInduction, places} from './assets/induction/induction.mjs';
+import {createProgress} from './assets/semester/progress.mjs';
+import {locationNames} from './assets/semester/locations.mjs';
+import {phoneLabels, presentScene, phoneEntries, resourceMarkup} from './assets/semester/presentation.mjs';
+import {addCampusFacades, addUnderpass, bridgeSupports, buildingPalette, shellMaterial, outsideNormal, winding, openLibraryApproach} from './assets/world/campus.mjs';
+import {createLuas} from './assets/world/arrival.mjs';
 const $=id=>document.getElementById(id),data=await fetch('./data.json').then(r=>{if(!r.ok)throw Error('No OSM snapshot (HTTP '+r.status+')');return r.json()}).catch(e=>{ $('error').hidden=false;$('errorText').textContent=e.message;throw e});
 if(!data.features?.length||!data.anchor||data.radius!==1000){$('error').hidden=false;$('errorText').textContent='Geographic snapshot is incomplete.';throw Error('Invalid OSM snapshot')}
-const zone=data.features,origin=data.anchor,MAX=1000,$map=$('map'),mapCtx=$map.getContext('2d'),miniCtx=$('mini').getContext('2d');
+const zone=openLibraryApproach(data.features),origin=data.anchor,MAX=1000,$map=$('map'),mapCtx=$map.getContext('2d'),miniCtx=$('mini').getContext('2d');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9bb5be);scene.fog=new THREE.Fog(0x9bb5be,180,520);
 const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,750),renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;$('stage').appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xd4e4f0,0x6b7666,2.1));const sun=new THREE.DirectionalLight(0xffe6bb,2.2);sun.position.set(-70,125,80);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-270,right:270,top:270,bottom:-270});scene.add(sun);
-const mat=(color,roughness=.89)=>new THREE.MeshStandardMaterial({color,roughness});const grey=mat(0x94988e),oldStone=mat(0x9e9585),newBrick=mat(0x50413a),lawn=mat(0x75946e),roadMat=mat(0x565f61),pathMat=mat(0xc2b5a0),hedgeMat=mat(0x486a43),railMat=mat(0x535b55),tramMat=mat(0x8f8293),roofMat=mat(0x636868);
+renderer.shadowMap.autoUpdate=false;
+renderer.shadowMap.needsUpdate=true;
+const mat=(color,roughness=.89)=>new THREE.MeshStandardMaterial({color,roughness});const oldStone=mat(0x9e9585),lawn=mat(0x75946e),roadMat=mat(0x565f61),pathMat=mat(0xc2b5a0),hedgeMat=mat(0x486a43),railMat=mat(0x535b55),tramMat=mat(0x8f8293),railHead=mat(0x525851,.42);
 // Stage-1 provisional elevation model. These 21/25 m OD Malin tiers are
 // illustrative design assumptions, NOT surveyed levels. The world y origin
 // is at the assumed 25 m OD East Quad approach; Rathdown is an x/z anchor.
@@ -82,6 +104,14 @@ groundGeometry.computeVertexNormals();
 const ground=new THREE.Mesh(groundGeometry,mat(0x809978));
 ground.receiveShadow=true;scene.add(ground);
 const world=(p)=>new THREE.Vector3(p[0],groundHeight(p[0],p[1]),-p[1]);const midpoint=p=>p.reduce((a,q)=>[a[0]+q[0]/p.length,a[1]+q[1]/p.length],[0,0]);
+// Batch the static OSM tiles by material. Only nearby tiles are drawn.
+const terrainLines=new Map(), terrainPolygons=new Map(), roadBox=new THREE.BoxGeometry(1,1,1);
+const tile=(x,n)=>Math.floor(x/128)+':'+Math.floor(n/128);
+let buildTerrain=true;
+function collect(batch,key,make,value){
+ if(!batch.has(key))batch.set(key,make());
+ batch.get(key).values.push(value);
+}
 function lineMesh(p,a,b,width,height,material,topSurface=false){
  const dx=b[0]-a[0],dn=b[1]-a[1],len=Math.hypot(dx,dn);
  if(len<.15)return;
@@ -95,17 +125,42 @@ function lineMesh(p,a,b,width,height,material,topSurface=false){
   const direction=new THREE.Vector3(bx-ax,y2-y1,an-bn);
   const segLen=direction.length();
   if(segLen<.01)continue;
-  const mesh=new THREE.Mesh(new THREE.BoxGeometry(width,height,segLen+.03),material);
-  mesh.position.set((ax+bx)/2,(y1+y2)/2+(topSurface?height/2-.01:height/2),(an+bn)/-2);
-  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),direction.normalize());
-  mesh.receiveShadow=true;p.add(mesh);
+  const x=(ax+bx)/2,n=(an+bn)/2;
+  const placement=new THREE.Vector3(x,(y1+y2)/2+(topSurface?height/2-.01:height/2),-n);
+  const rotation=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),direction.normalize());
+  if(buildTerrain&&p===scene){
+   const matrix=new THREE.Matrix4().compose(placement,rotation,new THREE.Vector3(width,height,segLen+.03));
+   collect(terrainLines,tile(x,n)+':'+material.id,()=>({material,values:[]}),matrix);
+  }else{
+   const mesh=new THREE.Mesh(new THREE.BoxGeometry(width,height,segLen+.03),material);
+   mesh.position.copy(placement);mesh.quaternion.copy(rotation);
+   mesh.receiveShadow=true;p.add(mesh);
+  }
  }
 }
 function polygonMesh(points,height,material,kind='building'){
  if(points.length<4||Math.hypot(points[0][0]-points.at(-1)[0],points[0][1]-points.at(-1)[1])>2)return null;
  const c=midpoint(points),shape=new THREE.Shape();points.forEach((v,i)=>{const x=v[0]-c[0],y=v[1]-c[1];i?shape.lineTo(x,y):shape.moveTo(x,y)});
  const geo=new THREE.ExtrudeGeometry(shape,{depth:height,bevelEnabled:false,steps:1,curveSegments:1});geo.rotateX(-Math.PI/2);
- const mesh=new THREE.Mesh(geo,material);mesh.position.set(c[0],groundHeight(c[0],c[1])+.02,-c[1]);mesh.receiveShadow=true;mesh.castShadow=kind==='building';scene.add(mesh);return mesh;
+ const base=groundHeight(c[0],c[1])+.02;
+ if(buildTerrain){
+  geo.translate(c[0],base,-c[1]);
+  collect(terrainPolygons,tile(...c)+':'+material.id+':'+kind,()=>({material,kind,values:[]}),geo);
+ }else{
+  const mesh=new THREE.Mesh(geo,material);
+  mesh.position.set(c[0],base,-c[1]);mesh.receiveShadow=true;mesh.castShadow=kind==='building';scene.add(mesh);
+ }
+ return {base};
+}
+function pavedArea(points,material){
+ if(points.length<4)return;
+ const shape=new THREE.Shape(points.map(p=>new THREE.Vector2(...p)));
+ const geometry=new THREE.ShapeGeometry(shape);
+ geometry.rotateX(-Math.PI/2);
+ const positions=geometry.attributes.position;
+ for(let i=0;i<positions.count;i++)positions.setY(i,groundHeight(positions.getX(i),-positions.getZ(i))+.025);
+ geometry.computeVertexNormals();
+ const mesh=new THREE.Mesh(geometry,material);mesh.receiveShadow=true;scene.add(mesh);
 }
 function roadWidth(t){if(['motorway','trunk','primary','secondary'].includes(t))return 12;if(['tertiary','residential','living_street'].includes(t))return 7.5;if(['service','unclassified'].includes(t))return 4.6;return 2.6}
 // Visual-only height assumptions for existing campus buildings. These numbers are
@@ -123,29 +178,55 @@ function visualBuildingHeight(f){
  let height=known>1&&known<120?known:levels>0&&levels<30?levels*3.2:8,source='osm_or_default';
  if(f.id==='way/810540713'||/\beast quad\b/.test(name)){height=existingQuadHeightEstimates.eastQuad.height;source='visual_estimate_east_quad';}
  else if(/\bcentral quad\b/.test(name)){height=existingQuadHeightEstimates.centralQuad.height;source='visual_estimate_central_quad';}
- else if(/\bacademic hub\b|\bacademic hub and library\b/.test(name)){height=existingQuadHeightEstimates.academicHub.height;source='visual_estimate_academic_hub';}
+ else if(buildingPalette(f)==='library'){height=existingQuadHeightEstimates.academicHub.height;source='visual_estimate_academic_hub';}
  return {height,source};
 }
-const visualHeightAudit=[];
+const visualHeightAudit=[], facadeBuildings=[];
 const counts={building:0,road:0,barrier:0,land:0};
 for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MAX+50)continue;const t=f.tags||{};
  if(f.kind==='land'&&f.coords.length>3&&dist<470){const m=polygonMesh(f.coords,.035,lawn,'land');if(m)counts.land++;}
- if(f.kind==='road'&&dist<640){const w=roadWidth(t.highway);const material=['footway','pedestrian','path','steps','cycleway'].includes(t.highway)?pathMat:t.railway?tramMat:roadMat;for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],w,.075,material);counts.road++;}
+ if(f.kind==='road'&&dist<640){
+  const pedestrian=['footway','pedestrian','path','steps','cycleway'].includes(t.highway);
+  if(t.area==='yes'&&pedestrian)pavedArea(f.coords,pathMat);
+  else for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],roadWidth(t.highway),.075,pedestrian?pathMat:roadMat);
+  counts.road++;
+ }
+ if(t.railway==='tram')for(let i=1;i<f.coords.length;i++){
+  const a=f.coords[i-1],b=f.coords[i];
+  if(Math.min(Math.hypot(a[0]-gradeStart[0],a[1]-gradeStart[1]),Math.hypot(b[0]-gradeStart[0],b[1]-gradeStart[1]))>175)continue;
+  const dx=b[0]-a[0],dn=b[1]-a[1],len=Math.hypot(dx,dn);
+  if(len<.15)continue;
+  lineMesh(scene,a,b,2.6,.08,tramMat);
+  for(const side of [-1,1]){
+   const offset=p=>[p[0]-dn/len*.72*side,p[1]+dx/len*.72*side];
+   lineMesh(scene,offset(a),offset(b),.075,.115,railHead);
+  }
+ }
  if(f.kind==='barrier'&&dist<540){const k=t.barrier||'wall',dimensions=barrierDimensions(t),h=dimensions.height,w=dimensions.width;for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],w,h,k==='hedge'?hedgeMat:k==='fence'?railMat:oldStone);counts.barrier++;}
  if(f.kind==='building'&&dist<510&&f.coords.length>3){
  const {height,source}=visualBuildingHeight(f);
  if(source.startsWith('visual_estimate'))visualHeightAudit.push({id:f.id,name:f.name,height,source});
- const mesh=polygonMesh(f.coords,height,(f.id==='way/810540713'?mat(0x77736d):/Quad/i.test(f.name)?newBrick:grey));
- if(mesh){
-  if(f.id==='way/810540713'){
-   // Preserve the original OSM-mapped building volume unmodified.
-   // Decorative overlays sit outside its existing perimeter.
-   mesh.material=mat(0x77736d);
-  }
-  counts.building++;
- }
+ const palette=buildingPalette(f);
+ const mesh=polygonMesh(f.coords,height,f.id==='way/810540713'?mat(0x77736d):shellMaterial(palette));
+ if(mesh&&f.id!=='way/810540713'&&(dist<186||palette!=='context')&&dist<430)
+  facadeBuildings.push({feature:f,height,base:mesh.base,palette});
+ if(mesh)counts.building++;
 }
 }
+buildTerrain=false;
+for(const {material,values} of terrainLines.values()){
+ const mesh=new THREE.InstancedMesh(roadBox,material,values.length);
+ values.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));
+ mesh.receiveShadow=true;
+ scene.add(mesh);
+}
+for(const {material,kind,values} of terrainPolygons.values()){
+ const geometry=mergeGeometries(values);
+ for(const source of values)source.dispose();
+ const mesh=new THREE.Mesh(geometry,material);
+ mesh.receiveShadow=true;mesh.castShadow=kind==='building';scene.add(mesh);
+}
+terrainLines.clear();terrainPolygons.clear();
 // Core field remains an entirely local metre-based plane. The wider 1km ring is map context.
 const player=new THREE.Group();scene.add(player);const human=new THREE.Mesh(new THREE.CapsuleGeometry(.28,1.1,5,12),mat(0x264e61));human.position.y=.88;human.castShadow=true;player.add(human);
 const head=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),mat(0xc99b7f));head.position.y=1.67;player.add(head);
@@ -277,7 +358,7 @@ const missions=landmarkMatches.map(([name,re,description,fallback])=>{
 // The player is represented by a 1.74-metre upright capsule; its ground
 // contact is a circular 0.34m radius. Building footprints and *thick* wall,
  // railing and hedge volumes share the same metre-based coordinates as the map.
-const collision=makeCollisionWorld(zone,{playerRadius:.34,worldRadius:990,worldExtent:550,cellSize:18});
+const collision=makeCollisionWorld([...zone,...bridgeSupports],{playerRadius:.34,worldRadius:990,worldExtent:550,cellSize:18});
 
 // East Quad exterior entry prototype: source-faithful footprint, provisional
 // door composition informed by the user's observation (door / revolving / door).
@@ -770,46 +851,62 @@ function intersectsPlanter(x,n){
 
 
 const missionDoorRegistry=[];
+const landmarkIds=new Map(Object.entries(locationNames).map(([id,name])=>[name,id]));
+function registerDoor(mission,door,interaction,outward,dimensions) {
+ const [x,n]=interaction;
+ const exits=[1.65,1.2,.6,0].map(d=>[x+outward[0]*d,n+outward[1]*d]);
+ const exit=exits.find(p=>{
+  if(collision.query(...p)||intersectsPlanter(...p))return false;
+  const reached=collision.move(x,n,p[0]-x,p[1]-n);
+  return Math.hypot(reached.x-p[0],reached.y-p[1])<.12;
+ });
+ if(!exit)throw Error('No safe exit for '+mission.name);
+ missionDoorRegistry.push({
+  id:landmarkIds.get(mission.name),name:mission.name,source:mission.source,provisional:true,
+  dimensions,door,interaction, radius:1.5,outward,exit,
+  destination:'scene at '+mission.name,entrySpawn:interaction,exitSpawn:exit,
+  onEnter:place=>semester.enter(place),
+ });
+}
 function buildMissionBuildingDoors(){
  // An exterior arrival door for each actual teaching/support mission building.
  // The position is the closest mapped building wall to its existing pedestrian
  // approach: it is explicitly provisional wherever no surveyed door plan exists.
  for(const mission of missions){
-  if(!mission.found||!['Rathdown House','Lower House','Central Quad'].includes(mission.name))continue;
+  if(!mission.found||['Broadstone–University','East Quad'].includes(mission.name))continue;
   const footprint=zone.find(f=>f.id===mission.source&&f.kind==='building');
-  if(!footprint||!mission.position)continue;
-  const c=mission.centre,points=footprint.coords;
+  if(!footprint||!mission.position)throw Error('No mapped footprint for '+mission.name);
+  const points=footprint.coords,orientation=winding(points);
+  const historic=buildingPalette(footprint)==='heritage';
+  const width=historic?2.0:mission.name==='Academic Hub & Library'?3.7:3.0;
+  const height=historic?2.42:3.15;
   const faces=[];
   for(let i=1;i<points.length;i++){
    const a=points[i-1],b=points[i],dx=b[0]-a[0],dn=b[1]-a[1],len=Math.hypot(dx,dn);
-   if(len<3.2)continue;
-   const cp=nearestPointOnSegment2D(mission.position,a,b);
-   faces.push({a,b,len,cp,dx,dn,distance:Math.hypot(cp[0]-mission.position[0],cp[1]-mission.position[1])});
+   const edge=width/2+.25;
+   if(len<2*edge)continue;
+   const projection=nearestPointOnSegment2D(mission.position,a,b);
+   const t=THREE.MathUtils.clamp(Math.hypot(projection[0]-a[0],projection[1]-a[1]),edge,len-edge);
+   const [ox,on]=outsideNormal(a,b,orientation);
+   if(mission.name==='Academic Hub & Library'&&on>-.54)continue;
+   for(const along of [t,t-2,t+2,t-4,t+4,len/2]){
+    if(along<edge||along>len-edge)continue;
+    const x=a[0]+dx/len*along,n=a[1]+dn/len*along;
+    const interaction=[x+ox*1.12,n+on*1.12];
+    if([.75,1.12,1.65,2.25,2.8].some(d=>{
+      const px=x+ox*d,pn=n+on*d;
+      return collision.query(px,pn)||intersectsPlanter(px,pn);
+    }))continue;
+    const distance=Math.hypot(x-mission.position[0],n-mission.position[1]);
+    faces.push({x,n,ox,on,interaction,distance});
+   }
   }
   faces.sort((a,b)=>a.distance-b.distance);
-  let door=null;
-  for(const face of faces.slice(0,10)){
-   const x=face.cp[0],n=face.cp[1];
-   let ox=-face.dn/face.len,on=face.dx/face.len;
-   if(ox*(x-c[0])+on*(n-c[1])<0){ox=-ox;on=-on}
-   let interaction=null;
-   for(const dist of [3.1,4.3,5.5,7]){
-    for(const offset of [0,1.3,-1.3]){
-     const px=x+ox*dist+face.dx/face.len*offset,
-           pn=n+on*dist+face.dn/face.len*offset;
-     if(!collision.query(px,pn)&&!intersectsPlanter(px,pn)){interaction=[px,pn];break}
-    }
-    if(interaction)break;
-   }
-   if(!interaction)continue;
-   door={face,x,n,ox,on,interaction};break;
-  }
-  if(!door)continue;
-  const {face,x,n,ox,on,interaction}=door;
+  if(!faces.length)throw Error('No accessible doorway for '+mission.name);
+  const {x,n,ox,on,interaction}=faces[0];
   const g=new THREE.Group();
   g.position.set(x+ox*.20,groundHeight(x,n),-n-on*.20);
   g.rotation.y=Math.atan2(ox,-on);
-  const historic=mission.name==='Rathdown House'||mission.name==='Lower House';
   const frame=mat(historic?0x716a5e:0x545b5b,.58);
   const glazing=new THREE.MeshPhysicalMaterial({color:historic?0x4d6265:0x5a8791,metalness:.15,
     roughness:.24,transparent:true,opacity:.86,side:THREE.DoubleSide});
@@ -818,7 +915,6 @@ function buildMissionBuildingDoors(){
    const mesh=new THREE.Mesh(geo,material);
    mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;g.add(mesh);return mesh;
   };
-  const width=historic?2.0:2.5,height=historic?2.42:2.8;
   add(new THREE.BoxGeometry(width+.21,height+.18,.16),frame,0,height/2,.04);
   add(new THREE.BoxGeometry(width-.12,height-.12,.03),glazing,0,height/2,.135);
   add(new THREE.BoxGeometry(.058,height-.12,.11),frame,0,height/2,.19);
@@ -826,17 +922,32 @@ function buildMissionBuildingDoors(){
    add(new THREE.BoxGeometry(.045,.36,.055),frame,sx*.15,1.08,.225);
   }
   add(new THREE.BoxGeometry(width+.85,.08,1.12),threshold,0,.027,.55);
+  const signWidth=mission.name==='Academic Hub & Library'?5.1:3.3;
+  const sign=add(new THREE.PlaneGeometry(signWidth,.43),
+    new THREE.MeshBasicMaterial({map:signTexture([mission.name])}),0,height+.37,.245);
+  sign.name='Entrance sign · '+mission.name;
+  if(!historic){
+   add(new THREE.BoxGeometry(width+1.6,.17,1.55),frame,0,height+.76,.62);
+   add(new THREE.BoxGeometry(width+2.1,.09,2.36),threshold,0,.014,1.13);
+  }
   g.name='MissionDoor-'+mission.name.replace(/\s+/g,'-');
   scene.add(g);
   // Approach waypoint is now at the actual exterior doorway, not the centre
   // of the georeferenced building volume.
-  mission.position=interaction;
-  missionDoorRegistry.push({name:mission.name,source:mission.source,provisional:true,
-    dimensions:{width,height},door:[x,n],interaction,
-    distanceFromOldApproach:face.distance});
+  registerDoor(mission,[x,n],interaction,[ox,on],{width,height});
  }
 }
 buildMissionBuildingDoors();
+for(const entry of entryPrototypes){
+ const mission=missions.find(m=>m.name==='East Quad');
+ const [x,n]=entry.mainWallMidpoint,[ox,on]=eastQuadOutward(...entry.face);
+ const approach=[1.28,1.75,2.2,3.0].map(d=>[x+ox*d,n+on*d])
+  .find(p=>!collision.query(...p)&&!intersectsPlanter(...p))||entry.interaction;
+ registerDoor(mission,[x,n],approach,[ox,on],{width:entry.width,height:2.76});
+}
+const campusFacadeAudit=addCampusFacades(scene,facadeBuildings,groundHeight,missionDoorRegistry);
+const underpass=addUnderpass(scene,groundHeight);
+$('mapFrame').setAttribute('aria-describedby','mapNote');
 
 // Temporary everyday-clothing overlays, proportioned for the current 1.74m character rig.
 // These are prototype costumes, not approved character assets. Replace with properly
@@ -986,7 +1097,8 @@ function addCampusSignAt(m,kind,label){
 addCampusSignAt(missions.find(m=>m.name==='Rathdown House'),'wayfinding','Rathdown House');
 const huntMarkers=Object.entries(landmarksByPlace).filter(([id])=>id!=='east').map(([id,m])=>{
  if(!m)throw Error('Missing campus landmark for '+id);
- const position=clearPoint(m.position,[[0,0],[0,1],[1,0],[-1,0],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]);
+ const entry=missionDoorRegistry.find(e=>e.id===id);
+ const position=clearPoint(entry?.interaction||m.position,[[0,0],[0,1],[1,0],[-1,0],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]);
  if(!position)throw Error('No walkable observation point for '+id);
  const [x,n]=position;
  const marker=new THREE.Mesh(new THREE.OctahedronGeometry(.30),new THREE.MeshBasicMaterial({color:0xffce67}));
@@ -997,39 +1109,174 @@ const huntMarkers=Object.entries(landmarksByPlace).filter(([id])=>id!=='east').m
 });
 const params=new URLSearchParams(location.search);
 const reviewStartAtLuas=params.get('start')!=='east-quad';
+const review=params.has('review')||!reviewStartAtLuas;
+$('hud').classList.toggle('review',review);
+const saveKey=review?'arts-geo-semester-review-v1':'arts-geo-semester-v1';
+let savedSemester;
+try{savedSemester=JSON.parse(localStorage.getItem(saveKey));}catch{}
+const poseNow=()=>({x:player.position.x,n:-player.position.z,yaw,pitch});
+const semester=createProgress(savedSemester?.state,()=>{saveSemester();refreshStory(true);});
+const orientation=()=>review||semester.state.mode==='orientation';
+let semesterTab='map', suspendedDialogue=null, activeEntry=null, resource=null;
+const saveSemester=()=>{
+ try{localStorage.setItem(saveKey,JSON.stringify({state:semester.state,pose:poseNow()}));}
+ catch{$('status').textContent='Progress could not be saved in this browser.';}
+};
 const story=createInduction({
  storage:window.localStorage,saveKey:reviewStartAtLuas?'arts-geo-induction-v1':'arts-geo-induction-review-v1',
  ui:{
-  pose:()=>({x:player.position.x,n:-player.position.z,yaw,pitch}),
+  pose:poseNow,
   refresh:refreshStory,
   saveUnavailable:()=>{$('status').textContent='Progress could not be saved in this browser.'},
   constraint:()=>$('constraintNote').value,
   showDialogue,
-  hideDialogue:()=>{$('npcDialog').hidden=true;$('stage').focus({preventScroll:true});},
+  hideDialogue,
   openPhone:()=>setMap(true),
  },
 });
-function showDialogue({speaker,title,text,choices,constraints=null}){
+if(!review&&!savedSemester&&story.savedPose)semester.state.mode='orientation';
+function setModal(){
+ const modal=[$('arrival'),$('overlay'),$('npcDialog')].find(el=>!el.hidden);
+ $('hud').inert=!!modal;
+ $('hud').classList.toggle('arrival-active',modal===$('arrival'));
+ $('stage').inert=!!modal;
+ for(const key in keys)keys[key]=false;
+ return modal;
+}
+function hideDialogue(){
+ $('npcDialog').hidden=true;
+ setModal();
+ $('stage').focus({preventScroll:true});
+}
+function showDialogue({speaker,title,text,choices,constraints=null,markup,location}){
+ const heading=$('npcTitle');
  $('npcSpeaker').textContent=speaker;
+ $('npcSpeaker').hidden=!speaker;
+ $('npcLocation').textContent=location||'';
+ $('npcLocation').hidden=!location;
+ $('npcMarkup').hidden=!markup;
+ $('npcMarkup').innerHTML=markup||'';
+ $('npcText').hidden=!!markup||!text;
+ $('npcClose').textContent=activeEntry?'Exit to campus':'Close conversation';
+ heading.tabIndex=-1;
  $('npcTitle').textContent=title;
- $('npcText').textContent=text;
+ $('npcText').textContent=text||'';
  $('npcConstraints').hidden=constraints===null;
  $('constraintNote').value=constraints??'';
  const list=$('npcChoices');
  list.replaceChildren(...choices.map(choice=>makeButton(choice.text,choice.select)));
  $('npcDialog').hidden=false;
- (constraints===null?list.firstElementChild:$('constraintNote'))?.focus();
+ setModal();
+ $('npcDialog').querySelector('article').scrollTop=0;
+ (constraints!==null?$('constraintNote'):orientation()&&list.firstElementChild?list.firstElementChild:heading).focus();
 }
 function makeButton(label,select){
  const button=document.createElement('button');
  button.type='button';button.textContent=label;button.onclick=select;
  return button;
 }
-$('npcClose').onclick=()=>story.close();
+function moveTo(point,facing){
+ const [x,n]=point;
+ player.position.set(x,groundHeight(x,n)+.05,-n);
+ if(facing)yaw=Math.atan2(-facing[0],facing[1]);
+ pitch=0;
+ sceneRendered=false;
+}
+function exitEntry(){
+ if(!activeEntry)return;
+ moveTo(activeEntry.exit,activeEntry.outward);
+ activeEntry=null;
+}
+function closeConversation(){
+ if(resource){
+  const ending=resource==='ending'&&semester.state.current==='ending';
+  resource=null;
+  if(ending)semester.leave();
+  hideDialogue();
+  if(!ending){
+   if(semester.current&&semester.location)showSemester();
+   setMap(true);
+  }
+  return;
+ }
+ exitEntry();
+ if(orientation())story.close();
+ else {
+  semester.leave();
+  hideDialogue();
+ }
+}
+$('npcClose').onclick=closeConversation;
+$('dialoguePhone').onclick=()=>setMap(true);
+function showSemester(){
+ if(semester.state.current==='ending'){showResource('ending');return;}
+ if(!semester.current||!semester.location){hideDialogue();return;}
+ showDialogue(presentScene(semester,index=>{
+  const result=semester.choose(index);
+  if(!semester.location)exitEntry();
+  if(typeof result==='string'){
+   semesterTab=result;
+   if(semester.current&&semester.location)showSemester();
+   else hideDialogue();
+   setMap(true);
+  }else showSemester();
+  saveSemester();
+ }));
+}
+function showResource(type){
+ resource=type;
+ showDialogue({speaker:'BA Arts',title:'',markup:resourceMarkup(type,semester.state),choices:[]});
+ const wrap=$('npcMarkup'),heading=wrap.querySelector('h1');
+ $('npcTitle').textContent=heading.textContent;
+ heading.remove();
+ $('npcClose').textContent=type==='ending'&&semester.state.current==='ending'?'Back to campus':'Back to phone';
+ wrap.querySelector('[data-next="survey"]')?.addEventListener('click',()=>showResource('survey'));
+ wrap.querySelector('[data-next="ending"]')?.addEventListener('click',()=>semester.state.completion?showResource('ending'):closeConversation());
+ const survey=wrap.querySelector('form');
+ const save=()=>{
+  const data=new FormData(survey);
+  semester.state.exitAnswers=Object.fromEntries(['structure','navigation','improve','comment']
+   .map(key=>[key,String(data.get(key)||'').trim().slice(0,300)]));
+  saveSemester();
+  $('survey-message').textContent='Saved only in this browser.';
+ };
+ survey?.addEventListener('submit',event=>{event.preventDefault();save();});
+ wrap.querySelector('[data-survey-copy]')?.addEventListener('click',async()=>{
+  save();
+  try{
+   await navigator.clipboard.writeText(JSON.stringify(semester.state.exitAnswers,null,2));
+   if($('survey-message'))$('survey-message').textContent='Copied. No response has been sent.';
+  }catch{
+   if($('survey-message'))$('survey-message').textContent='Copy is unavailable here. Your reflection is still saved on this device.';
+  }
+ });
+}
+function enterBuilding(entry){
+ if(entry.available&&!entry.available(semester.state))return;
+ activeEntry=entry;
+ moveTo(entry.entrySpawn);
+ if(!orientation()&&entry.onEnter(entry.id)){
+  showSemester();
+  return;
+ }
+ const m=missions.find(m=>m.name===entry.name);
+ showDialogue({speaker:entry.name,title:entry.name+' entrance',
+  text:m.description+'.',
+  choices:orientation()&&story.stopAvailable(entry.id)?[
+   {text:'Record an observation',select:()=>story.observe(entry.id)},
+  ]:[]});
+}
+function nearbyDoor(){
+ let closest=null,best=Infinity;
+ for(const door of missionDoorRegistry){
+  const d=Math.hypot(player.position.x-door.interaction[0],-player.position.z-door.interaction[1]);
+  if(d<door.radius&&d<best){closest=door;best=d;}
+ }
+ return closest;
+}
 function nearestNpc(){
  let best=null,d=2.7;
  for(const npc of npcs){
-  if(!story.nodeFor(npc.id))continue;
   const distance=npc.body.position.distanceTo(player.position);
   if(distance<d){best=npc;d=distance;}
  }
@@ -1040,8 +1287,20 @@ function nearestObservation(){
   Math.hypot(marker.position.x-player.position.x,marker.position.z-player.position.z)<2.2);
 }
 function interaction(){
+ const entrance=nearbyDoor();
+ if(!orientation()){
+  if(entrance){
+   const available=!entrance.available||entrance.available(semester.state);
+   return {label:available?'E — Enter '+entrance.name:entrance.name+' · unavailable',
+    select:()=>enterBuilding(entrance)};
+  }
+  const task=semester.task();
+  if(task?.place==='luas'&&Math.hypot(player.position.x-spawnPoint[0],-player.position.z-spawnPoint[1])<3)
+   return {label:'E — Continue at Broadstone–University',select:()=>{semester.enter('luas');showSemester();}};
+  return null;
+ }
  const npc=nearestNpc(),observation=nearestObservation();
- if(!npc&&!observation)return null;
+ if(!npc&&!observation)return entrance?{label:'E — Enter '+entrance.name,select:()=>enterBuilding(entrance)}:null;
  if(npc&&observation)return {
   label:'Press E · talk or record an observation',
   select:()=>showDialogue({speaker:places[observation.id].name,title:'What would you like to do?',text:'',
@@ -1116,14 +1375,14 @@ function placeAtArrival(){
  if(!result)throw Error('Cannot locate a collision-free review or arrival spawn');
  spawnPoint=[result.x,result.n];
  player.position.set(result.x,groundHeight(result.x,result.n)+.05,-result.n);
- const target=nearEast&&eastQuadEntrance?eastQuadEntrance.mainWallMidpoint:eastQuad.position;
+ const target=nearEast&&eastQuadEntrance?eastQuadEntrance.mainWallMidpoint:[351,-119];
  if(target){
   const dx=target[0]-result.x,dz=-target[1]+result.n;
   yaw=Math.atan2(-dx,-dz);pitch=nearEast?-.14:0;
  }
 }
 placeAtArrival();
-const pose=story.savedPose;
+const pose=orientation()?story.savedPose:(savedSemester?.pose||story.savedPose);
 if(reviewStartAtLuas&&pose&&[pose.x,pose.n,pose.yaw,pose.pitch].every(Number.isFinite)&&
  !collision.query(pose.x,pose.n)&&!intersectsPlanter(pose.x,pose.n)){
  player.position.set(pose.x,groundHeight(pose.x,pose.n)+.05,-pose.n);
@@ -1131,105 +1390,271 @@ if(reviewStartAtLuas&&pose&&[pose.x,pose.n,pose.yaw,pose.pitch].every(Number.isF
 }
 $('restart').textContent=reviewStartAtLuas?'Return to Luas':'Return to review position';
 
+function activeWaypoint(){
+ const target=orientation()?story.waypoint():semester.task()?.place;
+ return missions.find(m=>landmarkIds.get(m.name)===target);
+}
 function refreshStory(followObjective){
  if(followObjective){
-  const target=landmarksByPlace[story.waypoint()];
+  const target=activeWaypoint();
   selected=target?missions.indexOf(target):null;
  }
- for(const stop of huntMarkers)stop.marker.visible=story.stopAvailable(stop.id);
+ for(const stop of huntMarkers)stop.marker.visible=orientation()&&story.stopAvailable(stop.id);
  for(const npc of npcs){
-  npc.marker.visible=!!story.nodeFor(npc.id);
+  npc.marker.visible=orientation()&&!!story.nodeFor(npc.id);
   npc.marker.scale.setScalar(npc.id===story.targetCharacter?1.8:1);
  }
  updateObjective();
  if(mapOpen){missionList();drawMaps();}
 }
+function setSemesterTab(tab){
+ semesterTab=tab;
+ if(tab==='messages')semester.readMessages();
+ else {missionList();drawMaps();}
+}
+function switchMode(mode){
+ exitEntry();
+ if(mode==='orientation')semester.leave();
+ resource=null;
+ suspendedDialogue=null;
+ semester.state.mode=mode;
+ saveSemester();
+ setMap(false,{resume:false});
+ refreshStory(true);
+ if(mode==='orientation')story.start();
+ else if(!semester.state.started){
+  semester.arrivalSeen();
+  semester.begin();
+  showSemester();
+ }
+}
 function missionList(){
+ const isOrientation=orientation(),currentTab=isOrientation?story.tab:semesterTab;
+ const options=isOrientation?story.tabs:Object.keys(phoneLabels);
+ const labels=isOrientation?story.labels:phoneLabels;
  const tabs=$('phoneTabs'),list=$('missionList');
- tabs.replaceChildren(...story.tabs.map(id=>{
-  const button=makeButton(story.labels[id],()=>{story.setTab(id);tabs.querySelector('[aria-pressed="true"]')?.focus();});
-  button.setAttribute('aria-pressed',String(story.tab===id));
+ tabs.replaceChildren(...options.map(id=>{
+  const count=id==='messages'&&semester.unread?' ('+semester.unread+')':'';
+  const button=makeButton(labels[id]+count,()=>{
+   if(isOrientation)story.setTab(id);
+   else setSemesterTab(id);
+   tabs.querySelector('[aria-pressed="true"]')?.focus();
+  });
+  button.setAttribute('aria-pressed',String(currentTab===id));
   return button;
  }));
+ const map=currentTab==='map';
+ for(const id of ['mapFrame','mapTools','mapNote'])$(id).hidden=!map;
  list.replaceChildren();
- if(story.tab==='map'){
+ if(map){
   for(const [i,m] of missions.entries()){
-   const stop=Object.keys(places).find(id=>places[id].landmark===m.name);
-   const choose=()=>{
-    selectWaypoint(i);
-    list.querySelector('.active')?.focus();
-   };
-   const button=makeButton(m.name+' · '+m.description,choose);
+   if(!m.found)continue;
+   const id=landmarkIds.get(m.name);
+   const button=makeButton(m.name+(m===activeWaypoint()?' · Current destination':''),
+    ()=>{selectWaypoint(i);list.querySelector('.active')?.focus();});
    button.className=selected===i?'active':'';
-   button.disabled=!m.found;
-   if(stop&&story.stopAvailable(stop))button.textContent+=' · Observation available';
+   button.setAttribute('aria-pressed',String(selected===i));
+   if(isOrientation&&story.stopAvailable(id))button.textContent+=' · Observation available';
    list.appendChild(button);
   }
-  return;
+ }else{
+  const resourceAction=type=>()=>{
+   setMap(false,{resume:false});
+   showResource(type);
+  };
+  const entries=isOrientation?story.phoneContent():phoneEntries(semester,{
+   tab:currentTab,map:()=>{refreshStory(true);setSemesterTab('map');},
+   tabTo:setSemesterTab,
+   pause:()=>{semester.pauseEncounter();setSemesterTab('next');},
+   interest:value=>{semester.setInterest(value);setSemesterTab('planner');},
+   orientation:()=>switchMode('orientation'),
+   encounter:(entry,direct)=>{if(semester.schedule(entry,direct))setSemesterTab('map');},
+   guide:resourceAction('guide'),ending:resourceAction('ending'),survey:resourceAction('survey'),
+   readingMode:()=>{
+    semester.state.readingMode=semester.state.readingMode==='comfortable'?'standard':'comfortable';
+    document.body.classList.toggle('comfortable',semester.state.readingMode==='comfortable');
+    saveSemester();missionList();
+   },
+   reset:()=>{
+    if(confirm('Clear the semester story and its feedback from this browser?')){
+     localStorage.removeItem(saveKey);
+     location.reload();
+    }
+   },
+  });
+  for(const entry of entries){
+   const section=document.createElement('section');
+   if(entry.title){const heading=document.createElement('h2');heading.textContent=entry.title;section.appendChild(heading);}
+   if(entry.text){const text=document.createElement('p');text.textContent=entry.text;section.appendChild(text);}
+   for(const action of entry.buttons||(entry.button?[entry.button]:[]))section.appendChild(makeButton(action.text,action.select));
+   list.appendChild(section);
+  }
  }
- for(const entry of story.phoneContent()){
-  if(entry.title){const heading=document.createElement('h2');heading.textContent=entry.title;list.appendChild(heading);}
-  const text=document.createElement('p');text.textContent=entry.text;list.appendChild(text);
-  if(entry.button)list.appendChild(makeButton(entry.button.text,entry.button.select));
- }
+ if(isOrientation&&!review)list.appendChild(makeButton('Return to semester story',()=>switchMode('semester')));
  list.scrollTop=0;
 }
 function selectWaypoint(index){
- const m=missions[index];
- const stop=Object.keys(places).find(id=>places[id].landmark===m.name);
- if(stop&&story.stopAvailable(stop))story.selectStop(stop);
+ const m=missions[index],id=landmarkIds.get(m.name);
+ if(orientation()&&story.stopAvailable(id))story.selectStop(id);
  selected=index;missionList();updateObjective();drawMaps();
 }
 function mapPosition(m){
- const expected=story.waypoint();
- if(landmarksByPlace[expected]!==m)return m.position;
- const stop=huntMarkers.find(s=>s.id===expected&&story.stopAvailable(s.id));
- return stop?.position||npcs.find(n=>n.id===story.targetCharacter)?.position||m.position;
+ const id=landmarkIds.get(m.name);
+ if(orientation()&&m===activeWaypoint()){
+  const stop=huntMarkers.find(s=>s.id===id&&story.stopAvailable(s.id));
+  return stop?.position||npcs.find(n=>n.id===story.targetCharacter)?.position||m.position;
+ }
+ return missionDoorRegistry.find(door=>door.id===id)?.interaction||m.position;
 }
 function updateObjective(){
- const m=missions[selected];
- $('objective').textContent=story.objective()+(m?' Waypoint: '+m.name+'.':'');
+ const task=semester.task();
+ $('objective').textContent=orientation()?story.objective():task
+  ? 'Go to '+locationNames[task.place]+' · '+task.title
+  : semester.state.started?'Explore campus':'Broadstone–University arrival';
+ const count=orientation()?0:semester.unread;
+ $('mapBtn').textContent=count?'Phone (M) · '+count+' new':'Phone (M)';
 }
-function canvasMap(ctx,canvas,radius,focus=false){const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#263e37';ctx.fillRect(0,0,w,h);const span=radius*2,scale=Math.min(w,h)/span,px=x=>(x-(focus?player.position.x:0))*scale+w/2,py=y=>((focus?-player.position.z:0)-y)*scale+h/2;
- ctx.strokeStyle='#bba57b';ctx.setLineDash([9,7]);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(px(0),py(0),MAX*scale,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
- for(const f of zone){const p=f.coords;if(p.length<2)continue;const t=f.tags||{};if(f.kind==='land'){ctx.fillStyle='#54764f';ctx.strokeStyle='#557d55'}else if(f.kind==='building'){ctx.fillStyle='#777d79';ctx.strokeStyle='#aab0a4'}else if(f.kind==='barrier'){ctx.strokeStyle=t.barrier==='hedge'?'#73996c':'#e3be83'}else if(f.kind==='road'){ctx.strokeStyle=['footway','pedestrian','path'].includes(t.highway)?'#c5bba4':'#69787a'}else{ctx.strokeStyle='#928d7c'}
- ctx.beginPath();p.forEach((q,i)=>i?ctx.lineTo(px(q[0]),py(q[1])):ctx.moveTo(px(q[0]),py(q[1])));
- if(f.kind==='building'||f.kind==='land'){ctx.closePath();ctx.fill();ctx.stroke();}else{ctx.lineWidth=f.kind==='road'?Math.max(1,roadWidth(t.highway)*scale):f.kind==='barrier'?Math.max(1.5,1.4*scale):1.2;ctx.stroke()}
+const featureBounds=zone.map(f=>{
+ const xs=f.coords.map(p=>p[0]),ys=f.coords.map(p=>p[1]);
+ return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];
+});
+function mapProjection(canvas,radius,focus){
+ const scale=Math.min(canvas.width,canvas.height)/(radius*2);
+ const here=[player.position.x,-player.position.z];
+ const centre=focus||mapZoom>2.5||Math.max(Math.abs(here[0]-112),Math.abs(here[1]+45))>radius*.9
+  ?here:[112,-45];
+ return {scale,centre,x:x=>(x-centre[0])*scale+canvas.width/2,
+  y:n=>(centre[1]-n)*scale+canvas.height/2};
+}
+function canvasMap(ctx,canvas,radius,focus=false){
+ const w=canvas.width,h=canvas.height;
+ const {scale,centre,x:px,y:py}=mapProjection(canvas,radius,focus);
+ ctx.fillStyle='#263e37';ctx.fillRect(0,0,w,h);
+ for(const [i,f] of zone.entries()){
+  const p=f.coords;if(p.length<2)continue;
+  const [x0,y0,x1,y1]=featureBounds[i];
+  if(x1<centre[0]-radius||x0>centre[0]+radius||y1<centre[1]-radius||y0>centre[1]+radius)continue;
+  const t=f.tags||{};
+  if(f.kind==='land'){ctx.fillStyle='#54764f';ctx.strokeStyle='#557d55';}
+  else if(f.kind==='building'){ctx.fillStyle='#828984';ctx.strokeStyle='#acb3a6';}
+  else if(f.kind==='barrier'){ctx.strokeStyle=t.barrier==='hedge'?'#73996c':'#b29c78';}
+  else if(f.kind==='road'){ctx.strokeStyle=['footway','pedestrian','path','steps'].includes(t.highway)?'#d1c8ae':'#69787a';ctx.fillStyle=ctx.strokeStyle;}
+  else if(f.kind==='railway'){ctx.strokeStyle='#b3a3b3';}
+  else continue;
+  ctx.beginPath();p.forEach((q,i)=>i?ctx.lineTo(px(q[0]),py(q[1])):ctx.moveTo(px(q[0]),py(q[1])));
+  if(f.kind==='building'||f.kind==='land'||t.area==='yes'){ctx.lineWidth=1;ctx.closePath();ctx.fill();ctx.stroke();}
+  else{ctx.lineWidth=f.kind==='road'?Math.max(1,roadWidth(t.highway)*scale):1.5;ctx.stroke();}
  }
  const playerPx=px(player.position.x),playerPy=py(-player.position.z);
- if(selected!==null&&missions[selected].position){const p=mapPosition(missions[selected]);const x=px(p[0]),y=py(p[1]);ctx.strokeStyle='#f3d68e';ctx.setLineDash([8,7]);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(playerPx,playerPy);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([])}
- for(const [i,m] of missions.entries()){if(!m.found)continue;const [mx,my]=mapPosition(m);const x=px(mx),y=py(my);if(x<0||y<0||x>w||y>h)continue;ctx.fillStyle=selected===i?'#f8ce73':'#edf0d9';ctx.strokeStyle='#1b3637';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,selected===i?9:7,0,Math.PI*2);ctx.fill();ctx.stroke();if(!focus){ctx.fillStyle='#f8f4e7';ctx.font='bold 16px system-ui';ctx.fillText(m.name,x+12,y+5)}}
- ctx.save();ctx.translate(playerPx,playerPy);ctx.rotate(-yaw);ctx.fillStyle='#fff5b1';ctx.strokeStyle='#173a42';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(-9,10);ctx.lineTo(9,10);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
- ctx.fillStyle='#e7dbb8';ctx.font='bold 17px system-ui';ctx.fillText('N ↑',w-65,30);if(!focus){ctx.fillText('1 km',16,h-18);ctx.fillText('Rathdown origin (0,0)',16,26)}
+ if(selected!==null){
+  const [x,n]=mapPosition(missions[selected]);
+  ctx.strokeStyle='#f3d68e';ctx.setLineDash([8,7]);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(playerPx,playerPy);ctx.lineTo(px(x),py(n));ctx.stroke();ctx.setLineDash([]);
+ }
+ const mapLabels=[];
+ for(const [i,m] of missions.entries()){
+  if(!m.found)continue;
+  const [mx,mn]=mapPosition(m),x=px(mx),y=py(mn);
+  if(x<0||y<0||x>w||y>h)continue;
+  ctx.fillStyle=selected===i?'#f8ce73':'#edf0d9';ctx.strokeStyle='#1b3637';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(x,y,selected===i?9:6,0,Math.PI*2);ctx.fill();ctx.stroke();
+  if(!focus)mapLabels.push({name:m.name,x,y,priority:selected===i});
+ }
+ if(!focus)drawMapLabels(ctx,mapLabels,w,h);
+ ctx.save();ctx.translate(playerPx,playerPy);ctx.rotate(-yaw);ctx.fillStyle='#fff5b1';ctx.strokeStyle='#173a42';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(-10,11);ctx.lineTo(10,11);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+ ctx.fillStyle='#f1dfb7';ctx.font=focus?'bold 20px system-ui':'bold 25px system-ui';ctx.fillText('N ↑',w-(focus?67:78),34);
 }
-function drawMaps(){canvasMap(mapCtx,$map,1000/mapZoom);canvasMap(miniCtx,$('mini'),160,true)}
-$('mapBtn').onclick=()=>setMap(true);$('closeMap').onclick=()=>setMap(false);$('mini').onclick=()=>setMap(true);$('mini').onkeydown=e=>{if(e.key==='Enter'||e.key===' ')setMap(true)};
-function setMap(v){
+function drawMapLabels(ctx,labels,width,height){
+ const boxes=[];
+ ctx.font='bold 27px system-ui';
+ for(const {name,x,y,priority} of labels.sort((a,b)=>Number(b.priority)-Number(a.priority))){
+  const w=ctx.measureText(name).width;
+  const xs=[Math.min(x+12,width-w-8),Math.max(8,x-w-12)];
+  const ys=[y-12,y+35,y-43,y+63,y-73];
+  const positions=ys.flatMap(top=>xs.map(left=>[left,top]));
+  const label=positions.find(([left,bottom])=>left>=6&&bottom>=36&&bottom<height-7&&
+   boxes.every(b=>left>b.right+5||left+w<b.left-5||bottom<b.top-4||bottom-30>b.bottom+4));
+  if(!label)continue;
+  const [left,bottom]=label;
+  boxes.push({left,right:left+w,top:bottom-30,bottom});
+  ctx.strokeStyle='#192c2e';ctx.lineWidth=6;ctx.strokeText(name,left,bottom);
+  ctx.fillStyle=priority?'#fff2b2':'#fff8e1';ctx.fillText(name,left,bottom);
+ }
+}
+function drawMaps(){
+ if(mapOpen&&!(orientation()?story.tab!=='map':semesterTab!=='map'))canvasMap(mapCtx,$map,1000/mapZoom);
+ canvasMap(miniCtx,$('mini'),100,true);
+}
+$('mapBtn').onclick=()=>setMap(true);$('closeMap').onclick=()=>setMap(false);
+$('mini').onclick=()=>setMap(true);
+$('mini').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setMap(true);}};
+function setMap(v,{resume=true}={}){
+ if(!$('arrival').hidden)return;
+ if(v&&!$('npcDialog').hidden){
+  suspendedDialogue=true;
+  $('npcDialog').hidden=true;
+ }
  mapOpen=v;$('overlay').hidden=!v;
+ setModal();
  if(v){missionList();drawMaps();$('closeMap').focus();}
- else {$('stage').focus({preventScroll:true});story.resumePhone();}
+ else if(resume&&suspendedDialogue){
+  suspendedDialogue=null;
+  $('npcDialog').hidden=false;setModal();$('npcTitle').focus();
+ }else {
+  suspendedDialogue=null;
+  $('stage').focus({preventScroll:true});
+  if(resume&&orientation())story.resumePhone();
+ }
 }
-$('restart').onclick=()=>{placeAtArrival();story.persist();$('stage').focus();};
-$map.addEventListener('wheel',e=>{e.preventDefault();mapZoom=THREE.MathUtils.clamp(mapZoom+Math.sign(-e.deltaY)*.16,1,3.4);drawMaps()},{passive:false});
-$map.addEventListener('click',e=>{const b=$map.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*$map.width,y=(e.clientY-b.top)/b.height*$map.height,scale=$map.width/(2000/mapZoom),mx=(x-$map.width/2)/scale,my=($map.height/2-y)/scale;let best=-1,d=Infinity;missions.forEach((m,i)=>{if(!m.found)return;const [x,n]=mapPosition(m);const dd=Math.hypot(mx-x,my-n);if(dd<d){d=dd;best=i}});if(best>=0&&d<45/mapZoom)selectWaypoint(best)});
-// Track physical keys rather than typed characters so Space+WASD is reliable
-// with different keyboard layouts and after the browser loses focus.
+$('restart').onclick=()=>{
+ placeAtArrival();
+ if(orientation())story.persist();else saveSemester();
+ $('stage').focus();
+};
+function zoomMap(delta){mapZoom=THREE.MathUtils.clamp(mapZoom+delta,1,4);drawMaps();}
+$('zoomIn').onclick=()=>zoomMap(.3);$('zoomOut').onclick=()=>zoomMap(-.3);
+$map.addEventListener('wheel',e=>{e.preventDefault();zoomMap(Math.sign(-e.deltaY)*.16);},{passive:false});
+$map.addEventListener('click',e=>{
+ const b=$map.getBoundingClientRect(),side=Math.min(b.width,b.height);
+ const x=(e.clientX-b.left-(b.width-side)/2)*$map.width/side;
+ const y=(e.clientY-b.top-(b.height-side)/2)*$map.height/side;
+ const {scale,centre}=mapProjection($map,1000/mapZoom,false);
+ const mx=(x-$map.width/2)/scale+centre[0],mn=($map.height/2-y)/scale+centre[1];
+ let best=-1,d=Infinity;
+ missions.forEach((m,i)=>{if(!m.found)return;const [x,n]=mapPosition(m);const dd=Math.hypot(mx-x,mn-n);if(dd<d){d=dd;best=i;}});
+ if(best>=0&&d<32/mapZoom)selectWaypoint(best);
+});
 const keys={};
 const movementCodes=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ShiftLeft','ShiftRight']);
-function gameplayActive(){return !mapOpen&&$('npcDialog').hidden}
+function gameplayActive(){return !mapOpen&&$('npcDialog').hidden&&$('arrival').hidden;}
 addEventListener('keydown',e=>{
  const code=e.code,k=e.key.toLowerCase(),typing=e.target instanceof HTMLElement&&
    (e.target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName));
- if(typing&&k!=='escape')return;
- if(movementCodes.has(code)&&gameplayActive())e.preventDefault();
- keys[code]=true;
- if(k==='e'&&!e.repeat&&gameplayActive()){e.preventDefault();talkToNpc()}
- if(k==='v'&&!e.repeat&&gameplayActive()){e.preventDefault();setPerspective(!firstPerson)}
- if(k==='m'&&!e.repeat&&$('npcDialog').hidden){e.preventDefault();setMap(!mapOpen)}
- if(k==='escape'){if(!$('npcDialog').hidden)story.close();else if(mapOpen)setMap(false)}
+ if(k==='tab'){
+  const modal=[$('arrival'),$('overlay'),$('npcDialog')].find(el=>!el.hidden);
+  if(modal){
+   const available=[...modal.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),textarea')].filter(el=>el.getClientRects().length);
+   const first=available[0],last=available.at(-1);
+   if(first&&(!available.includes(document.activeElement)||(e.shiftKey&&document.activeElement===first)||(!e.shiftKey&&document.activeElement===last))){
+    e.preventDefault();(e.shiftKey?last:first).focus();
+   }
+  }
+ }
+ if(k==='escape'){
+  if(!$('arrival').hidden)finishArrival();
+  else if(mapOpen)setMap(false);
+  else if(!$('npcDialog').hidden)closeConversation();
+  return;
+ }
+ if(typing)return;
+ if(movementCodes.has(code)&&gameplayActive()&&(e.target===$('stage')||e.target===document.body||e.target===renderer.domElement)){
+  e.preventDefault();keys[code]=true;
+ }
+ if(k==='e'&&!e.repeat&&gameplayActive()){e.preventDefault();talkToNpc();}
+ if(k==='v'&&!e.repeat&&gameplayActive()){e.preventDefault();setPerspective(!firstPerson);}
+ if(k==='m'&&!e.repeat&&$('arrival').hidden){e.preventDefault();setMap(!mapOpen);}
 });
-addEventListener('keyup',e=>{keys[e.code]=false});
-addEventListener('blur',()=>{for(const key in keys)keys[key]=false});
+addEventListener('keyup',e=>{keys[e.code]=false;});
+addEventListener('blur',()=>{for(const key in keys)keys[key]=false;});
 function controlAxes(){
  const looking=!!keys.Space;
  const forward=+!!(keys.KeyW||keys.ArrowUp)-+!!(keys.KeyS||keys.ArrowDown);
@@ -1238,10 +1663,52 @@ function controlAxes(){
 }
 let dragging=false,mouseX=0,mouseY=0;renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;mouseX=e.clientX;mouseY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;yaw-=(e.clientX-mouseX)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-mouseY)*.005,-1.35,1.35);mouseX=e.clientX;mouseY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>dragging=false);renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();follow=THREE.MathUtils.clamp(follow+Math.sign(e.deltaY)*.55,3.8,8)},{passive:false});
 $('viewMode').onclick=()=>setPerspective(!firstPerson);setPerspective(true);
-let t=performance.now(),sceneRendered=false;
+let t=performance.now(),sceneRendered=false,arrivalElapsed=0,lastMini=0,lastPoseSave=0;
+const tramTrack=zone.find(f=>f.tags?.railway==='tram'&&f.coords.some(p=>Math.hypot(p[0]-gradeStart[0],p[1]-gradeStart[1])<.5));
+const luas=createLuas(scene,gradeStart,tramTrack,groundHeight);
+function finishArrival(){
+ if($('arrival').hidden)return;
+ $('arrival').hidden=true;
+ luas.pose(0,0);
+ placeAtArrival();
+ setModal();
+ semester.arrivalSeen();
+ semester.begin();
+ showSemester();
+}
+$('skipArrival').onclick=finishArrival;
+function showArrival(){
+ $('arrival').hidden=false;setModal();$('skipArrival').focus();
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)finishArrival();
+}
+function arrivalFrame(dt){
+ arrivalElapsed+=dt;
+ const t=arrivalElapsed;
+ const [x,n]=gradeStart,[dx,dn]=luas.direction;
+ luas.pose(-30*(1-THREE.MathUtils.smoothstep(t,0,2.55)),THREE.MathUtils.smoothstep(t,2.65,3.65));
+ camera.position.set(x+13*dn+5*dx,groundHeight(x,n)+3.5,-n+13*dx-5*dn);
+ camera.lookAt(x-3*dx,groundHeight(x,n)+1.4,-n+3*dn);
+ if(t>3.25&&$('arrivalLine').dataset.stage!=='doors'){
+  $('arrivalLine').dataset.stage='doors';
+  $('arrivalLine').textContent='The doors open. Follow the pedestrian approach towards Grangegorman.';
+ }
+ renderer.render(scene,camera);
+ if(t>5.8)finishArrival();
+}
+
+function movePlayer(forward,right,dt){
+ const x=-Math.sin(yaw)*forward+Math.cos(yaw)*right,z=-Math.cos(yaw)*forward-Math.sin(yaw)*right;
+ const length=Math.hypot(x,z),speed=(keys.ShiftLeft||keys.ShiftRight)?8:4.5;
+ const previousX=player.position.x,previousN=-player.position.z;
+ const resolved=collision.move(previousX,previousN,x/length*dt*speed,-z/length*dt*speed);
+ if(intersectsPlanter(resolved.x,resolved.y))return;
+ player.position.set(resolved.x,groundHeight(resolved.x,resolved.y)+.05,-resolved.y);
+ player.rotation.y=Math.atan2(-x,-z);
+}
 function frame(now){
  requestAnimationFrame(frame);
  const dt=Math.min((now-t)/1000,.055);t=now;
+ if(!$('arrival').hidden){arrivalFrame(dt);return;}
  const active=gameplayActive();
  if(!active&&sceneRendered){
   $('npcHint').hidden=true;
@@ -1259,14 +1726,10 @@ function frame(now){
   const lookSpeed=1.55;
   yaw-=right*lookSpeed*dt;
   pitch=THREE.MathUtils.clamp(pitch-forward*lookSpeed*dt,-1.35,1.35);
- }else if(forward||right){const x=-Math.sin(yaw)*forward+Math.cos(yaw)*right,z=-Math.cos(yaw)*forward-Math.sin(yaw)*right;const m=Math.hypot(x,z),speed=(keys.ShiftLeft||keys.ShiftRight)?8:4.5;movingRig=true;const dx=x/m*dt*speed,dz=z/m*dt*speed;const previousX=player.position.x,previousN=-player.position.z;
- const resolved=collision.move(previousX,previousN,dx,-dz);
- // Additional low-landscape collision: preserve the player's existing
- // position if the destination is inside the curved seating island.
- if(intersectsPlanter(resolved.x,resolved.y)){
-  resolved.x=previousX;resolved.y=previousN;
+ }else if(forward||right){
+  movingRig=true;
+  movePlayer(forward,right,dt);
  }
- player.position.x=resolved.x;player.position.z=-resolved.y;player.position.y=groundHeight(resolved.x,resolved.y)+.05;player.rotation.y=Math.atan2(-x,-z)} }
  if(animationController&&originalNpcRig)animationController.update(dt,movingRig?((keys.ShiftLeft||keys.ShiftRight)?'run':'walk'):'idle');
  if(player.userData.walkArms){
   const phase=now*.009,swing=movingRig?Math.sin(phase)*.27:Math.sin(now*.0013)*.025;
@@ -1281,6 +1744,7 @@ function frame(now){
    for(const a of arms)a.pivot.rotation.x=a.side*sway;
    for(const l of npc.body.userData.walkLegs)l.pivot.rotation.x=-l.side*sway*.36;
   }
+ }
  }
  const target=player.position.clone().add(new THREE.Vector3(0,1.6,0));
  if(firstPerson){
@@ -1298,10 +1762,35 @@ function frame(now){
   );
   camera.position.lerp(followPosition,.22);
   camera.lookAt(target);
- }renderer.render(scene,camera);sceneRendered=true;$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
-refreshStory(true);if(reviewStartAtLuas)story.start();
-addEventListener('pagehide',()=>story.persist());$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.id==='induction');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get missionDoorRegistry(){return missionDoorRegistry},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get eastQuadPavingAudit(){return eastQuadPavingAudit},get eastQuadSignRelativeScreenPosition(){
+ }
+ renderer.render(scene,camera);
+ sceneRendered=true;
+ if(now-lastMini>170){
+  if(review)$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;
+  drawMaps();
+  lastMini=now;
+ }
+ if(active&&now-lastPoseSave>2500){
+  if(orientation())story.persist();
+  saveSemester();
+  lastPoseSave=now;
+ }
+}
+document.body.classList.toggle('comfortable',semester.state.readingMode==='comfortable');
+refreshStory(true);
+if(orientation()){
+ if(reviewStartAtLuas)story.start();
+}else if(!semester.state.arrivalSeen)showArrival();
+else if(!semester.state.started){
+ semester.begin();
+ showSemester();
+}else if(semester.state.current){
+ activeEntry=missionDoorRegistry.find(d=>d.id===semester.location&&Math.hypot(player.position.x-d.interaction[0],-player.position.z-d.interaction[1])<.8)||null;
+ showSemester();
+}
+addEventListener('pagehide',()=>{if(orientation())story.persist();saveSemester();});
+$('status').textContent=review?`${zone.length} OSM features · ${counts.building} 3D building blocks`:'Campus routes follow the mapped site.';
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.id==='induction');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get missionDoorRegistry(){return missionDoorRegistry.map(({onEnter,available,...d})=>d)},get campusFacadeAudit(){return campusFacadeAudit},get underpass(){return underpass},get semester(){return structuredClone(semester.state)},get activeTask(){return semester.task()},get mapPlayer(){const p=mapProjection($map,1000/mapZoom,false);return {x:p.x(player.position.x),y:p.y(-player.position.z),centre:p.centre,scale:p.scale}},get arrivalElapsed(){return arrivalElapsed},get tramPosition(){return luas.car.position.toArray()},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get eastQuadPavingAudit(){return eastQuadPavingAudit},get eastQuadSignRelativeScreenPosition(){
  const sign=scene.getObjectByName('EastQuadGoldNorthEntranceWallSign');
  if(!sign||!eastQuadEntrance)return null;
  scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);
@@ -1314,11 +1803,22 @@ window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstP
 },get eastQuadSignSightline(){const sign=scene.getObjectByName('EastQuadGoldNorthEntranceWallSign');if(!sign)return null;sign.updateWorldMatrix(true,false);const target=sign.getWorldPosition(new THREE.Vector3()),eye=player.position.clone().add(new THREE.Vector3(0,1.65,0)),v=target.clone().sub(eye),d=v.length();const ray=new THREE.Raycaster(eye,v.normalize(),0,d+.4);const hits=ray.intersectObjects(scene.children,true);return {distance:d,hits:hits.filter(h=>h.distance>.1).slice(0,6).map(h=>({name:h.object.name||h.object.type,distance:h.distance,sign:h.object===sign}))};},get eastQuadSignGeometry(){let sign=null,panel=null;scene.traverse(o=>{if(o.name==='EastQuadGoldNorthEntranceWallSign')sign=o;if(o.name==='EastQuadRightSignBrickWall')panel=o});if(!sign||!panel)return null;sign.updateWorldMatrix(true,false);panel.updateWorldMatrix(true,false);const p=sign.getWorldPosition(new THREE.Vector3()),q=panel.getWorldPosition(new THREE.Vector3());return {position:[p.x,p.y,-p.z],wallPosition:[q.x,q.y,-q.z],frontOffset:sign.position.z,width:sign.geometry.parameters.width,height:sign.geometry.parameters.height,visible:sign.visible,wallVisible:panel.visible}},get story(){return story.snapshot},get encounterPoints(){return {
  characters:Object.fromEntries(npcs.map(n=>[n.id,n.position])),stops:Object.fromEntries(huntMarkers.map(m=>[m.id,m.position])),
  }},reviewPose:(x,n,tx,tn,height=0)=>{
- if(!params.has('review')||collision.query(x,n)||intersectsPlanter(x,n))return false;
+ if(!(params.has('review')||params.has('test'))||collision.query(x,n)||intersectsPlanter(x,n))return false;
  player.position.set(x,groundHeight(x,n)+.05,-n);
  yaw=Math.atan2(x-tx,tn-n);
  pitch=-Math.atan2(height-1.65,Math.hypot(tx-x,tn-n));
  return true;
+ },testWalk:(x,n)=>{
+  if(!params.has('test')||!gameplayActive())return null;
+  const dx=x-player.position.x,dn=n+player.position.z;
+  const len=Math.hypot(dx,dn);
+  if(len>.025){
+   yaw=Math.atan2(-dx,dn);
+   const slices=Math.ceil(len/.18);
+   for(let i=0;i<slices;i++)movePlayer(1,0,len/(4.5*slices));
+  }
+  sceneRendered=false;
+  return [player.position.x,-player.position.z];
  },get facingYaw(){return player.rotation.y},get plazaFeatures(){return eastQuadPlazaFeatures},plazaCollision:(x,n)=>intersectsPlanter(x,n),get closestNpcVerticalDifference(){const n=nearestNpc();return n?n.body.position.y-player.position.y:null},get npcVisualDiagnostics(){return npcs.map(n=>{const figure=n.body.children.find(c=>c.type==='Group');const figureBox=figure?new THREE.Box3().setFromObject(figure):null;const bodyBox=new THREE.Box3().setFromObject(n.body);return {name:n.name,groundY:groundHeight(n.body.position.x,-n.body.position.z),originY:n.body.position.y,rigBottom:figureBox?.min.y,rigTop:figureBox?.max.y,rigHeight:figureBox?.max.y-figureBox?.min.y,wholeHeight:bodyBox.max.y-bodyBox.min.y}})},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],groundHeight(m.position[0],m.position[1])+.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);sceneRendered=false;});
 </script></body></html>

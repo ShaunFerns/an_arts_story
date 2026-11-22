@@ -86,6 +86,17 @@ At each stop, look around and record something you might want to remember. Every
     huntQuestion: {speaker: "Sustainability team · scavenger hunt", title: "What do you notice?",
       text: ()=>{const stop=currentHuntStop();return `${places[stop.id].name} — ${stop.prompt}`;},
       choices: []},
+    huntTryAgain: {speaker:'Sustainability team · scavenger hunt',title:'Look around',
+      text:'The useful detail may be a building, a person, or a route you can remember later.',
+      choices:['Choose an observation']},
+    induction2: {speaker:'Bríd · Arts induction',title:'The day is underway',
+      text:`“There’s a lot to take in,” Bríd says, “but you don't need to remember it all now. Start with the people around you. Cian said he wanted to ask something after induction.”
+
+You hear people leaving for different buildings. The campus has begun to feel less like a map and more like somewhere you might belong.`,
+      choices:['Find Cian','Check my phone']},
+    defaultTalk: {speaker:'Narrator',title:'A brief encounter',
+      text:'People are coming and going between classes. You can return here later, or use your phone to find the next person you need.',
+      choices:['Back']},
     huntFeedback: {speaker: "Sustainability team · scavenger hunt", title: "Added to your field notes",
       text: ()=>{const id=state.huntDone[state.huntDone.length-1],note=state.huntEvidence[id];return `${note.note}
 

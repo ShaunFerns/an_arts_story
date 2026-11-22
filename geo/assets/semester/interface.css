@@ -1,0 +1,60 @@
+/* Phone and dialogue share the same modal layer and keyboard focus rules. */
+[hidden] { display: none !important; }
+#heads .pane:first-child { max-width: min(390px, calc(100vw - 36px)); }
+#heads h1 { font-size: 21px; }
+#heads p { font-size: 14px; }
+#foot .buttons { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+#hud:not(.review) .controls { display: none; }
+#mini { width: 136px; height: 136px; }
+#overlay { background: #071b22ba; padding: 12px; }
+#mapShell { display: flex; flex-direction: column; gap: 0; width: min(445px, 100%); height: min(820px, 95dvh); padding: 9px; border: 1px solid #73908d; border-radius: 31px; background: #0e2227; overflow: hidden; box-shadow: 0 24px 80px #000a; }
+#phoneHeader { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 13px; }
+#phoneHeader h1 { margin: 0; font-size: 17px; }
+#closeMap { padding: 8px 10px; }
+#mapFrame { order: 2; aspect-ratio: 1; flex: 0 1 min(330px, 48%); margin: 7px 3px 0; }
+#map { width: 100%; height: 100%; object-fit: contain; }
+#mapTools { display: flex; order: 3; gap: 6px; align-items: center; padding: 4px 10px; font-size: 12px; }
+#mapTools span { margin-right: auto; color: #fff2b6; }
+#mapTools button { background: none; color: #fcf5df; border: 1px solid #9ab3a8; padding: 3px 9px; border-radius: 5px; font: inherit; cursor: pointer; }
+#phoneTabs { order: 1; flex-shrink: 0; display: flex; gap: 4px; padding: 3px 4px; overflow-x: auto; flex-wrap: nowrap; }
+#phoneTabs button { flex: 1 0 auto; padding: 7px; white-space: nowrap; font-size: 13px; }
+#side { order: 4; flex: 1; display: flex; max-height: none; }
+#missionList { padding: 9px; border: 0; border-radius: 10px; box-shadow: none; min-height: 0; max-height: none; overscroll-behavior: contain; }
+#missionList section { border-bottom: 1px solid #91aaa144; padding: 5px 4px 9px; }
+#missionList h2 { margin: 5px 0 3px; line-height: 1.25; }
+#missionList p { margin: 3px 0 5px; }
+#mapNote { padding: 0 8px 3px; }
+#npcDialog #npcChoices { display: grid; gap: 8px; }
+#npcDialog .secondary-action { margin-left: 8px; }
+#npcLocation { color: #bad2c8; margin: 0 0 8px; }
+#npcMarkup p { white-space: pre-line; }
+#npcMarkup a { color: #ffdf9e; }
+#npcMarkup .item { border-top: 1px solid #91aaa160; padding: 8px 0; }
+#npcMarkup .item strong { display: block; }
+#npcMarkup fieldset { margin: 12px 0; }
+#npcMarkup fieldset label { display: block; padding: 3px; }
+#npcMarkup textarea { width: 100%; display: block; font: inherit; }
+#npcMarkup .footer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#npcMarkup .degree-segments { display: flex; flex-wrap: wrap; gap: 4px; }
+#npcMarkup .degree-segments span { min-width: max-content; padding: 3px 5px; color: white; text-shadow: 0 1px 3px #000; }
+.comfortable #npcDialog p, .comfortable #npcDialog #npcChoices button { font-size: 19px; line-height: 1.65; }
+#arrival { position: fixed; inset: 0; z-index: 10; display: grid; align-items: end; justify-items: center; background: linear-gradient(transparent 50%, #071b22a0); padding: 26px; }
+#arrival article { background: #102b31f5; border: 1px solid #afc2b4; border-radius: 14px; padding: 14px 22px; width: min(570px,100%); }
+#arrival h1 { font: 28px Georgia,serif; margin: 0 0 4px; }
+#arrival p { margin: 6px 0; }
+#arrival button { border: 1px solid #b3aa92; padding: 8px 12px; border-radius: 6px; background: #f1d8a4; color: #172529; cursor: pointer; font: inherit; }
+@media (max-width: 720px) {
+  #mini { width: 104px; height: 104px; bottom: 100px; }
+  #foot .buttons button { padding: 7px 9px; font-size: 12px; }
+  #npcHint { bottom: 92px; max-width: min(66vw, 300px); }
+  #npcDialog article { padding: 16px; }
+  #npcDialog h2 { font-size: 25px; }
+}
+#hud.arrival-active { visibility: hidden; }
+#phoneTabs { flex-wrap: wrap; overflow: visible; }
+#phoneTabs button { flex: 1 0 21%; }
+#mapShell #side { min-height: 95px; }
+#mapFrame { aspect-ratio: auto; }
+#mapFrame canvas { max-height: 100%; }
+#mapTools { flex-shrink: 0; }
+#phoneHeader { flex-shrink: 0; }

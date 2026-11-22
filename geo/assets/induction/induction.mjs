@@ -136,13 +136,16 @@ export function createInduction({storage, saveKey, ui}) {
     inductionPreferenceRecorded: [()=>advance('joinHunt')],
     huntStart: [()=>advance('hunt'),()=>{advance('hunt');phone('hunt');}],
     huntKeepGoing: [close,()=>phone('map')],
+    huntTryAgain: [()=>open('huntQuestion')],
+    induction2: [close,()=>phone('map')],
     huntFeedback: [()=>phone('hunt'),close],
     huntFinish: [()=>{
       state.timetablePublished=true;
       transition('friday');
       open('friday');
     }],
-    friday: [()=>{advance('cian');phone('timetable');},()=>advance('cian')],
+    friday: [()=>{transition('cian');open('induction2');phone('timetable');},
+      ()=>{transition('cian');open('induction2');}],
     cian1: [
       ()=>{state.chosenResponse='check';transition('cianAdviser');open('cian2');},
       ()=>{state.chosenResponse='swap';transition('cianAdviser');open('cian2');},
@@ -204,7 +207,7 @@ export function createInduction({storage, saveKey, ui}) {
           state.huntTarget=null;
           ui.refresh(true);
           open('huntFeedback');
-        }}))
+        }})).concat({text:'Take another look first',select:()=>open('huntTryAgain')})
       : node.choices.map((text,index)=>({text,select:()=>{
           if (branches.has(id) && index<2) state.decisions[id]=index;
           (actions[id]?.[index]||close)();
@@ -289,7 +292,7 @@ export function createInduction({storage, saveKey, ui}) {
     start(){if (state.node) open(state.node);},
     objective, waypoint, get targetCharacter(){return missions[state.stage].npc;},
     persist, close, resumePhone, phoneContent, stopAvailable, nodeFor, observe, selectStop,
-    talk(npc){open(nodeFor(npc));},
+    talk(npc){open(nodeFor(npc)||'defaultTalk');},
     get tab(){return tab;},
     tabs, labels, setTab,
   };
