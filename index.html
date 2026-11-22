@@ -1028,6 +1028,67 @@
     const tramStopSign=makeTextBillboard('Broadstone – University\nLuas',330,100,'#243c44','#fff4f2');tramStopSign.position.set(42*CAMPUS_SPREAD,4,39*CAMPUS_SPREAD);scene.add(tramStopSign);
     const routeSign=makeTextBillboard('EAST QUAD → ARTS INDUCTION',440,70,'#263e40','#ffe5a7');routeSign.position.set(31*CAMPUS_SPREAD,4.4,32*CAMPUS_SPREAD);scene.add(routeSign);
 
+    // Broadstone Gate arrival correction (v0.9.1): lower Luas platform,
+    // a gently rising pedestrian approach, and a bridge carrying depot access above.
+    // Approximate game geometry informed by campus travel guidance; not a survey model.
+    const rampNodes=[
+      [88.8,75.0,.21],[83.6,72.0,.42],[78.6,66.5,.86],
+      [74.2,60.8,1.35],[69.4,53.8,1.86],[64.2,46.4,2.15]
+    ];
+    const walkWidth=9.3;
+    const rampMaterial=new THREE.MeshStandardMaterial({color:0xb9b3a7,roughness:.91});
+    const wallMaterial=new THREE.MeshStandardMaterial({color:0x9a9890,roughness:.9});
+    function rampHeightAt(x,z){
+      let best=Infinity,result=.05;
+      for(let i=0;i<rampNodes.length-1;i++){
+        const a=rampNodes[i],b=rampNodes[i+1],dx=b[0]-a[0],dz=b[1]-a[1];
+        const u=THREE.MathUtils.clamp(((x-a[0])*dx+(z-a[1])*dz)/(dx*dx+dz*dz),0,1);
+        const px=a[0]+dx*u,pz=a[1]+dz*u,d=Math.hypot(x-px,z-pz);
+        if(d<best){best=d;result=THREE.MathUtils.lerp(a[2],b[2],u)}
+      }
+      return best<walkWidth*.67?result:.05;
+    }
+    for(let i=0;i<rampNodes.length-1;i++){
+      const a=rampNodes[i],b=rampNodes[i+1],dx=b[0]-a[0],dz=b[1]-a[1];
+      const length=Math.hypot(dx,dz),nx=-dz/length,nz=dx/length;
+      const vertices=[];
+      for(const [c,side] of [[a,-1],[a,1],[b,-1],[b,1]]){
+        vertices.push(c[0]+nx*walkWidth*.5*side,c[2],c[1]+nz*walkWidth*.5*side);
+      }
+      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+      geo.setIndex([0,2,1,1,2,3]);geo.computeVertexNormals();
+      const deck=new THREE.Mesh(geo,rampMaterial);deck.material.side=THREE.DoubleSide;
+      deck.receiveShadow=true;scene.add(deck);
+      for(const side of [-1,1]){
+        const edge=new THREE.Mesh(new THREE.BoxGeometry(length,.28,.15),wallMaterial);
+        edge.position.set((a[0]+b[0])*.5+nx*walkWidth*.5*side,
+          (a[2]+b[2])*.5+.02,(a[1]+b[1])*.5+nz*walkWidth*.5*side);
+        edge.rotation.y=-Math.atan2(dz,dx);scene.add(edge);
+      }
+    }
+    // The access road passes OVER the approach, not across the player's path.
+    const bridgeStone=new THREE.MeshStandardMaterial({color:0x828989,roughness:.83});
+    const bridgeDark=new THREE.MeshStandardMaterial({color:0x40494d,roughness:.92});
+    const crossing=new THREE.Mesh(new THREE.BoxGeometry(55,1.1,8.4),bridgeStone);
+    crossing.position.set(77.5,6.9,64.5);crossing.castShadow=true;crossing.receiveShadow=true;scene.add(crossing);
+    const underside=new THREE.Mesh(new THREE.BoxGeometry(55,.24,8.6),bridgeDark);
+    underside.position.set(77.5,6.22,64.5);scene.add(underside);
+    for(const x of [51.2,104.0]){
+      const support=new THREE.Mesh(new THREE.BoxGeometry(1.3,7.1,9.1),bridgeStone);
+      support.position.set(x,3.45,64.5);support.castShadow=true;scene.add(support);
+    }
+    for(const z of [60.2,68.8]){
+      const guard=new THREE.Mesh(new THREE.BoxGeometry(55,1.25,.14),shelterSteel);
+      guard.position.set(77.5,8.07,z);scene.add(guard);
+    }
+    for(const side of [-1,1]){
+      // Stone retaining edges widen the view as you climb towards the campus.
+      const retain=new THREE.Mesh(new THREE.BoxGeometry(.7,2.6,19),bridgeStone);
+      retain.position.set(80+side*8,1.25,72);retain.rotation.y=-.62;scene.add(retain);
+    }
+    const gateway=makeTextBillboard('GRANGEGORMAN · EAST QUAD',405,80,'#30434a','#f6e8c2');
+    gateway.position.set(66,5.7,50);gateway.scale.set(6.1,1.15,1);scene.add(gateway);
+
     // Background walkers and cyclists move along repeated paths. These are atmosphere, not quest characters.
     const ambientRoutes=[
       [[41,33],[36,31],[29,29],[15,29],[13,42]],
@@ -1091,8 +1152,8 @@
     // A short skippable camera scene inside the actual 3D world.
     const arrivalOverlay=document.getElementById('arrivalScene');
     let arrivalRunning=false,arrivalFinished=false,arrivalSeconds=0;
-    const onTrain=new THREE.Vector3(42*CAMPUS_SPREAD,.05,36*CAMPUS_SPREAD-1.9);
-    const onCampus=new THREE.Vector3(39*CAMPUS_SPREAD,.05,33*CAMPUS_SPREAD);
+    const onTrain=new THREE.Vector3(42*CAMPUS_SPREAD,.25,36*CAMPUS_SPREAD-1.9);
+    const onCampus=new THREE.Vector3(83.6,.45,72.0);
     const disembarking=[];
     for(let i=0;i<4;i++){
       const a=makeAvatar({shirt:[0x816d89,0x658a85,0x9b7955,0x6b839d][i],trousers:0x394751,
@@ -1115,7 +1176,7 @@
       document.getElementById('hud').style.opacity='';
       disembarking.forEach(a=>a.visible=false);
       player.position.copy(onCampus);
-      yaw=.5;pitch=.5;
+      yaw=.70;pitch=.49;
       openNode('intro');saveGame();
     }
     function updateArrival(dt){
@@ -1126,6 +1187,7 @@
       tramDoors.forEach(d=>d.panel.position.x=d.side*(.52+1.06*door));
       const p=THREE.MathUtils.smoothstep(t,3,9);
       player.position.lerpVectors(onTrain,onCampus,p);
+      player.position.y=rampHeightAt(player.position.x,player.position.z)+.05;
       body.rotation.y=-2.45;animateAvatar(body,t,p>.001&&p<.999);
       for(let i=0;i<disembarking.length;i++){
         const a=disembarking[i],m=THREE.MathUtils.smoothstep(t,2.5+i*.4,8.2+i*.2);
@@ -1136,9 +1198,9 @@
       camera.position.lerp(look.clone().add(new THREE.Vector3(9-p*2,5.4-p,12.5)),.09);
       camera.lookAt(look.x,look.y,look.z-2.0);
       const title=document.getElementById('arrivalTitle'),desc=document.getElementById('arrivalLine');
-      if(t<3){title.textContent='Welcome to Grangegorman.';desc.textContent='The Luas slows to a stop. People collect their bags. The doors slide open.';}
-      else if(t<7){title.textContent='A whole campus ahead.';desc.textContent='You step onto the platform with other students. The scale of the campus catches your attention.';}
-      else{title.textContent='Find your way to East Quad.';desc.textContent='Induction is where you meet fellow students, university services, staff and your academic adviser.';}
+      if(t<3){title.textContent='Broadstone–University.';desc.textContent='The Luas stops in the cutting beneath the road. Students collect their bags as the doors open.';}
+      else if(t<7){title.textContent='Up towards Grangegorman.';desc.textContent='You join the other first years on the gently rising pedestrian approach beneath the road bridge.';}
+      else{title.textContent='East Quad is ahead.';desc.textContent='The route opens towards campus. Your induction day begins with new people, university services and academic advising.';}
       if(t>10)finishArrival();
     }
     // Brief story transition: Operations publishes initial timetables on Friday before teaching.
@@ -1618,6 +1680,7 @@ You look around and make a mental note that some people are here for the first t
         lastTravelHeading=body.rotation.y;
         playerMoving=true;playerStride += dt;
       }
+      player.position.y=THREE.MathUtils.lerp(player.position.y,rampHeightAt(player.position.x,player.position.z)+.05,.18);
       player.position.x = THREE.MathUtils.clamp(player.position.x, -205, 120);
       player.position.z = THREE.MathUtils.clamp(player.position.z, -132, 150);
 
