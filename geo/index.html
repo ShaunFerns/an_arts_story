@@ -7,8 +7,10 @@
 <div id="foot"><div class="pane controls">1 world unit = <strong>1 metre</strong><br>Buildings: simple scaled blocks · walls/hedges: source feature lines<br><span id="pos"></span></div><div class="buttons"><button id="mapBtn">☰ Open mission map (M)</button><button id="restart">Return to Rathdown</button></div></div>
 <div id="overlay" hidden role="dialog" aria-modal="true" aria-label="Grangegorman mission map"><div id="mapShell"><div id="mapFrame"><canvas id="map" width="1000" height="1000" aria-label="Mapped campus with mission markers"></canvas></div><div id="side"><button id="closeMap">✕ Return to game (M)</button><div class="pane"><small>RATHDOWN ORIGIN · 1 KM RADIUS</small><h1>Mission map</h1><p>One game unit equals one metre. Click a marker or select a mission. The dashed gold line is a <b>bearing, not a verified walking route</b>.</p><p id="attribution">© OpenStreetMap contributors · ODbL</p></div><div id="missionList" class="pane"></div><div id="mapNote">Mapped footprints and walls are based on OpenStreetMap tags. Heights and some barriers are estimated; elevations are not yet surveyed.</div></div></div></div>
 <div id="error" hidden><article><h1>Verified geographic data unavailable</h1><p id="errorText"></p><p>The game will not substitute invented geography for missing OpenStreetMap data. <a href="../review/">Open the older experimental route</a> or review the <a href="https://github.com/ShaunFerns/an_arts_story/blob/main/docs/geographic-and-visual-reset.md">geographic specification</a>.</p></article></div>
+<script type="importmap">{"imports":{"three":"../vendor/three.module.js","three/addons/":"../vendor/addons/"}}</script>
 <script type="module">
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 const $=id=>document.getElementById(id),data=await fetch('./data.json').then(r=>{if(!r.ok)throw Error('No OSM snapshot (HTTP '+r.status+')');return r.json()}).catch(e=>{ $('error').hidden=false;$('errorText').textContent=e.message;throw e});
 if(!data.features?.length||!data.anchor||data.radius!==1000){$('error').hidden=false;$('errorText').textContent='Geographic snapshot is incomplete.';throw Error('Invalid OSM snapshot')}
 const zone=data.features,origin=data.anchor,MAX=1000,$map=$('map'),mapCtx=$map.getContext('2d'),miniCtx=$('mini').getContext('2d');
@@ -37,6 +39,24 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
 const player=new THREE.Group();scene.add(player);const human=new THREE.Mesh(new THREE.CapsuleGeometry(.28,1.1,5,12),mat(0x264e61));human.position.y=.88;human.castShadow=true;player.add(human);
 const head=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),mat(0xc99b7f));head.position.y=1.67;player.add(head);
 const direction=new THREE.Mesh(new THREE.ConeGeometry(.19,.58,8),mat(0xefc577));direction.rotation.x=Math.PI/2;direction.position.set(0,.9,-.48);player.add(direction);
+let riggedPlayer=false,modelRig=null,rigBones={};
+try {
+ const file=await new GLTFLoader().loadAsync('../review/assets/student-rig.glb');
+ modelRig=file.scene;
+ const bb=new THREE.Box3().setFromObject(modelRig);
+ const rawHeight=bb.max.y-bb.min.y;
+ if(!(rawHeight>.1))throw Error('Invalid rigged character bounds');
+ const k=1.74/rawHeight;modelRig.scale.setScalar(k);modelRig.position.y=-bb.min.y*k;
+ modelRig.traverse(n=>{
+  if(n.isSkinnedMesh){n.castShadow=true;n.receiveShadow=true}
+  if(!n.isBone)return;
+  const t=n.name.toLowerCase().replace(/[^a-z]/g,'');
+  const side=t.includes('left')||t.startsWith('l')?'left':t.includes('right')||t.startsWith('r')?'right':'';
+  if(side&&/upperarm|arm/.test(t)&&!rigBones[side+'arm'])rigBones[side+'arm']=n;
+  if(side&&/upperleg|thigh|upleg/.test(t)&&!rigBones[side+'leg'])rigBones[side+'leg']=n;
+ });
+ player.add(modelRig);human.visible=false;head.visible=false;direction.visible=false;riggedPlayer=true;
+}catch(e){console.warn('Using temporary character fallback:',e.message)}
 player.position.set(0,.05,0);let yaw=.4,pitch=.48,follow=16,angle=0,playing=true,selected=null,mapOpen=false,mapZoom=.6;
 const landmarkMatches=[['Rathdown House',/rathdown house|ráth an dúin|rath an duin/i,'Student services and finding help'],['East Quad',/east quad/i,'Meet Arts staff and academic advisers'],['Lower House',/lower house/i,'Find the Students’ Union'],['Central Quad',/central quad/i,'Discover teaching and shared spaces'],['Broadstone–University',/^Broadstone - University$/i,'Find the Broadstone–University Luas stop']];
 const missions=landmarkMatches.map(([name,re,desc])=>{const matches=zone.filter(f=>re.test(f.name));matches.sort((a,b)=>{const score=f=>(f.tags?.railway==='tram_stop'?10:0)+(f.kind==='building'?2:0)+(f.id==='node/8398652317'?1:0);return score(b)-score(a)});const f=matches[0];return {name,description:desc,found:!!f,position:f?midpoint(f.coords):null,source:f?.id}});
@@ -62,9 +82,16 @@ $map.addEventListener('wheel',e=>{e.preventDefault();mapZoom=THREE.MathUtils.cla
 $map.addEventListener('click',e=>{const b=$map.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*$map.width,y=(e.clientY-b.top)/b.height*$map.height,scale=$map.width/(2000/mapZoom),mx=(x-$map.width/2)/scale,my=($map.height/2-y)/scale;let best=-1,d=Infinity;missions.forEach((m,i)=>{if(!m.found)return;const dd=Math.hypot(mx-m.position[0],my-m.position[1]);if(dd<d){d=dd;best=i}});if(best>=0&&d<45/mapZoom){selected=best;missionList();updateObjective();drawMaps()}});
 const keys={};addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k==='m'){e.preventDefault();setMap(!mapOpen)}if(k==='escape'&&mapOpen)setMap(false)});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 let dragging=false,mouseX=0,mouseY=0;renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;mouseX=e.clientX;mouseY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;yaw-=(e.clientX-mouseX)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-mouseY)*.005,.2,.95);mouseX=e.clientX;mouseY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>dragging=false);renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();follow=THREE.MathUtils.clamp(follow+Math.sign(e.deltaY)*1.1,8,30)},{passive:false});
-let t=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-t)/1000,.055);t=now;if(!mapOpen){const forward=+!!(keys.w||keys.arrowup)-+!!(keys.s||keys.arrowdown),right=+!!(keys.d||keys.arrowright)-+!!(keys.a||keys.arrowleft);if(forward||right){const x=-Math.sin(yaw)*forward+Math.cos(yaw)*right,z=-Math.cos(yaw)*forward-Math.sin(yaw)*right;const m=Math.hypot(x,z),speed=keys.shift?8:4.5;player.position.x+=x/m*dt*speed;player.position.z+=z/m*dt*speed;const radius=Math.hypot(player.position.x,player.position.z);if(radius>990){player.position.x*=990/radius;player.position.z*=990/radius}player.rotation.y=Math.atan2(x,z)} }
+let t=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-t)/1000,.055);t=now;let movingRig=false;if(!mapOpen){const forward=+!!(keys.w||keys.arrowup)-+!!(keys.s||keys.arrowdown),right=+!!(keys.d||keys.arrowright)-+!!(keys.a||keys.arrowleft);if(forward||right){const x=-Math.sin(yaw)*forward+Math.cos(yaw)*right,z=-Math.cos(yaw)*forward-Math.sin(yaw)*right;const m=Math.hypot(x,z),speed=keys.shift?8:4.5;movingRig=true;player.position.x+=x/m*dt*speed;player.position.z+=z/m*dt*speed;const radius=Math.hypot(player.position.x,player.position.z);if(radius>990){player.position.x*=990/radius;player.position.z*=990/radius}player.rotation.y=Math.atan2(x,z)} }
+ if(riggedPlayer){
+  const swing=movingRig?Math.sin(now*.0078)*.42:Math.sin(now*.0012)*.015;
+  if(rigBones.leftleg)rigBones.leftleg.rotation.x=swing;
+  if(rigBones.rightleg)rigBones.rightleg.rotation.x=-swing;
+  if(rigBones.leftarm)rigBones.leftarm.rotation.x=-swing*.5;
+  if(rigBones.rightarm)rigBones.rightarm.rotation.x=swing*.5;
+ }
  const target=player.position.clone().add(new THREE.Vector3(0,1.6,0)),pos=target.clone().add(new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*follow,Math.sin(pitch)*follow,Math.cos(yaw)*Math.cos(pitch)*follow));camera.position.lerp(pos,.13);camera.lookAt(target);renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=available.length?missions.indexOf(available[0]):null;missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,origin,features:zone.length,counts,missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,source:m.source})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,origin,features:zone.length,counts,missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,source:m.source})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
