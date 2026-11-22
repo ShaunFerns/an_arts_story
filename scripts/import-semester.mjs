@@ -12,7 +12,7 @@ const digest = createHash('sha256').update(source).digest('hex');
 const sections = [
   section('const places=[', 'let state='),
   section('const html=s=>', 'const addUnique='),
-  section('function storyMarkup(', 'function canBegin('),
+  section('function storyMarkup(', 'function canBegin(').replace(/ +\nconst opt=/, '\nconst opt='),
   section('function degreeMarkup(', 'function allocated(').replace('function degreeMarkup()', 'function degreeMarkup(state)'),
   section('const N={', 'function renderIntro(')
     .replace('Sam’s idea','Cian’s idea')

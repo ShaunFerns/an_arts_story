@@ -19,7 +19,7 @@ const base={name:'Aisling',current:'intro',week:1,tab:'home',phoneOpen:false,don
 
 const html=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 
-function storyMarkup(text){const t=String(text);if(/^\s*<p[ >]/.test(t))return t;return t.split(/\n\n+/).map(p=>`<p>${html(p)}</p>`).join('')} 
+function storyMarkup(text){const t=String(text);if(/^\s*<p[ >]/.test(t))return t;return t.split(/\n\n+/).map(p=>`<p>${html(p)}</p>`).join('')}
 const opt=(label,to,effect)=>({label,to,effect});
 
 const CHAPTERS=[
