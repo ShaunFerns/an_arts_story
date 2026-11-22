@@ -24,7 +24,7 @@ jobs:
       - name: Install pinned Three.js library
         run: npm install --no-audit --no-fund --no-save three@0.160.0 playwright@1.56.1
       - name: Source Rathdown-centred OpenStreetMap snapshot
-        run: node scripts/build-geodata.mjs
+        run: python3 scripts/build-geodata-osm.py
       - name: Prepare self-contained site assets
         run: |
           test -f index.html || { echo "::error::Upload the current game as index.html at repository root."; exit 1; }
