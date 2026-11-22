@@ -1,0 +1,52 @@
+name: Publish the 3D game
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned Three.js library
+        run: npm install --no-audit --no-fund --no-save three@0.160.0
+      - name: Prepare self-contained site assets
+        run: |
+          test -f index.html || { echo "::error::Upload the current game as index.html at repository root."; exit 1; }
+          mkdir -p dist/vendor
+          cp node_modules/three/build/three.module.js dist/vendor/three.module.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          pattern = r"const engineSources=\[.*?\];"
+          replacement = "const engineSources=['./vendor/three.module.js'];"
+          updated, count = re.subn(pattern, replacement, html, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('Expected Three.js engineSources list not found: refusing to deploy')
+          Path('dist/index.html').write_text(updated, encoding='utf-8')
+          for name in ('offline_presentation.html',):
+              src = Path(name)
+              if src.exists():
+                  (Path('dist') / name).write_bytes(src.read_bytes())
+          PY
+          touch dist/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
