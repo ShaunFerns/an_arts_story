@@ -3,6 +3,7 @@ import * as THREE from 'three';
 const finishes={
  granite:{tones:['#a9a7a0','#b6b2a9','#bcb8af','#b4b0a7'],width:.60,length:.45},
  warm:{tones:['#beaa94','#c5b29d','#bba38d','#c4b1a3'],width:.60,length:.45},
+ luas:{tones:['#b6b1a7','#aaa9a5','#a5a7a8','#b19882'],width:.32,length:.18},
  setts:{tones:['#aaa297','#b5ab9c','#b6afaa','#a59e91'],width:.30,length:.16},
  band:{tones:['#ad9083','#b69a89','#aa8e82','#ba9e8e'],width:.60,length:.32},
  grass:{tones:['#71865a','#7c9161','#768b5e','#829268'],width:1,length:1},
@@ -20,7 +21,7 @@ export function groundFinish(type){
  ctx.fillRect(0,0,512,256);
  for(let row=0;row<8;row++)for(let col=-1;col<8;col++){
   const column=(col+8)%8;
-  const x=col*w+(type==='setts'&&row%2?w/2:0),y=row*h;
+  const x=col*w+(['setts','luas'].includes(type)&&row%2?w/2:0),y=row*h;
   if(type==='grass')continue;
   ctx.fillStyle=tones[(column*7+row*13+(row*column)%7)%tones.length];
   ctx.fillRect(x+1,y+1,w-2,h-2);

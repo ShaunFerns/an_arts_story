@@ -48,7 +48,7 @@ try {
 
   const audit=await model(()=>{
     const g=window.__artsGeo;
-    return {doors:g.missionDoorRegistry,bridge:g.underpass,facades:g.campusFacadeAudit,paving:g.entrancePaving,
+    return {doors:g.missionDoorRegistry,bridge:g.underpass,facades:g.campusFacadeAudit,paving:g.entrancePaving,rathdown:g.rathdownApproach,
       missions:g.missions,spawn:g.position};
   });
   console.log('World snapshots: '+JSON.stringify({doors:audit.doors,bridge:audit.bridge,missions:audit.missions,spawn:audit.spawn}));
@@ -127,6 +127,15 @@ try {
     return result.segments;
   }
   let segments=0;
+  const ramp=await model(()=>{
+    const g=window.__artsGeo,{foot,head,rails}=g.rathdownApproach;
+    const midpoint=rails[0][0].map((value,i)=>(value+rails[0][1][i])/2);
+    return {rise:g.terrain.heightAt(...head)-g.terrain.heightAt(...foot),midpoint};
+  });
+  assert(Math.abs(ramp.rise-audit.rathdown.rise)<.04);
+  const rathdown=audit.doors.find(d=>d.id==='rathdown');
+  assert(rathdown.outward[1]<-.85&&rathdown.door[1]<-24);
+
   for(const point of [[352,-119],[335,-129],[313,-132]])segments+=await walk(point);
   const height=await model(()=>{
     const g=window.__artsGeo;
@@ -215,7 +224,12 @@ try {
   await walkToMeeting(audit.doors.find(d=>d.id==='lower'));
   assert.equal(await panelTitle(),'I thought Stage 1 meant I could change anything');
   await choice();
-  await walkToMeeting(audit.doors.find(d=>d.id==='rathdown'));
+  segments+=await walk(audit.rathdown.foot);
+  const reachedRampHead=await page.evaluate(head=>window.__artsGeo.testWalk(...head),audit.rathdown.head);
+  assert(Math.hypot(reachedRampHead[0]-audit.rathdown.head[0],reachedRampHead[1]-audit.rathdown.head[1])<.23);
+  const reachedRail=await page.evaluate(point=>window.__artsGeo.testWalk(...point),ramp.midpoint);
+  assert(Math.hypot(reachedRail[0]-ramp.midpoint[0],reachedRail[1]-ramp.midpoint[1])>.25);
+  await walkToMeeting(rathdown);
   assert((await state()).visited.includes('rathdown'));
   await page.keyboard.press('Escape');
   for(const door of [eastSouth,...audit.doors.filter(d=>['glass','laurence'].includes(d.id))]){

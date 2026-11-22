@@ -7,13 +7,14 @@ const clock=new THREE.MeshStandardMaterial({color:0xd5c7a7,roughness:.72});
 const markings=new THREE.MeshStandardMaterial({color:0x343032,roughness:.85});
 
 const heritage={
+ 'way/281880562':{stone:'lowerStone',levels:2,eaves:9.5,roof:'hip',rise:1.65},
  'way/310375420':{stone:'chapelStone',levels:1,eaves:7.4,roof:'gable',rise:3.9},
  'way/310375422':{stone:'wardStone',levels:2,eaves:8.8,roof:'gable',rise:3.25},
  'way/516821746':{stone:'infirmaryStone',levels:2,eaves:7.8,roof:'hip',rise:3.0},
  'way/516821745':{stone:'infirmaryStone',levels:2,eaves:7.8,roof:'gable',rise:3.15},
  'way/396704720':{stone:'wardStone',levels:3,eaves:11.2,roof:'gable',rise:3.7},
  'way/307799384':{stone:'lowerStone',levels:3,eaves:11.0,roof:'hip',rise:3.0},
- 'way/516824969':{stone:'clockStone',levels:3,eaves:11.3,roof:'hip',rise:3.5,cupola:true},
+ 'way/516824969':{stone:'clockStone',levels:3,eaves:11.3,roof:'hip',rise:3.5,cupola:[88,-17.7]},
  'way/396704721':{stone:'infirmaryStone',levels:1,eaves:4.9,roof:'gable',rise:2.85},
 };
 
@@ -71,16 +72,16 @@ function addCupola(scene,x,n,y) {
   const m=new THREE.Mesh(geom,material);
   m.position.set(x,height,-n);m.castShadow=true;scene.add(m);return m;
  }
- const drum=place(new THREE.CylinderGeometry(1.15,1.28,2.25,8),clock,y+1.08);
+ const drum=place(new THREE.CylinderGeometry(1.45,1.58,2.75,8),clock,y+1.34);
  drum.rotation.y=Math.PI/8;
  const profile=[[0,0],[1.17,0],[1.16,.24],[1.07,.55],[.83,.86],[.47,1.1],[.14,1.25],[0,1.29]]
   .map(p=>new THREE.Vector2(...p));
- place(new THREE.LatheGeometry(profile,12),copper,y+2.18);
- place(new THREE.CylinderGeometry(.045,.065,.55,8),copper,y+3.63);
+ place(new THREE.LatheGeometry(profile,12),copper,y+2.70);
+ place(new THREE.CylinderGeometry(.045,.065,.55,8),copper,y+4.15);
  for(let i=0;i<4;i++){
   const a=i*Math.PI/2,dx=Math.sin(a),dz=Math.cos(a);
-  const dial=place(new THREE.CircleGeometry(.39,24),markings,y+1.24);
-  dial.position.x+=dx*1.143;dial.position.z+=dz*1.143;dial.rotation.y=a;
+  const dial=place(new THREE.CircleGeometry(.53,24),markings,y+1.60);
+  dial.position.x+=dx*1.421;dial.position.z+=dz*1.421;dial.rotation.y=a;
   for(const [angle,height] of [[.16,.21],[1.86,.27]]){
    const hand=new THREE.Mesh(new THREE.PlaneGeometry(.031,height),clock);
    hand.rotation.z=angle;hand.position.set(-Math.sin(angle)*height/2,Math.cos(angle)*height/2,.006);
@@ -179,7 +180,7 @@ export function addBuildingRoof(scene,feature,design,base,wallMaterial) {
   }
   ridgeHeight=design.eaves+design.rise;
   if(design.cupola){
-   const centre=plan.reduce(([x,n],p)=>[x+p[0]/plan.length,n+p[1]/plan.length],[0,0]);
+   const centre=design.cupola;
    addCupola(scene,...centre,base+height(centre)-.16);
   }
  }

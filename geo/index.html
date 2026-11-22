@@ -49,7 +49,8 @@ import {locationNames} from './assets/semester/locations.mjs';
 import {phoneLabels, presentScene, phoneEntries, resourceMarkup} from './assets/semester/presentation.mjs';
 import {addCampusFacades, addUnderpass, bridgeSupports, buildingDesign, buildingPalette, shellMaterial, outsideNormal, winding, openLibraryApproach} from './assets/world/campus.mjs';
 import {addEntrancePaving, groundFinish} from './assets/world/surfaces.mjs';
-import {createLuas} from './assets/world/arrival.mjs';
+import {addRathdownApproach,rathdownBarriers,rathdownRise} from './assets/world/rathdown.mjs';
+import {addLuasForecourt,createLuas} from './assets/world/arrival.mjs';
 const $=id=>document.getElementById(id),data=await fetch('./data.json').then(r=>{if(!r.ok)throw Error('No OSM snapshot (HTTP '+r.status+')');return r.json()}).catch(e=>{ $('error').hidden=false;$('errorText').textContent=e.message;throw e});
 if(!data.features?.length||!data.anchor||data.radius!==1000){$('error').hidden=false;$('errorText').textContent='Geographic snapshot is incomplete.';throw Error('Invalid OSM snapshot')}
 const zone=openLibraryApproach(data.features),origin=data.anchor,MAX=1000,$map=$('map'),mapCtx=$map.getContext('2d'),miniCtx=$('mini').getContext('2d');
@@ -92,7 +93,7 @@ function groundHeight(x,n){
  // The provisional cutting fades into the unreconstructed wider terrain
  // rather than projecting a false 4m drop across all of Grangegorman.
  const influence=1-smoothstep((perpendicular-80)/90);
- return -(terrainModel.difference)*(1-smoothstep(t))*influence;
+ return rathdownRise(x,n)-(terrainModel.difference)*(1-smoothstep(t))*influence;
 }
 const groundGeometry=new THREE.PlaneGeometry(2200,2200,220,220);
 groundGeometry.rotateX(-Math.PI/2);
@@ -150,11 +151,11 @@ function lineMesh(p,a,b,width,height,material,topSurface=false){
   }
  }
 }
-function polygonMesh(points,height,material,kind='building'){
+function polygonMesh(points,height,material,kind='building',lift=0){
  if(points.length<4||Math.hypot(points[0][0]-points.at(-1)[0],points[0][1]-points.at(-1)[1])>2)return null;
  const c=midpoint(points),shape=new THREE.Shape();points.forEach((v,i)=>{const x=v[0]-c[0],y=v[1]-c[1];i?shape.lineTo(x,y):shape.moveTo(x,y)});
  const geo=new THREE.ExtrudeGeometry(shape,{depth:height,bevelEnabled:false,steps:1,curveSegments:1});geo.rotateX(-Math.PI/2);
- const base=groundHeight(c[0],c[1])+.02;
+ const base=groundHeight(c[0],c[1])+.02+lift;
  if(buildTerrain){
   geo.translate(c[0],base,-c[1]);
   collect(terrainPolygons,tile(...c)+':'+material.id+':'+kind,()=>({material,kind,values:[]}),geo);
@@ -164,13 +165,13 @@ function polygonMesh(points,height,material,kind='building'){
  }
  return {base};
 }
-function pavedArea(points,material){
+function pavedArea(points,material,offset=.025){
  if(points.length<4)return;
  const shape=new THREE.Shape(points.map(p=>new THREE.Vector2(...p)));
  const geometry=new THREE.ShapeGeometry(shape);
  geometry.rotateX(-Math.PI/2);
  const positions=geometry.attributes.position;
- for(let i=0;i<positions.count;i++)positions.setY(i,groundHeight(positions.getX(i),-positions.getZ(i))+.025);
+ for(let i=0;i<positions.count;i++)positions.setY(i,groundHeight(positions.getX(i),-positions.getZ(i))+offset);
  geometry.computeVertexNormals();
  const uv=geometry.attributes.uv;
  for(let i=0;i<uv.count;i++)uv.setXY(i,positions.getX(i),-positions.getZ(i));
@@ -207,12 +208,16 @@ function districtStone(point){
  }
  return closest;
 }
+const arrivalsConcrete=mat(0xafa99e,.96);
 const counts={building:0,road:0,barrier:0,land:0};
 for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MAX+50)continue;const t=f.tags||{};
  if(f.kind==='land'&&f.coords.length>3&&dist<470){const m=polygonMesh(f.coords,.035,lawn,'land');if(m)counts.land++;}
  if(f.kind==='road'&&dist<640){
   const pedestrian=['footway','pedestrian','path','steps','cycleway'].includes(t.highway);
-  if(t.area==='yes'&&pedestrian)pavedArea(f.coords,groundFinish('granite'));
+  if(t.area==='yes'&&pedestrian){
+   const luasPlaza=f.id==='way/1208522277';
+   pavedArea(f.coords,groundFinish(luasPlaza?'luas':'granite'),luasPlaza?.097:.025);
+  }
   else for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],roadWidth(t.highway),.075,pedestrian?pathMat:roadMat);
   counts.road++;
  }
@@ -229,15 +234,17 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
  }
  if(f.kind==='barrier'&&dist<540){
   const k=t.barrier||'wall', {height,width}=barrierDimensions(t);
-  const material=k==='hedge'?hedgeMat:k==='fence'?railMat:k==='wall'?districtStone(c):oldStone;
-  for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],width,height,material);
+  const stopWall=['way/530721241','way/998785438'].includes(f.id);
+  const material=stopWall?arrivalsConcrete:k==='hedge'?hedgeMat:k==='fence'?railMat:k==='wall'?districtStone(c):oldStone;
+  for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],width,stopWall?4.3:height,material);
   counts.barrier++;
  }
  if(f.kind==='building'&&dist<510&&f.coords.length>3){
  const {height,source}=visualBuildingHeight(f);
  if(source.startsWith('visual_estimate'))visualHeightAudit.push({id:f.id,name:f.name,height,source});
  const palette=buildingPalette(f),design=buildingDesign(f,palette,height);
- const mesh=polygonMesh(f.coords,design.eaves,f.id==='way/810540713'?mat(0x77736d):shellMaterial(palette,f,height));
+ if(f.id==='way/281880562')polygonMesh(f.coords,4.17,arrivalsConcrete);
+ const mesh=polygonMesh(f.coords,design.eaves,f.id==='way/810540713'?mat(0x77736d):shellMaterial(palette,f,height), 'building',f.id==='way/281880562'?4.15:0);
  if(mesh&&f.id!=='way/810540713'&&(dist<186||palette!=='context')&&dist<430)
   facadeBuildings.push({feature:f,height,base:mesh.base,palette,design});
  if(mesh)counts.building++;
@@ -388,7 +395,7 @@ const missions=landmarkMatches.map(([name,re,description,fallback])=>{
 // The player is represented by a 1.74-metre upright capsule; its ground
 // contact is a circular 0.34m radius. Building footprints and *thick* wall,
  // railing and hedge volumes share the same metre-based coordinates as the map.
-const collision=makeCollisionWorld([...zone,...bridgeSupports],{playerRadius:.34,worldRadius:990,worldExtent:550,cellSize:18});
+const collision=makeCollisionWorld([...zone,...bridgeSupports,...rathdownBarriers],{playerRadius:.34,worldRadius:990,worldExtent:550,cellSize:18});
 
 // East Quad exterior entry prototype: source-faithful footprint, provisional
 // door composition informed by the user's observation (door / revolving / door).
@@ -949,6 +956,7 @@ function registerDoor(mission,door,interaction,outward,dimensions) {
  });
 }
 const entranceReferences={
+ 'Rathdown House':{point:[2,-25.6],facing:'South forecourt',evidence:'Rathdown House photos and historic south-wing description'},
  'Central Quad':{point:[-124.0,130.8],facing:'Courtyard off the south approach',evidence:'FCB Studios site/floor plans and courtyard photography'},
  'Academic Hub & Library':{point:[-216.6,115.9],facing:'Playing fields',evidence:'TU Dublin Library directions and Kilsaran forecourt photo'},
  'Lower House':{point:[85,-277.6],facing:'Broadstone Walk',evidence:'TU Dublin front entrance photo and Purcell restoration photos'},
@@ -969,6 +977,7 @@ function buildMissionBuildingDoors(){
   const library=mission.name==='Academic Hub & Library',central=mission.name==='Central Quad';
   const chapel=mission.name==='St Laurence’s';
   const lower=mission.name==='Lower House',rathdown=mission.name==='Rathdown House';
+  const glassmanogue=mission.name==='Glassmanogue';
   const width=historic?(rathdown?2.5:lower?2.2:1.92):library?3.7:3.8;
   const height=historic?(rathdown?2.76:2.42):library?3.65:3.15;
   const faces=[];
@@ -1001,7 +1010,7 @@ function buildMissionBuildingDoors(){
   g.position.set(x+ox*.20,groundHeight(x,n),-n-on*.20);
   g.rotation.y=Math.atan2(ox,-on);
   const frame=mat(historic?0x6d6a63:library?0x2d3436:0x52595b,.58);
-  const glazing=new THREE.MeshPhysicalMaterial({color:historic?0x465359:library?0x344952:0x597e89,metalness:.15,
+  const glazing=new THREE.MeshPhysicalMaterial({color:glassmanogue?0x385e73:historic?0x465359:library?0x344952:0x597e89,metalness:.15,
     roughness:.24,transparent:true,opacity:.86,side:THREE.DoubleSide});
   const threshold=mat(0xaaa69c,.95);
   const add=(geo,material,x,y,z)=>{
@@ -1014,9 +1023,9 @@ function buildMissionBuildingDoors(){
   const leaf=width/2-.094;
   for(const side of [-1,1]){
    panel(leaf,height-.17,.05,chapel?timber:glazing,side*width/4,height/2,.13);
-   panel(leaf,historic?.28:.13,.07,chapel?timber:frame,side*width/4,.19,.16);
+   panel(leaf,glassmanogue?.52:historic?.28:.13,.07,glassmanogue?mat(0x34576a):chapel?timber:frame,side*width/4,.19,.16);
    panel(.039,.29,.065,frame,side*.13,1.08,.225);
-   if(lower||rathdown)panel(leaf,.055,.065,frame,side*width/4,1.85,.17);
+   if(lower||rathdown||glassmanogue)panel(leaf,.055,.065,frame,side*width/4,1.85,.17);
    if(chapel){
     for(let slat=1;slat<4;slat++)panel(.025,height-.21,.045,frame,side*(.10+slat*.185),height/2,.167);
    }
@@ -1090,6 +1099,8 @@ addEntrancePaving(scene,missionDoorRegistry,groundHeight,(x,n,door)=>{
  // Leave the planted centre of the Central Quad court between its walkways.
  return door.id==='central'&&x<-136&&x>-159&&n>118&&n<132;
 });
+const rathdownApproach=addRathdownApproach(scene,groundHeight,districtStone([12,-26]),(x,n)=>
+ collision.query(x,n,0)?.kind==='building'||((x-.2)/5.2)**2+((n+31.7)/4.0)**2<1);
 const campusFacadeAudit=addCampusFacades(scene,facadeBuildings,groundHeight,missionDoorRegistry);
 const underpass=addUnderpass(scene,groundHeight);
 $('mapFrame').setAttribute('aria-describedby','mapNote');
@@ -1858,6 +1869,7 @@ $('viewMode').onclick=()=>setPerspective(!firstPerson);setPerspective(true);
 let t=performance.now(),sceneRendered=false,arrivalElapsed=0,lastMini=0,lastPoseSave=0;
 const tramTrack=zone.find(f=>f.tags?.railway==='tram'&&f.coords.some(p=>Math.hypot(p[0]-gradeStart[0],p[1]-gradeStart[1])<.5));
 const luas=createLuas(scene,gradeStart,tramTrack,groundHeight);
+addLuasForecourt(scene,gradeStart,luas.direction,groundHeight);
 function finishArrival(){
  if($('arrival').hidden)return;
  $('arrival').hidden=true;
@@ -1982,7 +1994,7 @@ else if(!semester.state.started){
 }
 addEventListener('pagehide',()=>{if(orientation())story.persist();saveSemester();});
 $('status').textContent=review?`${zone.length} OSM features · ${counts.building} 3D building blocks`:'Campus routes follow the mapped site.';
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.id==='induction');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get missionDoorRegistry(){return missionDoorRegistry.map(({available,...d})=>d)},get semesterMeetingPlaces(){return Object.fromEntries([...semesterMeetings].map(([id,m])=>[id,{position:m.position,visible:m.body.visible}]))},get campusFacadeAudit(){return campusFacadeAudit},get entrancePaving(){return scene.children.filter(o=>o.name.startsWith('Entrance paving · ')).map(o=>({name:o.name,triangles:o.geometry.attributes.position.count/3}))},get underpass(){return underpass},get semester(){return structuredClone(semester.state)},get activeTask(){return semester.task()},get mapPlayer(){const p=mapProjection($map,1000/mapZoom,false);return {x:p.x(player.position.x),y:p.y(-player.position.z),centre:p.centre,scale:p.scale}},get arrivalElapsed(){return arrivalElapsed},get tramPosition(){return luas.car.position.toArray()},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get eastQuadPavingAudit(){return eastQuadPavingAudit},get eastQuadSignRelativeScreenPosition(){
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.id==='induction');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get missionDoorRegistry(){return missionDoorRegistry.map(({available,...d})=>d)},get semesterMeetingPlaces(){return Object.fromEntries([...semesterMeetings].map(([id,m])=>[id,{position:m.position,visible:m.body.visible}]))},get campusFacadeAudit(){return campusFacadeAudit},get entrancePaving(){return scene.children.filter(o=>o.name.startsWith('Entrance paving · ')).map(o=>({name:o.name,triangles:o.geometry.attributes.position.count/3}))},rathdownApproach,get underpass(){return underpass},get semester(){return structuredClone(semester.state)},get activeTask(){return semester.task()},get mapPlayer(){const p=mapProjection($map,1000/mapZoom,false);return {x:p.x(player.position.x),y:p.y(-player.position.z),centre:p.centre,scale:p.scale}},get arrivalElapsed(){return arrivalElapsed},get tramPosition(){return luas.car.position.toArray()},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get eastQuadPavingAudit(){return eastQuadPavingAudit},get eastQuadSignRelativeScreenPosition(){
  const sign=scene.getObjectByName('EastQuadGoldNorthEntranceWallSign');
  if(!sign||!eastQuadEntrance)return null;
  scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);

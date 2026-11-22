@@ -21,6 +21,7 @@ const materials = {
   glassLight:new THREE.MeshStandardMaterial({color:0x69828b,metalness:.16,roughness:.33}),
   historic:new THREE.MeshStandardMaterial({color:0x9a8e7d,roughness:.95}),
   slate:new THREE.MeshStandardMaterial({color:0x50575a,roughness:.91}),
+  brickTrim:new THREE.MeshStandardMaterial({color:0x8b7163,roughness:.87}),
   steel:new THREE.MeshStandardMaterial({color:0x454b4a,roughness:.57}),
 };
 
@@ -29,7 +30,7 @@ export function buildingPalette(feature) {
   if (/central quad/i.test(name)) return 'central';
   if (/academic hub/i.test(name) || ['way/1361416599','way/1457282385'].includes(feature.id)) return 'library';
   if (/greenway hub|goirtín/i.test(name)) return 'contemporary';
-  if (/laurence|glassmanogue|rathdown|clocktower|orchard|all saints|north house|bradogue|stanhope|grianán|lower house/i.test(name) ||
+  if (feature.id==='way/281880562'||/laurence|glassmanogue|rathdown|clocktower|orchard|all saints|north house|bradogue|stanhope|grianán|lower house/i.test(name) ||
       feature.id==='way/307799384') return 'heritage';
   return 'context';
 }
@@ -124,6 +125,9 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
     const poly=feature.coords, orientation=winding(poly);
     const door=entrances.find(e=>e.source===feature.id);
     const historic=palette==='heritage',chapel=feature.id==='way/310375420';
+    const rathdown=feature.id==='way/310375422',glassmanogue=feature.id==='way/516821746';
+    const clocktower=feature.id==='way/516824969';
+    const broadstone=feature.id==='way/281880562';
     const roof=addBuildingRoof(scene,feature,design,base,shellMaterial(palette,feature,height));
     const levels=design.levels||Math.max(1,Math.min(5,Math.floor(height/3.1)));
     const floor=(historic?design.eaves:height)/levels;
@@ -138,7 +142,48 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
        const [x,n]=point(s,offset);
        panel(key,x,base+y,n,w,h,d,yaw);
       };
-      const count=Math.max(1,Math.floor(len/(palette==='central'?3.65:palette==='library'?3.1:3.35)));
+      const entryFace=rathdown&&door&&Math.hypot(...point(.5,0).map((v,j)=>v-door.door[j]))<1.1;
+      if(entryFace){
+       const gable=new THREE.Group();
+       const [x,n]=point(.5,.13);
+       gable.position.set(x,base+design.eaves,-n);
+       gable.rotation.y=yaw;
+       const gableShape=new THREE.Shape();
+       gableShape.moveTo(-len/2,-.14);gableShape.lineTo(len/2,-.14);
+       gableShape.lineTo(0,3.45);gableShape.closePath();
+       const stone=shellMaterial(palette,feature,height);
+       const face=new THREE.Mesh(new THREE.ExtrudeGeometry(gableShape,{depth:3.7,bevelEnabled:false}),stone);
+       face.position.z=-3.7;gable.add(face);
+       for(const side of [-1,1]){
+        const rake=new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(len/2,3.45)+.38,.21,4.0),materials.slate);
+        rake.rotation.z=side*Math.atan2(3.45,len/2);rake.position.set(-side*len/4,1.73,-1.85);gable.add(rake);
+       }
+       const oculus=new THREE.Mesh(new THREE.CircleGeometry(.51,24),materials.glass);
+       oculus.position.set(0,1.39,.034);gable.add(oculus);
+       const ring=new THREE.Mesh(new THREE.RingGeometry(.49,.64,24),materials.historic);
+       ring.position.set(0,1.39,.038);gable.add(ring);
+       gable.name='Rathdown House · south entrance gable and oculus';
+       scene.add(gable);
+      }
+      const clockFront=clocktower&&a[0]===87&&a[1]===-3.4&&b[0]===79;
+      if(clockFront){
+       const pediment=new THREE.Group();
+       const [x,n]=point(.5,.47);
+       pediment.position.set(x,base+design.eaves,-n);
+       pediment.rotation.y=yaw;
+       const shape=new THREE.Shape();
+       shape.moveTo(-9,-.18);shape.lineTo(9,-.18);shape.lineTo(0,2.35);shape.closePath();
+       const stone=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:.68,bevelEnabled:false}),materials.clockStone);
+       stone.position.z=-.39;pediment.add(stone);
+       for(const side of [-1,1]){
+        const trim=new THREE.Mesh(new THREE.BoxGeometry(9.40,.18,.67),materials.slate);
+        trim.position.set(-side*4.5,1.17,.16);trim.rotation.z=side*Math.atan2(2.35,9);pediment.add(trim);
+       }
+       pediment.name='Clocktower · street-facing pediment';
+       scene.add(pediment);
+       part('historic',.5,.29,design.eaves-.28,18.4,.34,.56);
+      }
+      const count=Math.max(1,Math.floor(len/(entryFace?2.7:palette==='central'?3.65:palette==='library'?3.1:3.35)));
       const bay=len/count;
       const libraryFront=palette==='library'&&on<-.48&&len>14;
       for(let j=0;j<count;j++) {
@@ -185,7 +230,7 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
               part('sash',t,.267,y+h*.12,width,.06,.055);
               if(!lowerHouse)part('sash',t,.267,y-h*.18,width,.036,.045);
               part('historic',t,.16,y-h*.54,width+.24,.17,.34);
-              part('historic',t,.12,y+h*.53,width+.25,.12,.21);
+              part(glassmanogue?'brickTrim':'historic',t,.12,y+h*.53,width+.29,glassmanogue?.30:.12,.21);
              }
             }
           }
@@ -209,6 +254,11 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
           part('polishedStone',.5,.35,9.66,len,.25,.70);
           part('harling',.5,.21,14.55,len,.29,.40);
         }
+      }
+      if(broadstone&&on<-.28){
+       for(const level of [1.05,floor-.12,design.eaves-.30])part('historic',.5,.24,level,len,.26,.45);
+       const count=Math.max(2,Math.round(len/7));
+       for(let j=0;j<=count;j++)part('historic',j/count,.21,design.eaves*.51,.56,design.eaves*.88,.36);
       }
       if(historic){
        part('slate',.5,.13,design.eaves-.06,len,.19,.42);
@@ -263,12 +313,30 @@ export function addUnderpass(scene, groundHeight) {
   add(8.6,1.06,length,0,.53,0,materials.limestone);
   add(7.5,.12,length,0,1.11,0,materials.slate);
   for(const side of [-1,1]){
-    add(.36,.91,length,side*4.1,1.55,0,materials.precast);
+    add(.18,.22,length,side*4.1,1.12,0,materials.precast);
+    const glass=new THREE.MeshPhysicalMaterial({color:0x9ebbc3,transparent:true,opacity:.36,
+      roughness:.25,side:THREE.DoubleSide,depthWrite:false});
+    const bays=Math.ceil(length/2.18),spacing=length/bays;
+    for(let i=0;i<bays;i++)add(.055,1.70,spacing-.045,side*4.1,2.02,(i+.5)*spacing-length/2,glass);
+    for(let i=0;i<=bays;i++)add(.16,1.87,.085,side*4.1,1.98,i*spacing-length/2,materials.steel);
+    add(.10,.105,length,side*4.1,2.88,0,materials.steel);
     // The abutments sit at the two ends, away from the tram and footway.
     const [px,pn]=side===-1?a:b;
     const pierHeight=underside-groundHeight(px,pn);
     add(8.5,pierHeight,1.12,0,-pierHeight/2,side*(length/2-.36),materials.limestone);
   }
+  const canvas=document.createElement('canvas');
+  canvas.width=1536;canvas.height=128;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#e8efeb';ctx.font='600 92px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  const letters='GRANGEGORMAN';
+  for(const [i,letter] of [...letters].entries())ctx.fillText(letter,(i+.5)*canvas.width/letters.length,68);
+  const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(30,1.72),
+   new THREE.MeshBasicMaterial({map,transparent:true,depthWrite:false}));
+  sign.position.set(4.21,2.03,.9);sign.rotation.y=Math.PI/2;
+  sign.name='Grangegorman bridge lettering';
+  g.add(sign);
   scene.add(g);
   return {centre:[x,n],ends:[a,b],clearance:clear,underside};
 }
