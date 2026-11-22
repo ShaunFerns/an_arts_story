@@ -49,6 +49,11 @@ if(entries[0].sign?.side!=='right when facing main entrance'||!entries[0].sign.m
 const signBuild=await page.evaluate(()=>window.__artsGeo.eastQuadSignGeometry);
 console.log('Mounted gold lettering and right-hand brick bay:',JSON.stringify(signBuild));
 if(!signBuild||!signBuild.visible||!signBuild.wallVisible||signBuild.width<4||signBuild.height<2||signBuild.frontOffset<=0||signBuild.frontOffset>.08)throw Error('East Quad gold sign missing from scene');
+const signHeight=await page.evaluate(()=>{
+ const g=window.__artsGeo,[x,y,n]=g.eastQuadSignGeometry.position;
+ return y-g.terrain.heightAt(x,n);
+});
+if(signHeight<3.35||signHeight>3.6)throw Error('East Quad sign should sit about 3.5 m above the paving');
 if(Math.hypot(signBuild.position[0]-entries[0].mainWallMidpoint[0],signBuild.position[2]-entries[0].mainWallMidpoint[1])>12)throw Error('East Quad signage is not adjacent to northern doorway');
 const paving=await page.evaluate(()=>window.__artsGeo.eastQuadPavingAudit);
 console.log('East Quad paved forecourt:',JSON.stringify(paving));
@@ -61,6 +66,8 @@ for(const name of ['Central Quad','Rathdown House','Lower House']){
 }
 const facade=await page.evaluate(()=>window.__artsGeo.eastQuadFacadeAudit);
 console.log('Full East Quad facade build:',JSON.stringify(facade));
+if(facade.signWallWindows?.columns!==5||facade.signWallWindows.bronzePanels!==4||
+ facade.signWallWindows.glassOn!=='viewer’s right')throw Error('East Quad’s first window row lost its bronze panels and right-hand glazing');
 if(facade.wallFaces<4||facade.windowBays<20||facade.brickCoverageM<40)throw Error('East Quad still has untextured building sides');
 
 const plaza=await page.evaluate(()=>window.__artsGeo.plazaFeatures);
