@@ -5,9 +5,14 @@ const errors=[];page.on('pageerror',e=>errors.push(e.stack||e.message));page.on(
 const response=await page.goto('http://127.0.0.1:8765/geo/',{waitUntil:'domcontentloaded',timeout:40000});
 if(response.status()!==200)throw Error('Geo page returned '+response.status());
 await page.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
-const g=await page.evaluate(()=>window.__artsGeo&&({anchor:window.__artsGeo.origin,features:window.__artsGeo.features,counts:window.__artsGeo.counts,missions:window.__artsGeo.missions}));
+const g=await page.evaluate(()=>window.__artsGeo&&({rigged:window.__artsGeo.rigged,anchor:window.__artsGeo.origin,features:window.__artsGeo.features,counts:window.__artsGeo.counts,missions:window.__artsGeo.missions}));
 console.log('Sourced geographic world:',JSON.stringify(g));
 if(!g||g.anchor.id!=='way/310375422')throw Error('Rathdown must use verified OSM anchor');
+if(!g.rigged)throw Error('Geo player must use actual rigged GLB, not capsule fallback');
+const luas=g.missions.find(m=>m.name==='Broadstone–University');
+if(!luas?.found||!luas.source?.startsWith('node/'))throw Error('Broadstone must be pinned to a mapped tram stop node, not a bus garage');
+if(Math.hypot(luas.position[0]-382,luas.position[1]+100)>45)throw Error('Broadstone waypoint appears far from its OSM Luas stop');
+
 if(g.features<1000||g.counts.building<50||g.counts.barrier<5)throw Error('Source data lacks building/wall coverage');
 if(!g.missions.some(m=>m.name==='East Quad'&&m.found))throw Error('East Quad OSM building waypoint missing');
 await page.evaluate(()=>window.__artsGeo.openMap());
