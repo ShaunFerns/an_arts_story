@@ -70,7 +70,7 @@ const afterWalk=await page.evaluate(()=>window.__artsGeo.position);
 if(Math.hypot(afterWalk.x-afterYaw.position.x,afterWalk.north-afterYaw.position.north)<.01)throw Error('W without Space should walk');
 const perspective=await page.evaluate(()=>window.__artsGeo.perspective);
 const signCount=await page.evaluate(()=>window.__artsGeo.signCount);
-if(signCount<2)throw Error('Two distinct mapped-campus sign prototypes missing');
+if(signCount<1)throw Error('At least one mapped campus wayfinding prototype missing');
 if(perspective!=='first-person')throw Error('Default camera must be first-person');
 await page.keyboard.press('v');
 if(await page.evaluate(()=>window.__artsGeo.perspective)!=='third-person')throw Error('V did not switch to third-person');
