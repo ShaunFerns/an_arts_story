@@ -297,27 +297,59 @@ function createEastQuadEntry(){
   const mesh=new THREE.Mesh(geometry,material);
   mesh.position.set(x,y,z);mesh.rotation.y=ry;mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;
  };
- // A 6.3 m wide, 3.3 m tall entrance screen, with flanking glazed doors.
- add(new THREE.BoxGeometry(6.65,.17,.20),bronze,0,3.35,.05);
- for(const x of [-3.3,-1.1,1.1,3.3])add(new THREE.BoxGeometry(.11,3.35,.17),bronze,x,1.67,.09);
- for(const x of [-2.2,2.2]){
-  add(new THREE.BoxGeometry(2.07,3.05,.045),glass,x,1.54,.13);
-  // Two swing-door leaves and their vertical pulls, visually represented.
-  add(new THREE.BoxGeometry(.055,2.8,.085),darkMetal,x,1.48,.18);
-  for(const offset of [-.15,.15])add(new THREE.BoxGeometry(.035,.40,.09),darkMetal,x+offset,1.32,.21);
+ // Photo-driven exterior articulation, based on Ste Murray's photograph
+ // of the as-built East Quad main entrance for AHR (2021). A tall, dark,
+ // vertically divided curtain-wall atrium rises above the glazed doors,
+ // between bronze and brick façade surfaces. The door bank is at its base.
+ // Reference: https://www.ste.ie/east-quad-grangegorman-ahr-architects
+ // Exact glazing dimensions and bay counts are *approximate*.
+ const glassDark=new THREE.MeshPhysicalMaterial({color:0x354f59,roughness:.22,metalness:.14,transparent:true,opacity:.77,side:THREE.DoubleSide,depthWrite:false});
+ const glazingHeight=12.4,glazingWidth=8.8;
+ // On the mapped building wall, a dark glazed entrance bay with bronze
+ // mullions and transoms. Its solid footprint remains collision-blocking.
+ add(new THREE.BoxGeometry(glazingWidth,glazingHeight,.07),glassDark,0,glazingHeight/2,-.06);
+ for(const x of [-4.4,-2.8,-1.4,0,1.4,2.8,4.4])
+  add(new THREE.BoxGeometry(.075,glazingHeight,.14),darkMetal,x,glazingHeight/2,.06);
+ for(const y of [3.45,6.05,8.65,11.4])
+  add(new THREE.BoxGeometry(glazingWidth,.075,.13),darkMetal,0,y,.06);
+ // A recessed bronze side panel echoes the real material palette.
+ add(new THREE.BoxGeometry(.9,7.2,.17),bronze,-4.85,3.6,.04);
+ // Ground-floor door assembly. A smaller central revolving cylinder, backed
+ // by dark glazed side doors, is visible in the entrance photograph.
+ add(new THREE.BoxGeometry(7.15,.13,.17),bronze,0,3.35,.22);
+ for(const x of [-3.58,-1.2,1.2,3.58])
+  add(new THREE.BoxGeometry(.09,3.35,.13),bronze,x,1.675,.25);
+ for(const x of [-2.37,2.37]){
+  add(new THREE.BoxGeometry(2.21,3.03,.05),glass,x,1.53,.27);
+  add(new THREE.BoxGeometry(.06,2.98,.1),darkMetal,x,1.53,.33);
+  for(const offset of [-.11,.11])
+   add(new THREE.BoxGeometry(.032,.33,.08),darkMetal,x+offset,1.35,.36);
  }
- // Prototype centre revolving door: glazed cylindrical drum with a three-wing
- // central spindle. Static on purpose; interaction is with the nearby NPC.
- const drum=new THREE.Mesh(new THREE.CylinderGeometry(1.04,1.04,3.03,24,1,true,0,Math.PI*2),glass);
- drum.position.set(0,1.52,.66);group.add(drum);
- add(new THREE.CylinderGeometry(.055,.055,3.07,10),darkMetal,0,1.52,.66);
+ // Transparent, stationary revolving-door assembly; visual only.
+ const drumRadius=.95;
+ const drum=new THREE.Mesh(new THREE.CylinderGeometry(drumRadius,drumRadius,3.08,30,1,true),glass);
+ drum.position.set(0,1.55,.65);group.add(drum);
+ add(new THREE.CylinderGeometry(.047,.047,3.1,10),darkMetal,0,1.55,.65);
  for(let i=0;i<3;i++){
-  const wing=new THREE.Mesh(new THREE.BoxGeometry(.95,2.95,.055),glass);
-  wing.position.set(Math.sin(i*2*Math.PI/3)*.48,1.52,.66+Math.cos(i*2*Math.PI/3)*.48);
-  wing.rotation.y=i*2*Math.PI/3;group.add(wing);
+  const ang=i*2*Math.PI/3;
+  const wing=new THREE.Mesh(new THREE.BoxGeometry(.93,3.03,.045),glass);
+  wing.position.set(Math.sin(ang)*.46,1.55,.65+Math.cos(ang)*.46);
+  wing.rotation.y=ang;group.add(wing);
  }
- add(new THREE.CylinderGeometry(1.08,1.08,.11,24),bronze,0,3.11,.66);
- add(new THREE.BoxGeometry(7.3,.10,2.25),threshold,0,.015,1.03);
+ add(new THREE.CylinderGeometry(.98,.98,.1,30),bronze,0,3.11,.65);
+ // Plaza paving and dark threshold channel visible in the source photograph.
+ add(new THREE.BoxGeometry(8.6,.08,2.65),threshold,0,.014,1.25);
+ add(new THREE.BoxGeometry(8.6,.035,.11),darkMetal,0,.063,2.35);
+ // The photo also shows DUBLIN / university lettering on the adjacent brick
+ // façade, *not* a floating road sign. Keep this modest and legible.
+ const plaqueCanvas=document.createElement('canvas');plaqueCanvas.width=512;plaqueCanvas.height=512;
+ const pc=plaqueCanvas.getContext('2d');pc.fillStyle='#927d69';pc.fillRect(0,0,512,512);
+ for(let y=0;y<512;y+=24){pc.strokeStyle=y%48===0?'#6f6457':'#aa9582';pc.lineWidth=1.5;pc.beginPath();pc.moveTo(0,y);pc.lineTo(512,y);pc.stroke()}
+ pc.fillStyle='#353332';pc.font='bold 80px Arial,sans-serif';pc.fillText('DUBLIN',45,228);
+ pc.font='bold 34px Arial,sans-serif';pc.fillText('TECHNOLOGICAL',45,282);pc.fillText('UNIVERSITY',45,324);
+ const plaqueTexture=new THREE.CanvasTexture(plaqueCanvas);plaqueTexture.colorSpace=THREE.SRGBColorSpace;
+ const brickPanel=new THREE.Mesh(new THREE.PlaneGeometry(5.2,8),new THREE.MeshStandardMaterial({map:plaqueTexture,roughness:.92,side:THREE.DoubleSide}));
+ brickPanel.position.set(7.05,4,.02);group.add(brickPanel);
  scene.add(group);
  // Path-side interaction node: prefer pedestrian position outside the entry.
  let target=null;
@@ -333,7 +365,7 @@ function createEastQuadEntry(){
  if(target)m.position=target;
  const info={name:'East Quad main entrance (prototype)',face:[seg.a,seg.b],width:6.65,
   mainWallMidpoint:[cx,cn],position:[group.position.x,-group.position.z],
-  interaction:m.position,provisional:true,doorComposition:'glazed door / revolving door / glazed door',
+  interaction:m.position,provisional:true,doorComposition:'photographic curtain-wall atrium, glazed side doors and central revolving entrance',sourcePhoto:'https://www.ste.ie/east-quad-grangegorman-ahr-architects',
   wallLength:seg.length,distanceFromOriginalApproach:seg.distance};
  entryPrototypes.push(info);
  return info;
