@@ -4,7 +4,7 @@ const page=await browser.newPage({viewport:{width:1365,height:768}});
 const errors=[];page.on('pageerror',e=>errors.push(e.stack||e.message));page.on('console',e=>{if(e.type()==='error')errors.push(e.text())});
 const response=await page.goto('http://127.0.0.1:8765/geo/?review',{waitUntil:'domcontentloaded',timeout:40000});
 if(response.status()!==200)throw Error('Geo page returned '+response.status());
-await page.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
+await page.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,undefined,{timeout:55000});
 const g=await page.evaluate(()=>window.__artsGeo&&({rigged:window.__artsGeo.rigged,anchor:window.__artsGeo.origin,features:window.__artsGeo.features,counts:window.__artsGeo.counts,missions:window.__artsGeo.missions}));
 console.log('Sourced geographic world:',JSON.stringify(g));
 if(!g||g.anchor.id!=='way/310375422')throw Error('Rathdown must use verified OSM anchor');
@@ -275,7 +275,7 @@ await page.close();
 
 const eqReview=await browser.newPage({viewport:{width:1365,height:768}});
 await eqReview.goto('http://127.0.0.1:8765/geo/?start=east-quad&review',{waitUntil:'domcontentloaded',timeout:40000});
-await eqReview.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
+await eqReview.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,undefined,{timeout:55000});
 await eqReview.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
 const review=await eqReview.evaluate(()=>({location:window.__artsGeo.spawnLocation,distance:window.__artsGeo.startDistanceFromEastQuad,entries:window.__artsGeo.entrancePrototypes}));
 console.log('East Quad direct-review spawn:',JSON.stringify(review));
@@ -310,13 +310,6 @@ if(thirdPerson.body.width>.9)throw Error('Third-person player is disproportionat
 await eqReview.evaluate(()=>window.__artsGeo.setPerspective(true));
 
 if(Math.abs(calibration.eye-1.65)>.06)throw Error('First-person eye height unexpectedly changed');
-const comparison=await browser.newPage({viewport:{width:1365,height:768}});
-await comparison.goto('http://127.0.0.1:8765/geo/?start=east-quad&npc=original&scale=1',{waitUntil:'domcontentloaded',timeout:40000});
-await comparison.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
-const original=await comparison.evaluate(()=>({variant:window.__artsGeo.npcVariant,visible:window.__artsGeo.humanReferenceVisible,dimensions:window.__artsGeo.eastQuadNpcDimensions}));
-console.log('Original 1.74m mannequin comparison:',JSON.stringify(original));
-if(original.variant!=='original-mannequin'||!original.visible||Math.abs(original.dimensions.height-1.74)>.12)throw Error('Original NPC comparison and human scale reference missing');
-await comparison.close();
 if(review.location!=='East Quad review'||review.distance>30)throw Error('Direct review spawn must face the north entrance of East Quad');
 for (const [view,pose] of [
  ['luas-approach',[116,-74,95,-99,5]],
@@ -328,6 +321,14 @@ for (const [view,pose] of [
  await eqReview.screenshot({path:'/tmp/arts-geo-'+view+'.png'});
 }
 await eqReview.close();
+
+const comparison=await browser.newPage({viewport:{width:1365,height:768}});
+await comparison.goto('http://127.0.0.1:8765/geo/?start=east-quad&npc=original&scale=1',{waitUntil:'domcontentloaded',timeout:40000});
+await comparison.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,undefined,{timeout:55000});
+const original=await comparison.evaluate(()=>({variant:window.__artsGeo.npcVariant,visible:window.__artsGeo.humanReferenceVisible,dimensions:window.__artsGeo.eastQuadNpcDimensions}));
+console.log('Original 1.74m mannequin comparison:',JSON.stringify(original));
+if(original.variant!=='original-mannequin'||!original.visible||Math.abs(original.dimensions.height-1.74)>.12)throw Error('Original NPC comparison and human scale reference missing');
+await comparison.close();
 if(errors.length)throw Error('Browser errors: '+JSON.stringify(errors.slice(0,8)));
 console.log('Georeferenced 3D world, mission map and source-faithful map markers passed.');
 await browser.close();
