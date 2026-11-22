@@ -190,8 +190,24 @@ function talkToNpc(){
  $('npcDialog').hidden=false;$('npcClose').focus();
 }
 function nearestNpc(){let best=null,d=2.7;for(const n of npcs){const k=n.body.position.distanceTo(player.position);if(k<d){best=n;d=k}}return best}
+// First-person must not spawn inside or directly in front of the campus guide.
+// Keep the NPC at the waypoint and start the player several metres away on clear ground.
 const home=missions.find(m=>m.name==='Rathdown House'&&m.found);
-if(home)player.position.set(home.position[0],.05,-home.position[1]);
+if(home){
+ const [hx,hn]=home.position;
+ const candidates=[];
+ for(const radius of [5,6,7,8,10])for(let i=0;i<16;i++){
+  const a=i*Math.PI/8, x=hx+Math.cos(a)*radius,n=hn+Math.sin(a)*radius;
+  if(collision.query(x,n))continue;
+  const separation=Math.min(...npcs.map(q=>Math.hypot(q.body.position.x-x,q.body.position.z+n)));
+  if(separation>=4.5)candidates.push({x,n,separation,radius});
+ }
+ candidates.sort((a,b)=>a.radius-b.radius||b.separation-a.separation);
+ const start=candidates[0];
+ if(start)player.position.set(start.x,.05,-start.n);
+ else player.position.set(hx,.05,-hn);
+}
+
 function missionList(){const list=$('missionList');list.innerHTML='';for(const [i,m] of missions.entries()){const b=document.createElement('button');b.className=selected===i?'active':'';b.disabled=!m.found;b.textContent=m.found?`◉ ${m.name} · ${m.description}`:`○ ${m.name} · not tagged in this OSM snapshot`;b.onclick=()=>{selected=i;missionList();updateObjective();drawMaps()};list.appendChild(b)} }
 function updateObjective(){const m=selected===null?null:missions[selected];$('objective').textContent=m?`Waypoint: ${m.name} · ${m.description}`:'Choose a mission on the map (M). Waypoints use OSM feature coordinates.'}
 function canvasMap(ctx,canvas,radius,focus=false){const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#263e37';ctx.fillRect(0,0,w,h);const span=radius*2,scale=Math.min(w,h)/span,px=x=>(x-(focus?player.position.x:0))*scale+w/2,py=y=>((focus?-player.position.z:0)-y)*scale+h/2;
@@ -220,6 +236,6 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
  for(const npc of npcs)npc.body.userData.animation?.update(dt,'idle');
  const target=player.position.clone().add(new THREE.Vector3(0,1.6,0));if(firstPerson){camera.position.copy(target);camera.lookAt(target.clone().add(new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch),-Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch))));}else{const pos=target.clone().add(new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*follow,Math.sin(pitch)*follow,Math.cos(yaw)*Math.cos(pitch)*follow));camera.position.lerp(pos,.13);camera.lookAt(target);}renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=available.length?missions.indexOf(available[0]):null;missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get cameraHeight(){return camera.position.y},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
