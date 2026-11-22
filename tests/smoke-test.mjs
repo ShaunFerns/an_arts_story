@@ -24,12 +24,25 @@ if (!result.ready || !result.canvas) {
   process.exit(1);
 }
 await page.locator('#startFull').click();
-await page.waitForTimeout(1500);
+await page.waitForTimeout(900);
+const arrival = await page.evaluate(() => ({
+  running: window.__artsArrival?.active,
+  visible: !document.querySelector('#arrivalScene')?.hidden,
+  startHidden: document.querySelector('#startScreen')?.hidden
+}));
+console.log('Luas arrival cinematic:', JSON.stringify(arrival));
+if(!arrival.running || !arrival.visible || !arrival.startHidden) {
+  throw new Error('The in-engine Luas cinematic did not start correctly');
+}
+await page.locator('#arrivalSkip').click();
+await page.waitForTimeout(400);
 const gameplay = await page.evaluate(() => ({
-  startHidden: document.querySelector('#startScreen')?.hidden,
+  arrivalHidden: document.querySelector('#arrivalScene')?.hidden,
   dialogueVisible: getComputedStyle(document.querySelector('#dialogueOverlay')).display,
   canvas: document.querySelector('#app canvas')?.getBoundingClientRect().width
 }));
-console.log('After start:', JSON.stringify(gameplay));
-if(!gameplay.startHidden) process.exitCode=1;
+console.log('After skipping arrival:', JSON.stringify(gameplay));
+if(!gameplay.arrivalHidden || gameplay.dialogueVisible!=='flex' || !gameplay.canvas) {
+  throw new Error('Luas cinematic failed to transfer control to the interactive story');
+}
 await browser.close();
