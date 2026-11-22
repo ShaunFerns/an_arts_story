@@ -521,7 +521,10 @@ function buildEastQuadFacade(){
     new THREE.MeshBasicMaterial({map:eastQuadGoldTexture,transparent:true,
       depthWrite:false,side:THREE.DoubleSide,alphaTest:.045}));
    sign.name='EastQuadGoldNorthEntranceWallSign';
-   sign.position.set(signLocalX,5.2,.055);
+   // This wall's camera-visible face is the reverse surface of the OSM
+   // segment. Mount the thin sign texture on that visible face rather than
+   // hiding it behind the footprint extrusion.
+   sign.position.set(signLocalX,5.2,-.82);
    wall.add(sign);
    const world=wall.localToWorld(sign.position.clone());
    eastQuadEntrance.sign={side:'right when facing main entrance',
