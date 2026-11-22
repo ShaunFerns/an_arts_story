@@ -9,6 +9,11 @@ const g=await page.evaluate(()=>window.__artsGeo&&({rigged:window.__artsGeo.rigg
 console.log('Sourced geographic world:',JSON.stringify(g));
 if(!g||g.anchor.id!=='way/310375422')throw Error('Rathdown must use verified OSM anchor');
 if(!g.rigged)throw Error('Geo player must use actual rigged GLB, not capsule fallback');
+const spawnNpcDistance=await page.evaluate(()=>window.__artsGeo.nearestNpcDistance);
+const eyeHeight=await page.evaluate(()=>window.__artsGeo.cameraHeight);
+console.log('Initial camera eye height and nearest NPC:',eyeHeight,spawnNpcDistance);
+if(spawnNpcDistance<3.5)throw Error('First-person starts too close to an NPC');
+if(eyeHeight<1.45||eyeHeight>2.0)throw Error('First-person eye height is outside expected standing range');
 const perspective=await page.evaluate(()=>window.__artsGeo.perspective);
 if(perspective!=='first-person')throw Error('Default camera must be first-person');
 await page.keyboard.press('v');
