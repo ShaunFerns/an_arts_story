@@ -167,6 +167,9 @@ await eqReview.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelec
 const review=await eqReview.evaluate(()=>({location:window.__artsGeo.spawnLocation,distance:window.__artsGeo.startDistanceFromEastQuad,entries:window.__artsGeo.entrancePrototypes}));
 console.log('East Quad direct-review spawn:',JSON.stringify(review));
 const signLine=await eqReview.evaluate(()=>window.__artsGeo.eastQuadSignSightline);
+const screenSign=await eqReview.evaluate(()=>window.__artsGeo.eastQuadSignRelativeScreenPosition);
+console.log('Real screen sign relative to door:',JSON.stringify(screenSign));
+if(!screenSign||!screenSign.screenRight||screenSign.delta<.04)throw Error('Gold identity lettering is left of the main door in the actual camera image');
 console.log('North entrance sign visibility ray:',JSON.stringify(signLine));
 if(!signLine||!signLine.hits.some(h=>h.sign))throw Error('Gold wall sign cannot be seen along the north entrance sightline');
 const signHit=signLine.hits.findIndex(h=>h.sign);
