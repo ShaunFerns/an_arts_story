@@ -397,7 +397,7 @@
       chosenResponse: null,
       notes: ['Stage 1 is exploratory, but that does not mean modules can be swapped freely once a timetable is published.'],
       messages: [
-        { from: 'BA Arts', subject: 'Welcome to East Quad', body: 'Induction is in East Quad. Follow the main approach from Broadstone–University and look for Bríd near the entrance.' }
+        { from: 'BA Arts', subject: 'Your induction day', body: 'Meet your classmates, university services, programme staff and academic adviser at East Quad. Your initial preferences help the team plan the first semester. Initial timetables are published on the Friday before classes begin.' }
       ],
       contacts: [
         { name: 'Bríd', role: 'Arts induction', place: 'East Quad' },
@@ -412,6 +412,7 @@
         watchpoint: 'Do not confuse preferences with registration.',
         action: 'Compare the timetable with pathway questions before asking for changes.'
       },
+      timetablePublished:false,
       timetable: [
         { code: 'ARTS 1001', name: 'Arts & Society', day: 'Mon', time: '09:00', place: 'Central Quad' },
         { code: 'MDIA 1002', name: 'Media Forms', day: 'Mon', time: '12:00', place: 'East Quad' },
@@ -1187,20 +1188,47 @@
     // Dialogue data
     const nodes = {
       intro: {
-        speaker:'Narrator', title:'The first morning',
-        text:`The Luas doors open at Broadstone–University. A knot of students steps out with you, talking over each other, checking directions and heading through the campus approach. Someone cycles past towards a lecture.
+        speaker:'Narrator', title:'Your first morning at Grangegorman',
+        text:`You step away from the Luas stop and look out across Grangegorman. The walkways and buildings stretch further than you expected. Students are moving towards East Quad, where the BA Arts induction is taking place.
 
-Your first destination is East Quad, home of BA Arts. Induction is starting and Bríd is waiting near the entrance. The sustainability team has organised a scavenger hunt to help everyone explore Grangegorman. You can follow the flow of students or use your campus map.`,
-        choices:[{text:'Step off the Luas',primary:true,action(){closeDialogue();showToast('Find East Quad — Arts induction');}}]
+Today is about getting oriented: meeting other first years, finding out what the university offers, meeting staff and your academic adviser, and learning how to find your way around. The sustainability team has also organised a campus challenge.`,
+        choices:[{text:'Find the Arts induction welcome point',primary:true,action(){closeDialogue();showToast('Find Bríd outside East Quad');}}]
       },
       induction1:{
         speaker:'Bríd · Arts induction',title:'Welcome to BA Arts',
-        text:`“You made it,” Bríd says. “You're in the right place. East Quad is the programme's home, but you'll be moving around Grangegorman as different subjects and activities take you elsewhere.”
+        text:`“Great to see you. Have you met many people yet?” Bríd asks. Nearby, other first years are introducing themselves and comparing what they might enjoy studying.
 
-Around you, first-year students are comparing timetables. Some are excited about subjects they hadn't expected to take. Others are still figuring out where classes happen.
+“Today you'll meet some of the people and services you'll use throughout the year. Take your time getting to know the campus. You will also meet your academic adviser to talk through the subjects and directions that interest you for this first semester.”
 
-“Don't worry if you don't have every decision made today,” she adds. “You'll have time to explore, with academic advising to help you understand the pathways. First, though, the sustainability team wants you out seeing the campus.”`,
-        choices:[{text:'Join the sustainability team’s scavenger hunt',primary:true,action(){state.huntStarted=true;state.mission='scavenger';addMessage('Sustainability team','Your induction scavenger hunt starts now. Find five places around Grangegorman. Visit each checkpoint and return to East Quad.');updateHuntRoute();openNode('huntStart');}}]
+“Those conversations help Operations build the initial module allocations and timetables. Your preferences are important, but they're not a guarantee of a place in every subject. The first timetables will be published on the Friday before teaching begins.”
+
+She points towards the advisers beside the entrance. “Go and have a chat. Then the sustainability team will help you discover the rest of Grangegorman.”`,
+        choices:[{text:'Meet my academic adviser',primary:true,action(){openNode('inductionAdviser');}}]
+      },
+      inductionAdviser:{
+        speaker:'Dr Aoife Byrne · academic adviser',title:'Which directions interest you?',
+        text:`Dr Byrne welcomes you to Arts. “We don't need you to decide on a Major today. I'd like to understand what you'd most like to explore during your first semester, and what options you hope to keep open.”
+
+She explains how the programme's breadth and pathway requirements will shape the choices available. She also asks about any timetable or other constraints you want the team to know about.
+
+You think about which subjects you would place near the top of your initial preference list.`,
+        choices:[
+          {text:'I am drawn to media, design and creative practice',primary:true,action(){state.formA.interests=['Media and design','Creative practice'];openNode('inductionPreferenceRecorded');}},
+          {text:'Music and cultural subjects are catching my attention',action(){state.formA.interests=['Music','Culture and society'];openNode('inductionPreferenceRecorded');}},
+          {text:'I want to explore people, society and history',action(){state.formA.interests=['Society and culture','History'];openNode('inductionPreferenceRecorded');}},
+          {text:'I have several interests and need help narrowing them',action(){state.formA.interests=['Broad exploration','Several possible subject areas'];openNode('inductionPreferenceRecorded');}}
+        ]
+      },
+      inductionPreferenceRecorded:{
+        speaker:'Dr Aoife Byrne · academic adviser',title:'Your initial preferences',
+        text:()=>`Dr Byrne records your provisional areas of interest: ${state.formA.interests.join(' and ')}.
+
+“Thank you. This is a starting point for your first-semester planning, not a final Major decision or confirmed module allocation. We'll consider viable combinations, subject availability and any constraints when preparing the timetable.”
+
+She reminds you that Programme Operations will publish initial timetables on the Friday before the first classes, and that you can return to advising as your understanding develops.
+
+Outside East Quad, the sustainability team is gathering students for a challenge. It is a chance to find university services and talk to others while exploring the campus.`,
+        choices:[{text:'Join the sustainability team’s scavenger hunt',primary:true,action(){state.adviserMet=true;state.formA.confidence='Exploring in Semester 1';state.formA.watchpoint='Initial preferences guide planning; they are not a confirmed module allocation or Major.';state.formA.action='Review the published timetable and keep discussing viable pathways with my adviser.';state.huntStarted=true;state.mission='scavenger';addMessage('Sustainability team','Choose your own route around five locations. Talk to others, notice university services, and bring your observations back to East Quad.');updateHuntRoute();openNode('huntStart');}}]
       },
       huntKeepGoing:{speaker:'Bríd · Arts induction',title:'Keep exploring',text:()=>`“You’re doing well,” Bríd says. “You have ${state.huntDone.length} of five places checked off. Go find the next one, and we’ll see you back here.”`,choices:[{text:'Back to the hunt',primary:true,action(){closeDialogue();}},{text:'Check the campus map',action(){state.phoneTab='map';togglePhone(true);}}]},
       huntStart:{speaker:'Sustainability team · induction',title:'The campus is your first challenge',text:`“Before we get buried in timetables, we want you to see the place,” says a member of the sustainability team. “Grangegorman is bigger than East Quad, and you’ll use more of it than you think.”
@@ -1451,7 +1479,8 @@ You look around and make a mental note that some people are here for the first t
             </div>
             <div class="legend"><span><i class="dot current"></i>You are here</span><span><i class="dot target"></i>Next person</span><span><i class="dot other"></i>Other building</span></div>`;
         case 'timetable':
-          return `<h4>Timetable</h4><div class="card"><div class="label">Semester 1</div>${state.timetable.map(m=>`<p><strong>${m.code}</strong> — ${m.name}<br>${m.day} · ${m.time} · ${m.place}</p>`).join('')}</div><div class="card"><p>The timetable shows where and when classes happen. It does not show all the reading, preparation and assignment work that surround a module.</p></div>`;
+          if(!state.timetablePublished)return '<h4>Timetable</h4><div class="card"><div class="label">Awaiting publication</div><p>Programme Operations will publish the initial Semester 1 timetable on the Friday before the first classes. Your advising preferences are not a confirmed allocation.</p></div>';
+          return `<h4>Timetable</h4><div class="card"><div class="label">Semester 1 · published example</div>${state.timetable.map(m=>`<p><strong>${m.code}</strong> — ${m.name}<br>${m.day} · ${m.time} · ${m.place}</p>`).join('')}</div><div class="card"><p>The timetable shows where and when classes happen. It does not show all the reading, preparation and assignment work that surround a module.</p></div>`;
         case 'planner':
           return `<h4>Curriculum planner</h4><div class="card"><div class="label">Current picture</div><p><strong>Likely interests</strong>: ${state.formA.interests.join(' and ')}</p><p><strong>Current confidence</strong>: ${state.formA.confidence}</p><p><strong>Watchpoint</strong>: ${state.formA.watchpoint}</p></div><div class="card"><p>Stage 1 exploration is about understanding possibilities and keeping routes open. It does not automatically mean every published module can be exchanged once a timetable appears.</p></div>`;
         case 'formA':
