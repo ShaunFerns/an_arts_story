@@ -31,14 +31,35 @@ function polygonMesh(points,height,material,kind='building'){
  const mesh=new THREE.Mesh(geo,material);mesh.position.set(c[0],.02,-c[1]);mesh.receiveShadow=true;mesh.castShadow=kind==='building';scene.add(mesh);return mesh;
 }
 function roadWidth(t){if(['motorway','trunk','primary','secondary'].includes(t))return 12;if(['tertiary','residential','living_street'].includes(t))return 7.5;if(['service','unclassified'].includes(t))return 4.6;return 2.6}
+// Visual-only height assumptions for existing campus buildings. These numbers are
+// metres above local ground, NOT Ordnance Datum roof/parapet levels. Confirm against
+// as-built elevations before describing the reconstruction as dimensionally accurate.
+// Never construct proposed West Quad or Broadstone Gate buildings from SDZ envelopes.
+const existingQuadHeightEstimates={
+ eastQuad:{height:24.5,storeys:5,confidence:'provisional'},
+ centralQuad:{height:26,storeys:6,confidence:'provisional'},
+ academicHub:{height:24,storeys:null,confidence:'provisional'}
+};
+function visualBuildingHeight(f){
+ const t=f.tags||{},name=(f.name||t.name||'').toLowerCase();
+ const levels=Number(t['building:levels']),known=Number(String(t.height||'').replace(/[^0-9.]/g,''));
+ let height=known>1&&known<120?known:levels>0&&levels<30?levels*3.2:8,source='osm_or_default';
+ if(f.id==='way/810540713'||/\beast quad\b/.test(name)){height=existingQuadHeightEstimates.eastQuad.height;source='visual_estimate_east_quad';}
+ else if(/\bcentral quad\b/.test(name)){height=existingQuadHeightEstimates.centralQuad.height;source='visual_estimate_central_quad';}
+ else if(/\bacademic hub\b|\bacademic hub and library\b/.test(name)){height=existingQuadHeightEstimates.academicHub.height;source='visual_estimate_academic_hub';}
+ return {height,source};
+}
+const visualHeightAudit=[];
 const counts={building:0,road:0,barrier:0,land:0};
 for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MAX+50)continue;const t=f.tags||{};
  if(f.kind==='land'&&f.coords.length>3&&dist<470){const m=polygonMesh(f.coords,.035,lawn,'land');if(m)counts.land++;}
  if(f.kind==='road'&&dist<640){const w=roadWidth(t.highway);const material=['footway','pedestrian','path','steps','cycleway'].includes(t.highway)?pathMat:t.railway?tramMat:roadMat;for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],w,.075,material);counts.road++;}
  if(f.kind==='barrier'&&dist<540){const k=t.barrier||'wall',dimensions=barrierDimensions(t),h=dimensions.height,w=dimensions.width;for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],w,h,k==='hedge'?hedgeMat:k==='fence'?railMat:oldStone);counts.barrier++;}
- if(f.kind==='building'&&dist<510&&f.coords.length>3){const levels=Number(t['building:levels']),known=Number(String(t.height||'').replace(/[^0-9.]/g,''));let h=known>1&&known<120?known:levels>0&&levels<30?levels*3.2:8;
- if(f.id==='way/810540713')h=20; // East Quad: five floors per construction documentation; 20m is an interim, unverified overall height.
- const mesh=polygonMesh(f.coords,h,(/Quad/i.test(f.name)?newBrick:grey));if(mesh)counts.building++;}
+ if(f.kind==='building'&&dist<510&&f.coords.length>3){
+ const {height,source}=visualBuildingHeight(f);
+ if(source.startsWith('visual_estimate'))visualHeightAudit.push({id:f.id,name:f.name,height,source});
+ const mesh=polygonMesh(f.coords,height,(/Quad/i.test(f.name)?newBrick:grey));if(mesh)counts.building++;
+}
 }
 // Core field remains an entirely local metre-based plane. The wider 1km ring is map context.
 const player=new THREE.Group();scene.add(player);const human=new THREE.Mesh(new THREE.CapsuleGeometry(.28,1.1,5,12),mat(0x264e61));human.position.y=.88;human.castShadow=true;player.add(human);
@@ -277,6 +298,6 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
  for(const npc of npcs)npc.body.userData.animation?.update(dt,'idle');
  const target=player.position.clone().add(new THREE.Vector3(0,1.6,0));if(firstPerson){camera.position.copy(target);camera.lookAt(target.clone().add(new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch),-Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch))));}else{const pos=target.clone().add(new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*follow,Math.sin(pitch)*follow,Math.cos(yaw)*Math.cos(pitch)*follow));camera.position.lerp(pos,.13);camera.lookAt(target);}renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=missions.indexOf(home);missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get cameraHeight(){return camera.position.y},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return home.name},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return 20},get dressedNpcs(){return npcs.length},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get cameraHeight(){return camera.position.y},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return home.name},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},get dressedNpcs(){return npcs.length},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
