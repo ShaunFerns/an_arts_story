@@ -93,7 +93,11 @@ if(upwardPitch>-.95)throw Error('Camera cannot look sufficiently upwards');
 await page.waitForTimeout(500);
 const npcArmVerticalities=await page.evaluate(()=>window.__artsGeo.npcArmVerticalities);
 console.log('NPC shoulder-to-elbow downward orientation (-1 = vertical down):',JSON.stringify(npcArmVerticalities));
-if(npcArmVerticalities.length<2||npcArmVerticalities.some(v=>v>-.65))throw Error('NPCs retain raised or T-pose upper arms');
+// The mannequin is intentionally hidden in the default variant; there
+// are no imported NPC rig shoulders to assert in the clothed prototype.
+const npcVariant=await page.evaluate(()=>window.__artsGeo.npcVariant);
+if(npcVariant==='original-mannequin'&&(npcArmVerticalities.length<2||npcArmVerticalities.some(v=>v>-.65)))throw Error('Original NPC rig retains a T-pose');
+if(npcVariant!=='clothed-82-percent')throw Error('Default NPC comparison variant not active');
 const animationStates=await page.evaluate(()=>window.__artsGeo.animationStates);
 console.log('Rigged player animation states:',JSON.stringify(animationStates));
 if(!['idle','walk','run'].every(x=>animationStates.includes(x)))throw Error('Rigged player missing idle/walk/run AnimationMixer clips');
@@ -137,6 +141,22 @@ await eqReview.goto('http://127.0.0.1:8765/geo/',{waitUntil:'domcontentloaded',t
 await eqReview.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
 const review=await eqReview.evaluate(()=>({location:window.__artsGeo.spawnLocation,distance:window.__artsGeo.startDistanceFromEastQuad,entries:window.__artsGeo.entrancePrototypes}));
 console.log('East Quad direct-review spawn:',JSON.stringify(review));
+const calibration=await eqReview.evaluate(()=>{
+ const g=window.__artsGeo;
+ return {npc:g.eastQuadNpcDimensions,variant:g.npcVariant,scale:g.npcPrototypeScale,eye:g.eyeHeightAboveGround};
+});
+console.log('East Quad NPC vs reference 2.10m door:',JSON.stringify(calibration));
+if(calibration.variant!=='clothed-82-percent')throw Error('Wrong default NPC variant');
+if(!calibration.npc||!(calibration.npc.height>1.1&&calibration.npc.height<2.10))throw Error('NPC is not shorter than reference 2.10m door');
+if(calibration.npc.width>.9)throw Error('NPC shoulder width still disproportionate');
+if(Math.abs(calibration.eye-1.65)>.06)throw Error('First-person eye height unexpectedly changed');
+const comparison=await browser.newPage({viewport:{width:1365,height:768}});
+await comparison.goto('http://127.0.0.1:8765/geo/?npc=original&scale=1',{waitUntil:'domcontentloaded',timeout:40000});
+await comparison.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
+const original=await comparison.evaluate(()=>({variant:window.__artsGeo.npcVariant,visible:window.__artsGeo.humanReferenceVisible,dimensions:window.__artsGeo.eastQuadNpcDimensions}));
+console.log('Original 1.74m mannequin comparison:',JSON.stringify(original));
+if(original.variant!=='original-mannequin'||!original.visible||Math.abs(original.dimensions.height-1.74)>.12)throw Error('Original NPC comparison and human scale reference missing');
+await comparison.close();
 if(review.location!=='East Quad review'||review.distance>30)throw Error('Default direct test spawn must face north entrance of East Quad');
 await eqReview.screenshot({path:'/tmp/arts-geo-north-entrance-review.png',fullPage:true});
 await eqReview.close();
