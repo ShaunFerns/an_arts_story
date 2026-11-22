@@ -28,6 +28,9 @@ jobs:
           test -f index.html || { echo "::error::Upload the current game as index.html at repository root."; exit 1; }
           mkdir -p dist/vendor
           cp node_modules/three/build/three.module.js dist/vendor/three.module.js
+          cp -R node_modules/three/examples/jsm dist/vendor/addons
+          test -f review/index.html && test -s review/assets/student-rig.glb
+          cp -R review dist/review
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -51,6 +54,14 @@ jobs:
           python3 -m http.server 8765 --directory dist > /tmp/arts-test-server.log 2>&1 &
           sleep 2
           node tests/smoke-test.mjs
+          node tests/route-review-smoke.mjs
+      - name: Attach location-review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: location-review-screenshots
+          path: /tmp/arts-route-*.png
+          if-no-files-found: ignore
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
