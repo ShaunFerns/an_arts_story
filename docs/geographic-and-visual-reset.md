@@ -106,3 +106,8 @@ Keep boundary geometry separately editable as `walls`, `railings`, `hedges`, `ga
 - [GDA conservation assessment: existing Grangegorman boundary walls and entrances](https://ggda.ie/media/a3vnvuc2/13_gg-appendix_2a.pdf)
 - [GDA Green Finger, Playscape & Ivy Avenue](https://ggda.ie/what-we-do/projects/green-finger-playscape-ivy-avenue/)
 - [OpenStreetMap: barrier=wall](https://wiki.openstreetmap.org/wiki/Wall) and [barrier=hedge](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dhedge)
+
+
+## November 2026 build consolidation
+
+The separate /review/ prototype has been retired from the live repository. Its useful geographic and character work is developed in /geo/; the original narrative implementation is retained under /story/ for later integration. The current geographical build defaults to first-person with a third-person testing toggle. This perspective choice reduces the need for a fixed player identity, but visible NPC clothing and posing still require review. Geographic accuracy remains unverified until human review.

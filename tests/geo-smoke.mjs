@@ -9,6 +9,12 @@ const g=await page.evaluate(()=>window.__artsGeo&&({rigged:window.__artsGeo.rigg
 console.log('Sourced geographic world:',JSON.stringify(g));
 if(!g||g.anchor.id!=='way/310375422')throw Error('Rathdown must use verified OSM anchor');
 if(!g.rigged)throw Error('Geo player must use actual rigged GLB, not capsule fallback');
+const perspective=await page.evaluate(()=>window.__artsGeo.perspective);
+if(perspective!=='first-person')throw Error('Default camera must be first-person');
+await page.keyboard.press('v');
+if(await page.evaluate(()=>window.__artsGeo.perspective)!=='third-person')throw Error('V did not switch to third-person');
+await page.keyboard.press('v');
+if(await page.evaluate(()=>window.__artsGeo.perspective)!=='first-person')throw Error('V did not restore first-person');
 const animationStates=await page.evaluate(()=>window.__artsGeo.animationStates);
 console.log('Rigged player animation states:',JSON.stringify(animationStates));
 if(!['idle','walk','run'].every(x=>animationStates.includes(x)))throw Error('Rigged player missing idle/walk/run AnimationMixer clips');

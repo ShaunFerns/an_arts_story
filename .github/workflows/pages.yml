@@ -29,24 +29,26 @@ jobs:
           python3 -c "import json; d=json.load(open('geo/data.json')); assert d['anchor']['id']=='way/310375422' and d['counts']['barrier']>0"
       - name: Prepare self-contained site assets
         run: |
-          test -f index.html || { echo "::error::Upload the current game as index.html at repository root."; exit 1; }
+          test -f index.html && test -f story/index.html || { echo "::error::Missing landing page or archived story."; exit 1; }
           mkdir -p dist/vendor
           cp node_modules/three/build/three.module.js dist/vendor/three.module.js
           cp -R node_modules/three/examples/jsm dist/vendor/addons
-          test -f review/index.html && test -s review/assets/student-rig.glb
-          cp -R review dist/review
+          test -s geo/assets/student-rig.glb
+          cp -R geo/assets dist/geo/assets
           mkdir -p dist/geo
           cp geo/index.html geo/data.json geo/collision.mjs dist/geo/
           python3 - <<'PY'
           from pathlib import Path
           import re
-          html = Path('index.html').read_text(encoding='utf-8')
+          html = Path('story/index.html').read_text(encoding='utf-8')
           pattern = r"const engineSources=\[.*?\];"
           replacement = "const engineSources=['./vendor/three.module.js'];"
           updated, count = re.subn(pattern, replacement, html, count=1, flags=re.S)
           if count != 1:
               raise SystemExit('Expected Three.js engineSources list not found: refusing to deploy')
-          Path('dist/index.html').write_text(updated, encoding='utf-8')
+          Path('dist/story').mkdir(exist_ok=True)
+          Path('dist/story/index.html').write_text(updated.replace("'./vendor/three.module.js'","'../vendor/three.module.js'"), encoding='utf-8')
+          Path('dist/index.html').write_bytes(Path('index.html').read_bytes())
           for name in ('offline_presentation.html',):
               src = Path(name)
               if src.exists():
@@ -61,8 +63,6 @@ jobs:
         run: |
           python3 -m http.server 8765 --directory dist > /tmp/arts-test-server.log 2>&1 &
           sleep 2
-          node tests/smoke-test.mjs
-          node tests/route-review-smoke.mjs
           node tests/geo-smoke.mjs
       - name: Attach location-review screenshots
         if: always()

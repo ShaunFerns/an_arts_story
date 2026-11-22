@@ -1,61 +1,50 @@
 # First Semester: An Arts Story
 
-An independent, experimental narrative game about arriving at TU Dublin, finding one's way around Grangegorman, and navigating the first semester of the BA Arts (TU980) programme.
+An independently developed educational narrative-game prototype exploring a new student's first semester on TU Dublin's BA Arts (TU980) programme, set in a developing 3D representation of the Grangegorman campus.
 
-**Status: work in progress.** The original playable story and the newer campus prototypes are currently separate. There is not yet one integrated “latest game”.
+## Play the current development build
 
-## Open the builds
+**[OPEN THE CURRENT GAME — GEOGRAPHIC BUILD](https://shaunferns.github.io/an_arts_story/geo/)**
 
-| Build | What it contains | Link | Status |
-| --- | --- | --- | --- |
-| **Narrative game (v0.9)** | Induction, dialogue, academic interests, advising encounters and timetable story | [Play the narrative game](https://shaunferns.github.io/an_arts_story/) | Earlier playable build |
-| **First walk (location review 0.10)** | Third-person movement, Luas approach and an experimental Grangegorman walkthrough | [Open location review](https://shaunferns.github.io/an_arts_story/review/) | Separate visual and navigation prototype; geography approximate |
-| **Geographic mission map** | Rathdown-centred 1 km OpenStreetMap snapshot, scaled footprints, walls, hedges, collision and mission-map interaction | [Open geographic prototype](https://shaunferns.github.io/an_arts_story/geo/) | Newer geographic development; incomplete campus verification |
+This is the **active working version**. It uses a Rathdown-centred OpenStreetMap geographic snapshot, scaled campus footprints, boundaries, a mission map, NPC encounters, and **first-person movement by default**. Press **V** to switch to third-person for testing; **M** opens the mission map. It is still incomplete and parts of the campus require location verification.
 
-**If you want to inspect the most recent geographic work, use the geographic prototype link, not the homepage.** “Most recent” does not mean “complete” or “geographically verified”.
+The [project homepage](https://shaunferns.github.io/an_arts_story/) directs visitors to this same active build. Keep this link and the homepage current whenever the active build changes. Do not describe an older build as the latest.
 
-## What we are building
+**Earlier narrative prototype:** [Open the archived playable story](https://shaunferns.github.io/an_arts_story/story/). This retains the induction, adviser discussion, timetable and student-choice story as material to integrate into the geographic build; it is not the active campus implementation.
 
-The intended integrated game starts with arrival by Luas and a walk towards East Quad. The player meets students and staff, explores the campus, participates in induction, expresses indicative subject preferences, and later encounters the realities of timetable publication and module allocation. The experience is meant to let players explore uncertainty and practise asking useful questions rather than simply read induction information.
+## What the eventual game will do
 
-In the story, **academic advisers discuss interests and possible pathways; Programme Operations assembles and publishes the initial timetable.** An indicative preference is not formal Major confirmation or guaranteed module registration. Timetables and programme situations shown in the game are illustrative.
+A new BA Arts student arrives at Broadstone–University Luas, finds East Quad, encounters other students and university staff, and explores campus during induction. Conversations and choices gradually introduce indicative academic interests, programme options, academic advising, module allocation, timetable publication and the first weeks of study.
 
-## Current development priorities
+Our aim is to test whether story-based participation can help students navigate uncertainty and find useful support. Advisers help students explore and articulate preferences; Programme Operations assembles the initial timetable. An indicative preference is neither a guaranteed module place nor a formal Major confirmation.
 
-1. **Geographic and visual credibility.** Review the actual walking route, terrain, entrances, building relationships, boundaries and accessibility with a site-familiar reviewer. Footprints are sourced where available; elevations, labels and some interpretations remain provisional.
-2. **Characters and interaction.** Maintain rigged idle/walk/run character animation and meaningful NPC encounters, with reliable controls and sensible performance.
-3. **Narrative integration.** Bring the induction, adviser meeting, scavenger hunt, Friday timetable publication and subsequent student questions into the reviewed campus environment.
-4. **Student testing.** Check whether playing helps students understand campus life and choices, and revise based on evidence. No educational effectiveness claim is made yet.
+## Development decisions
 
-The project is deliberately iterative. More detail is not automatically better; if the 3D campus cannot become sufficiently recognisable and usable, an illustrated or isometric story remains an option.
+- **Active build:** the `geo/` experience; the superseded `review/` walking prototype has been removed.
+- **Perspective:** first-person by default. This avoids assigning the player a particular gender, clothing or appearance and helps foreground their own experience. Third-person remains a testable option, not the default.
+- **Characters:** focus representation and natural clothing/posing on the people the player meets. Existing rigged characters and animations need further visual quality review.
+- **Environment:** geographic plausibility, walkable routes, site boundaries, campus recognition, access and performance come before detailed façades.
+- **Integration:** migrate the meaningful induction and advising narrative from the archived story into the active environment rather than operating two competing games.
+- **Validation:** review screenshots and routes with people who know the campus, then test with students; automated browser checks alone do not establish geographic or educational quality.
 
-## Where things live
+## Repository layout
 
 | Path | Purpose |
 | --- | --- |
-| `index.html` | Original narrative game (currently the website root) |
-| `review/` | Experimental third-person first walk |
-| `geo/` | Geographic world and fixed OpenStreetMap data |
-| `docs/induction-story-structure.md` | Intended narrative and educational sequence |
-| `docs/geographic-and-visual-reset.md` | Geographic design requirements and review gate |
-| `docs/architecture-reference-brief.md` | Visual/architectural references |
-| `docs/third-person-and-npc-stack-review.md` | Character and movement considerations |
-| `tests/` | Automated smoke and collision tests |
-| `.github/workflows/pages.yml` | GitHub Pages build, checks and deployment |
+| `index.html` | Stable landing page pointing to the active game |
+| `geo/` | Current first-person game, mission map, OSM source snapshot and character asset |
+| `story/` | Earlier narrative build, preserved as a reference |
+| `docs/` | Narrative, geographic and visual planning |
+| `scripts/` | Geographic snapshot generation |
+| `tests/` | Automated geographic and collision checks |
+| `.github/workflows/pages.yml` | Build, verification and Pages deployment |
 
-### Deployment
+The [GitHub Actions workflow](https://github.com/ShaunFerns/an_arts_story/actions) builds and deploys the website when `main` changes. Pages may briefly lag behind the repository while a new deployment runs.
 
-Each push to `main` triggers **Publish the 3D game** in [GitHub Actions](https://github.com/ShaunFerns/an_arts_story/actions). The workflow prepares a `dist/` site with the narrative root, `review/`, `geo/`, and vendored Three.js, runs automated checks, then deploys to GitHub Pages. The site root does **not** automatically show whichever prototype was most recently edited.
+## Important limits
 
-Browser smoke tests check technical startup and interactions. They do not establish geographic fidelity, accessibility or educational value.
-
-## Educational context and limits
-
-BA Arts encourages exploration during Stage 1 while requiring choices to remain academically and operationally viable. The game is a complementary educational design exploration, **not an official TU Dublin advising or registration service**. It does not provide live timetables, module capacity, programme approvals or individual academic advice. Refer to current university guidance and academic advisers for real decisions.
-
-Campus geography and characters are stylised or provisional and may differ from current conditions. Feedback and review will guide what becomes a public-facing integrated release.
+This is an experimental, independently developed educational project, **not an official TU Dublin advising or registration service**. It contains no live student timetables, module allocations or guarantees. Geography, building heights and landmark attribution require further verification. Use official university guidance and academic advisers for programme decisions.
 
 ---
 
-**Project repository:** [ShaunFerns/an_arts_story](https://github.com/ShaunFerns/an_arts_story)  
-**Development:** Independent prototype, November 2026.
+*November 2026 · [Source repository](https://github.com/ShaunFerns/an_arts_story)*
