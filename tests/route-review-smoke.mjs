@@ -1,0 +1,28 @@
+import {chromium} from 'playwright';
+const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
+const page=await browser.newPage({viewport:{width:1440,height:900}});
+const errors=[];page.on('pageerror',e=>errors.push(e.stack||e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+const response=await page.goto('http://127.0.0.1:8765/review/',{waitUntil:'load'});
+if(response.status()!==200)throw Error('Review scene does not load HTTP 200');
+await page.waitForFunction(()=>!!window.__artsRouteReview?.ready,{timeout:35000});
+const status=await page.evaluate(()=>({rigged:window.__artsRouteReview.rigged,stops:window.__artsRouteReview.stops,ready:window.__artsRouteReview.ready}));
+console.log('Review initial state:',JSON.stringify(status));
+if(!status.rigged)throw Error('The CC0 rigged GLB character must load; no placeholder-only deployment');
+if(status.stops.length!==5)throw Error('Missing one or more grounded geographic review stops');
+if(errors.length)throw Error('Browser errors: '+JSON.stringify(errors));
+await page.screenshot({path:'/tmp/arts-route-start.png',fullPage:true});
+await page.locator('#begin').click();
+await page.waitForTimeout(900);
+if(await page.locator('#cinema').getAttribute('hidden')!==null)throw Error('Luas approach cinematic did not open');
+await page.locator('#skip').click();
+if(await page.locator('#cinema').getAttribute('hidden')===null)throw Error('Skip did not close cinematic');
+for(let i=0;i<5;i++){
+  await page.evaluate(j=>window.__artsRouteReview.visit(j),i);
+  await page.waitForTimeout(900);
+  const player=await page.evaluate(()=>window.__artsRouteReview.player);
+  console.log('Waypoint',i+1,status.stops[i],JSON.stringify(player));
+  await page.screenshot({path:'/tmp/arts-route-'+(i+1)+'.png',fullPage:true});
+}
+if(errors.length)throw Error('Browser errors after navigation: '+JSON.stringify(errors));
+console.log('PASS: rigged 3D route loaded, animated arrival skipped and all 5 map stops navigated.');
+await browser.close();
