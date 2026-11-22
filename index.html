@@ -233,7 +233,7 @@
       <div class="launch-foot">Walk freely or use the phone to travel between buildings. Progress stays on this device. <strong id="engineStatus" role="status" aria-live="polite">Preparing the 3D campus…</strong></div>
       <div id="threeHelp" hidden style="margin-top:14px;background:#193c46;color:#e5f0ef;border:1px solid #74959c;border-radius:12px;padding:14px;line-height:1.55">
         <strong>The 3D engine could not start in this browser.</strong>
-        <p style="margin:7px 0">This version uses an external copy of Three.js. Check your internet connection and try opening the game in Chrome or Edge. If your network blocks Three.js libraries, the 3D world cannot render until that library is available.</p>
+        <p style="margin:7px 0">This website serves Three.js locally. If the 3D scene cannot start, the technical error will appear above. Please use a current Chrome, Edge, Firefox or Safari browser.</p>
         <p style="margin:7px 0">For a more reliable experience, open the <strong>complete project on a local web server</strong> or publish it to GitHub Pages. Instructions are included with the ZIP.</p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" id="retryThree" class="launch-secondary">Retry 3D</button><button type="button" id="startStoryAlternative" class="launch-secondary">Use story alternative</button></div>
       </div>
@@ -513,9 +513,6 @@
     function addBanner(x,z,text,color=0x224852){const post=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,4.8,8),new THREE.MeshStandardMaterial({color:0x5a6769}));post.position.set(x,2.4,z);scene.add(post);const banner=new THREE.Mesh(new THREE.PlaneGeometry(1.3,2.2),new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide}));banner.position.set(x+.72,3.4,z);scene.add(banner);const tag=makeTextBillboard(text,190,80,'#16343d','#f3f6f5');tag.scale.set(2.1,.85,1);tag.position.set(x+.72,3.4,z+.02);scene.add(tag)}
     addBanner(23,24,'BA Arts'); addBanner(1,14,'Student\nHub',0x5b4742); addBanner(10,41,'SU',0x385640);
 
-    // Distinctive paving around East Quad and the main campus concourse.
-    const pavedArea=new THREE.Mesh(new THREE.PlaneGeometry(23,10),new THREE.MeshStandardMaterial({map:pavingTex,roughness:1}));
-    pavedArea.rotation.x=-Math.PI/2;pavedArea.position.set(27,.095,27);pavedArea.receiveShadow=true;scene.add(pavedArea);
     // Stainless bollards outside East Quad: high-contrast but grounded wayfinding detail.
     for(let i=0;i<9;i++){
       const b=new THREE.Mesh(new THREE.CylinderGeometry(.10,.12,1.1,12),new THREE.MeshStandardMaterial({color:0x9ca6a5,metalness:.8,roughness:.3}));
@@ -568,6 +565,9 @@
     const paleStone=masonryTexture('#ada69b',['#c4bcb0','#d1c8b9','#bdb8b0','#d9d0c0','#aea79d']);
     const pavingTex=masonryTexture('#b6a89a',['#c6b9a7','#d0c4b1','#bdb3a6','#d8cbb8']);
     pavingTex.repeat.set(3,2);
+    // Distinctive paving around East Quad and the main campus concourse.
+    const pavedArea=new THREE.Mesh(new THREE.PlaneGeometry(23,10),new THREE.MeshStandardMaterial({map:pavingTex,roughness:1}));
+    pavedArea.rotation.x=-Math.PI/2;pavedArea.position.set(27,.095,27);pavedArea.receiveShadow=true;scene.add(pavedArea);
     const darkBrickMat=new THREE.MeshStandardMaterial({map:darkBrick,roughness:.98});
     const lightStoneMat=new THREE.MeshStandardMaterial({map:lightStone,roughness:.97});
     const paleStoneMat=new THREE.MeshStandardMaterial({map:paleStone,roughness:.97});
@@ -1450,7 +1450,7 @@ You look around and make a mental note that some people are here for the first t
     } catch(startError) {
       window.__artsThreeReady=false;
       window.__artsEngineFailed=true;
-      document.getElementById('engineStatus').textContent='3D setup failed. See the instructions below.';
+      document.getElementById('engineStatus').textContent='3D setup failed: '+(startError?.message || String(startError));
       document.getElementById('threeHelp').hidden=false;
       console.error('3D startup failed',startError);
     } }
