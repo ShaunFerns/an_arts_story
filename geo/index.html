@@ -55,9 +55,11 @@ try {
  modelRig.traverse(n=>{
   if(n.isSkinnedMesh){n.castShadow=true;n.receiveShadow=true}
   if(!n.isBone)return;
-  const t=n.name.toLowerCase().replace(/[^a-z]/g,'');
-  const side=t.includes('left')||t.startsWith('l')?'left':t.includes('right')||t.startsWith('r')?'right':'';
-  if(side&&/upperarm|arm/.test(t)&&!rigBones[side+'arm'])rigBones[side+'arm']=n;
+  const raw=n.name.toLowerCase(),t=raw.replace(/[^a-z]/g,'');
+  // Quaternius Universal Base Characters uses upperarm_l / upperarm_r and
+  // thigh_l / thigh_r. Other humanoids may use LeftArm/RightArm naming.
+  const side=raw.endsWith('_l')||t.includes('left')?'left':raw.endsWith('_r')||t.includes('right')?'right':'';
+  if(side&&/upperarm/.test(t)&&!rigBones[side+'arm'])rigBones[side+'arm']=n;
   if(side&&/upperleg|thigh|upleg/.test(t)&&!rigBones[side+'leg'])rigBones[side+'leg']=n;
  });
  player.add(modelRig);human.visible=false;head.visible=false;direction.visible=false;riggedPlayer=true;
