@@ -657,6 +657,32 @@ const home=missions.find(m=>m.name==='Broadstone–University'&&m.found);
 const eastQuad=missions.find(m=>m.name==='East Quad'&&m.found);
 if(!home)throw Error('Cannot begin induction: mapped Broadstone–University Luas stop missing');
 let spawnPoint=null;
+// Default to East Quad for rapid façade/plaza review. Full induction arrival
+// remains available at ?start=luas.
+const reviewStartAtLuas=new URLSearchParams(location.search).get('start')==='luas';
+function chooseEastQuadReviewSpawn(){
+ if(!eastQuadEntrance)return null;
+ const face=eastQuadEntrance.face,centre=eastQuadEntrance.mainWallMidpoint;
+ const a=face[0],b=face[1],dx=b[0]-a[0],dn=b[1]-a[1],len=Math.hypot(dx,dn);
+ let ox=-dn/len,on=dx/len;
+ // Main face is northern: confirm its outward normal via the centre of EQ.
+ const mid=eastQuad.centre;
+ if(ox*(centre[0]-mid[0])+on*(centre[1]-mid[1])<0){ox=-ox;on=-on}
+ const tx=dx/len,tn=dn/len;
+ const options=[];
+ for(const dist of [10,12,14,17,20,25]){
+  for(const side of [0,-3,3,-5,5]){
+   const x=centre[0]+ox*dist+tx*side,n=centre[1]+on*dist+tn*side;
+   if(collision.query(x,n)||intersectsPlanter(x,n))continue;
+   const personDist=Math.min(...npcs.map(q=>Math.hypot(q.body.position.x-x,-q.body.position.z-n)));
+   if(personDist<4.5)continue;
+   const route=nearestWalkable([x,n],null);
+   if(!route||Math.hypot(x-route.point[0],n-route.point[1])>10)continue;
+   options.push({x,n,distance:dist,side});
+  }
+ }
+ return options[0]||null;
+}
 function chooseArrivalSpawn(){
  const [hx,hn]=home.position,candidates=[];
  for(const radius of [5,6,7,8,9,11])for(let i=0;i<32;i++){
@@ -673,16 +699,31 @@ function chooseArrivalSpawn(){
  return candidates[0]||null;
 }
 function placeAtArrival(){
- const result=chooseArrivalSpawn();
- if(!result)throw Error('Cannot locate a collision-free pedestrian spawn at Broadstone');
+ const nearEast=!reviewStartAtLuas;
+ let result=nearEast?chooseEastQuadReviewSpawn():null;
+ if(!result&&nearEast){
+  // If the photo-frontage location is constrained, use the validated
+  // East Quad NPC approach rather than starting at an unrelated street.
+  const e=eastQuad.position;
+  for(const dist of [6,8,10,12])for(let i=0;i<16;i++){
+   const ang=2*Math.PI*i/16,x=e[0]+Math.cos(ang)*dist,n=e[1]+Math.sin(ang)*dist;
+   if(collision.query(x,n)||intersectsPlanter(x,n))continue;
+   if(Math.hypot(x-e[0],n-e[1])<5)continue;
+   result={x,n};break;
+  }
+ }
+ if(!result)result=chooseArrivalSpawn();
+ if(!result)throw Error('Cannot locate a collision-free review or arrival spawn');
  spawnPoint=[result.x,result.n];
  player.position.set(result.x,groundHeight(result.x,result.n)+.05,-result.n);
- if(eastQuad){
-  const dx=eastQuad.position[0]-result.x,dz=-eastQuad.position[1]+result.n;
-  yaw=Math.atan2(-dx,-dz);pitch=.04;
+ const target=nearEast&&eastQuadEntrance?eastQuadEntrance.mainWallMidpoint:eastQuad.position;
+ if(target){
+  const dx=target[0]-result.x,dz=-target[1]+result.n;
+  yaw=Math.atan2(-dx,-dz);pitch=0;
  }
 }
 placeAtArrival();
+$('restart').textContent=reviewStartAtLuas?'Restart at Luas':'Restart outside East Quad';
 
 function missionList(){const list=$('missionList');list.innerHTML='';for(const [i,m] of missions.entries()){const b=document.createElement('button');b.className=selected===i?'active':'';b.disabled=!m.found;b.textContent=m.found?`◉ ${m.name} · ${m.description}`:`○ ${m.name} · not tagged in this OSM snapshot`;b.onclick=()=>{selected=i;missionList();updateObjective();drawMaps()};list.appendChild(b)} }
 function updateObjective(){const m=selected===null?null:missions[selected];$('objective').textContent=m?`Waypoint: ${m.name} · ${m.description}`:'Choose a mission on the map (M). Waypoints use OSM feature coordinates.'}
@@ -766,6 +807,6 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
   camera.lookAt(target);
  }renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=missions.indexOf(home);missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return home.name},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get entrancePrototypes(){return entryPrototypes},get plazaFeatures(){return eastQuadPlazaFeatures},plazaCollision:(x,n)=>intersectsPlanter(x,n),get closestNpcVerticalDifference(){const n=nearestNpc();return n?n.body.position.y-player.position.y:null},get npcVisualDiagnostics(){return npcs.map(n=>{const figure=n.body.children.find(c=>c.type==='Group');const figureBox=figure?new THREE.Box3().setFromObject(figure):null;const bodyBox=new THREE.Box3().setFromObject(n.body);return {name:n.name,groundY:groundHeight(n.body.position.x,-n.body.position.z),originY:n.body.position.y,rigBottom:figureBox?.min.y,rigTop:figureBox?.max.y,rigHeight:figureBox?.max.y-figureBox?.min.y,wholeHeight:bodyBox.max.y-bodyBox.min.y}})},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],groundHeight(m.position[0],m.position[1])+.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get entrancePrototypes(){return entryPrototypes},get plazaFeatures(){return eastQuadPlazaFeatures},plazaCollision:(x,n)=>intersectsPlanter(x,n),get closestNpcVerticalDifference(){const n=nearestNpc();return n?n.body.position.y-player.position.y:null},get npcVisualDiagnostics(){return npcs.map(n=>{const figure=n.body.children.find(c=>c.type==='Group');const figureBox=figure?new THREE.Box3().setFromObject(figure):null;const bodyBox=new THREE.Box3().setFromObject(n.body);return {name:n.name,groundY:groundHeight(n.body.position.x,-n.body.position.z),originY:n.body.position.y,rigBottom:figureBox?.min.y,rigTop:figureBox?.max.y,rigHeight:figureBox?.max.y-figureBox?.min.y,wholeHeight:bodyBox.max.y-bodyBox.min.y}})},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],groundHeight(m.position[0],m.position[1])+.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
