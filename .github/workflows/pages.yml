@@ -23,6 +23,8 @@ jobs:
           node-version: '22'
       - name: Install pinned Three.js library
         run: npm install --no-audit --no-fund --no-save three@0.160.0 playwright@1.56.1
+      - name: Source Rathdown-centred OpenStreetMap snapshot
+        run: node scripts/build-geodata.mjs
       - name: Prepare self-contained site assets
         run: |
           test -f index.html || { echo "::error::Upload the current game as index.html at repository root."; exit 1; }
@@ -31,6 +33,8 @@ jobs:
           cp -R node_modules/three/examples/jsm dist/vendor/addons
           test -f review/index.html && test -s review/assets/student-rig.glb
           cp -R review dist/review
+          mkdir -p dist/geo
+          cp geo/index.html geo/data.json dist/geo/
           python3 - <<'PY'
           from pathlib import Path
           import re
