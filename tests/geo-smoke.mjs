@@ -159,6 +159,9 @@ await eqReview.goto('http://127.0.0.1:8765/geo/',{waitUntil:'domcontentloaded',t
 await eqReview.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
 const review=await eqReview.evaluate(()=>({location:window.__artsGeo.spawnLocation,distance:window.__artsGeo.startDistanceFromEastQuad,entries:window.__artsGeo.entrancePrototypes}));
 console.log('East Quad direct-review spawn:',JSON.stringify(review));
+const signLine=await eqReview.evaluate(()=>window.__artsGeo.eastQuadSignSightline);
+console.log('North entrance sign visibility ray:',JSON.stringify(signLine));
+
 const calibration=await eqReview.evaluate(()=>{
  const g=window.__artsGeo;
  return {npc:g.eastQuadNpcDimensions,variant:g.npcVariant,scale:g.npcPrototypeScale,eye:g.eyeHeightAboveGround};
