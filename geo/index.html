@@ -4,13 +4,14 @@
 </style></head><body><div id="stage"></div>
 <div id="heads"><div class="pane"><small>FIRST SEMESTER · AN ARTS STORY</small><h1>Grangegorman · Mission Map</h1><p id="objective">Rathdown-centred world · connecting real footprints and boundaries</p></div><div class="pane right"><small>GEOGRAPHIC BASE · OSM</small><p id="status">Reading Rathdown map data…</p><p>WASD move · mouse drag look · scroll zoom · <b>M</b> mission map</p></div></div>
 <canvas id="mini" width="390" height="390" aria-label="Open the mission map" role="button" tabindex="0"></canvas>
-<div id="foot"><div class="pane controls">1 world unit = <strong>1 metre</strong><br>Buildings: simple scaled blocks · walls/hedges: source feature lines<br><span id="pos"></span></div><div class="buttons"><button id="mapBtn">☰ Open mission map (M)</button><button id="restart">Return to Rathdown</button></div></div>
+<div id="foot"><div class="pane controls">1 world unit = <strong>1 metre</strong><br>Buildings: scaled footprints · walls and hedges: solid widths + heights<br><span id="pos"></span></div><div class="buttons"><button id="mapBtn">☰ Open mission map (M)</button><button id="restart">Return to Rathdown</button></div></div>
 <div id="overlay" hidden role="dialog" aria-modal="true" aria-label="Grangegorman mission map"><div id="mapShell"><div id="mapFrame"><canvas id="map" width="1000" height="1000" aria-label="Mapped campus with mission markers"></canvas></div><div id="side"><button id="closeMap">✕ Return to game (M)</button><div class="pane"><small>RATHDOWN ORIGIN · 1 KM RADIUS</small><h1>Mission map</h1><p>One game unit equals one metre. Click a marker or select a mission. The dashed gold line is a <b>bearing, not a verified walking route</b>.</p><p id="attribution">© OpenStreetMap contributors · ODbL</p></div><div id="missionList" class="pane"></div><div id="mapNote">Mapped footprints and walls are based on OpenStreetMap tags. Heights are estimates. Lower House is a provisional mapping of the Sports and Student Facility footprint pending campus-plan verification; elevations are not yet surveyed.</div></div></div></div>
 <div id="error" hidden><article><h1>Verified geographic data unavailable</h1><p id="errorText"></p><p>The game will not substitute invented geography for missing OpenStreetMap data. <a href="../review/">Open the older experimental route</a> or review the <a href="https://github.com/ShaunFerns/an_arts_story/blob/main/docs/geographic-and-visual-reset.md">geographic specification</a>.</p></article></div>
 <script type="importmap">{"imports":{"three":"../vendor/three.module.js","three/addons/":"../vendor/addons/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {makeCollisionWorld,barrierDimensions} from './collision.mjs';
 const $=id=>document.getElementById(id),data=await fetch('./data.json').then(r=>{if(!r.ok)throw Error('No OSM snapshot (HTTP '+r.status+')');return r.json()}).catch(e=>{ $('error').hidden=false;$('errorText').textContent=e.message;throw e});
 if(!data.features?.length||!data.anchor||data.radius!==1000){$('error').hidden=false;$('errorText').textContent='Geographic snapshot is incomplete.';throw Error('Invalid OSM snapshot')}
 const zone=data.features,origin=data.anchor,MAX=1000,$map=$('map'),mapCtx=$map.getContext('2d'),miniCtx=$('mini').getContext('2d');
@@ -32,7 +33,7 @@ const counts={building:0,road:0,barrier:0,land:0};
 for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MAX+50)continue;const t=f.tags||{};
  if(f.kind==='land'&&f.coords.length>3&&dist<470){const m=polygonMesh(f.coords,.035,lawn,'land');if(m)counts.land++;}
  if(f.kind==='road'&&dist<640){const w=roadWidth(t.highway);const material=['footway','pedestrian','path','steps','cycleway'].includes(t.highway)?pathMat:t.railway?tramMat:roadMat;for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],w,.075,material);counts.road++;}
- if(f.kind==='barrier'&&dist<540){const k=t.barrier||'wall',h=k==='hedge'?1.35:k==='fence'?1.6:1.9,w=k==='hedge'?.7:k==='fence'?.1:.42;for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],w,h,k==='hedge'?hedgeMat:k==='fence'?railMat:oldStone);counts.barrier++;}
+ if(f.kind==='barrier'&&dist<540){const k=t.barrier||'wall',dimensions=barrierDimensions(t),h=dimensions.height,w=dimensions.width;for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],w,h,k==='hedge'?hedgeMat:k==='fence'?railMat:oldStone);counts.barrier++;}
  if(f.kind==='building'&&dist<510&&f.coords.length>3){const levels=Number(t['building:levels']),known=Number(String(t.height||'').replace(/[^0-9.]/g,''));let h=known>1&&known<120?known:levels>0&&levels<30?levels*3.2:8;
  if(f.id==='way/810540713')h=17.5; // TU Dublin documents five floors; overall height is estimated.
  const mesh=polygonMesh(f.coords,h,(/Quad/i.test(f.name)?newBrick:grey));if(mesh)counts.building++;}
@@ -95,30 +96,10 @@ const missions=landmarkMatches.map(([name,re,desc])=>{
  const f=matches[0],centre=f?midpoint(f.coords):null,approach=centre?nearestWalkable(centre,f.kind==='building'?f:null):null;
  return {name,description:inferredLower&&f?desc+' · footprint provisional':desc,found:!!(f&&approach),provisional:!!(f&&inferredLower),position:approach?.point||null,centre,source:f?.id,approachWay:approach?.road};
 });
-const solidBuildings=zone.filter(f=>f.kind==='building'&&f.coords.length>3).map(f=>{
- const xs=f.coords.map(p=>p[0]),ys=f.coords.map(p=>p[1]);
- return {shape:f.coords,minX:Math.min(...xs),maxX:Math.max(...xs),minY:Math.min(...ys),maxY:Math.max(...ys)};
-}).filter(f=>Math.hypot((f.minX+f.maxX)/2,(f.minY+f.maxY)/2)<550);
-const solidEdges=[];
-for(const f of zone.filter(f=>f.kind==='barrier'&&['wall','fence','hedge','retaining_wall'].includes(f.tags?.barrier))){
- const c=midpoint(f.coords);if(Math.hypot(c[0],c[1])>550)continue;
- for(let i=1;i<f.coords.length;i++){
-  const a=f.coords[i-1],b=f.coords[i];if(Math.hypot(b[0]-a[0],b[1]-a[1])<.1)continue;
-  solidEdges.push({a,b,minX:Math.min(a[0],b[0])-.55,maxX:Math.max(a[0],b[0])+.55,minY:Math.min(a[1],b[1])-.55,maxY:Math.max(a[1],b[1])+.55});
- }
-}
-function blockedAt(east,north){
- for(const b of solidBuildings){
-  if(east<b.minX-.3||east>b.maxX+.3||north<b.minY-.3||north>b.maxY+.3)continue;
-  if(contains2D([east,north],b.shape))return true;
- }
- for(const e of solidEdges){
-  if(east<e.minX||east>e.maxX||north<e.minY||north>e.maxY)continue;
-  const dx=e.b[0]-e.a[0],dy=e.b[1]-e.a[1],t=THREE.MathUtils.clamp(((east-e.a[0])*dx+(north-e.a[1])*dy)/(dx*dx+dy*dy),0,1);
-  if((east-e.a[0]-dx*t)**2+(north-e.a[1]-dy*t)**2<.36)return true;
- }
- return false;
-}
+// The player is represented by a 1.74-metre upright capsule; its ground
+// contact is a circular 0.34m radius. Building footprints and *thick* wall,
+ // railing and hedge volumes share the same metre-based coordinates as the map.
+const collision=makeCollisionWorld(zone,{playerRadius:.34,worldRadius:990,worldExtent:550,cellSize:18});
 const home=missions.find(m=>m.name==='Rathdown House'&&m.found);
 if(home)player.position.set(home.position[0],.05,-home.position[1]);
 function missionList(){const list=$('missionList');list.innerHTML='';for(const [i,m] of missions.entries()){const b=document.createElement('button');b.className=selected===i?'active':'';b.disabled=!m.found;b.textContent=m.found?`◉ ${m.name} · ${m.description}`:`○ ${m.name} · not tagged in this OSM snapshot`;b.onclick=()=>{selected=i;missionList();updateObjective();drawMaps()};list.appendChild(b)} }
@@ -143,7 +124,7 @@ $map.addEventListener('wheel',e=>{e.preventDefault();mapZoom=THREE.MathUtils.cla
 $map.addEventListener('click',e=>{const b=$map.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*$map.width,y=(e.clientY-b.top)/b.height*$map.height,scale=$map.width/(2000/mapZoom),mx=(x-$map.width/2)/scale,my=($map.height/2-y)/scale;let best=-1,d=Infinity;missions.forEach((m,i)=>{if(!m.found)return;const dd=Math.hypot(mx-m.position[0],my-m.position[1]);if(dd<d){d=dd;best=i}});if(best>=0&&d<45/mapZoom){selected=best;missionList();updateObjective();drawMaps()}});
 const keys={};addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k==='m'){e.preventDefault();setMap(!mapOpen)}if(k==='escape'&&mapOpen)setMap(false)});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 let dragging=false,mouseX=0,mouseY=0;renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;mouseX=e.clientX;mouseY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;yaw-=(e.clientX-mouseX)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-mouseY)*.005,.2,.95);mouseX=e.clientX;mouseY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>dragging=false);renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();follow=THREE.MathUtils.clamp(follow+Math.sign(e.deltaY)*1.1,8,30)},{passive:false});
-let t=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-t)/1000,.055);t=now;let movingRig=false;if(!mapOpen){const forward=+!!(keys.w||keys.arrowup)-+!!(keys.s||keys.arrowdown),right=+!!(keys.d||keys.arrowright)-+!!(keys.a||keys.arrowleft);if(forward||right){const x=-Math.sin(yaw)*forward+Math.cos(yaw)*right,z=-Math.cos(yaw)*forward-Math.sin(yaw)*right;const m=Math.hypot(x,z),speed=keys.shift?8:4.5;movingRig=true;const dx=x/m*dt*speed,dz=z/m*dt*speed;if(!blockedAt(player.position.x+dx,-player.position.z))player.position.x+=dx;if(!blockedAt(player.position.x,-player.position.z-dz))player.position.z+=dz;const radius=Math.hypot(player.position.x,player.position.z);if(radius>990){player.position.x*=990/radius;player.position.z*=990/radius}player.rotation.y=Math.atan2(x,z)} }
+let t=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-t)/1000,.055);t=now;let movingRig=false;if(!mapOpen){const forward=+!!(keys.w||keys.arrowup)-+!!(keys.s||keys.arrowdown),right=+!!(keys.d||keys.arrowright)-+!!(keys.a||keys.arrowleft);if(forward||right){const x=-Math.sin(yaw)*forward+Math.cos(yaw)*right,z=-Math.cos(yaw)*forward-Math.sin(yaw)*right;const m=Math.hypot(x,z),speed=keys.shift?8:4.5;movingRig=true;const dx=x/m*dt*speed,dz=z/m*dt*speed;const resolved=collision.move(player.position.x,-player.position.z,dx,-dz);player.position.x=resolved.x;player.position.z=-resolved.y;player.rotation.y=Math.atan2(x,z)} }
  if(riggedPlayer){
   const swing=movingRig?Math.sin(now*.0078)*.42:Math.sin(now*.0012)*.015;
   if(rigBones.leftleg)rigBones.leftleg.rotation.x=swing;
@@ -153,6 +134,6 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
  }
  const target=player.position.clone().add(new THREE.Vector3(0,1.6,0)),pos=target.clone().add(new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*follow,Math.sin(pitch)*follow,Math.cos(yaw)*Math.cos(pitch)*follow));camera.position.lerp(pos,.13);camera.lookAt(target);renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=available.length?missions.indexOf(available[0]):null;missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,origin,features:zone.length,counts,collisions:{buildings:solidBuildings.length,barrierSegments:solidEdges.length},missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
