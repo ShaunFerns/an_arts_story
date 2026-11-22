@@ -34,8 +34,8 @@ jobs:
           cp node_modules/three/build/three.module.js dist/vendor/three.module.js
           cp -R node_modules/three/examples/jsm dist/vendor/addons
           test -s geo/assets/student-rig.glb
-          cp -R geo/assets dist/geo/assets
           mkdir -p dist/geo
+          cp -R geo/assets dist/geo/assets
           cp geo/index.html geo/data.json geo/collision.mjs dist/geo/
           python3 - <<'PY'
           from pathlib import Path
