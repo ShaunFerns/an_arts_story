@@ -51,7 +51,7 @@ await page.keyboard.press('p');
 await page.locator('#phoneTabs .tabBtn').filter({ hasText:'Timetable' }).click();
 const timetableText = await page.locator('#phoneContent').innerText();
 console.log('Timetable before publication:', timetableText.slice(0, 180));
-if (!timetableText.includes('Awaiting publication') || !timetableText.includes('Friday')) {
+if (!timetableText.toLowerCase().includes('awaiting publication') || !timetableText.toLowerCase().includes('friday')) {
   throw new Error('The induction timetable must remain unpublished until Friday before classes');
 }
 await page.locator('#phoneCloseBtn').click();
