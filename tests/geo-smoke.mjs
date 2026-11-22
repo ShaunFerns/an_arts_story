@@ -2,12 +2,13 @@ import { chromium } from 'playwright';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
 const page=await browser.newPage({viewport:{width:1365,height:768}});
 const errors=[];page.on('pageerror',e=>errors.push(e.stack||e.message));page.on('console',e=>{if(e.type()==='error')errors.push(e.text())});
-const response=await page.goto('http://127.0.0.1:8765/geo/?start=luas',{waitUntil:'domcontentloaded',timeout:40000});
+const response=await page.goto('http://127.0.0.1:8765/geo/?review',{waitUntil:'domcontentloaded',timeout:40000});
 if(response.status()!==200)throw Error('Geo page returned '+response.status());
 await page.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
 const g=await page.evaluate(()=>window.__artsGeo&&({rigged:window.__artsGeo.rigged,anchor:window.__artsGeo.origin,features:window.__artsGeo.features,counts:window.__artsGeo.counts,missions:window.__artsGeo.missions}));
 console.log('Sourced geographic world:',JSON.stringify(g));
 if(!g||g.anchor.id!=='way/310375422')throw Error('Rathdown must use verified OSM anchor');
+await page.getByRole('button',{name:'Find the Arts induction welcome point'}).click();
 if(!g.rigged)throw Error('Geo player must use actual rigged GLB, not capsule fallback');
 const spawnNpcDistance=await page.evaluate(()=>window.__artsGeo.nearestNpcDistance);
 const eyeHeight=await page.evaluate(()=>window.__artsGeo.cameraHeight);
@@ -47,7 +48,7 @@ if(JSON.stringify(entries[0].face)===JSON.stringify(entries[1].face))throw Error
 if(entries[0].sign?.side!=='right when facing main entrance'||!entries[0].sign.mountedOnBrick)throw Error('Photo-referenced wall lettering must be to the right of the northern door');
 const signBuild=await page.evaluate(()=>window.__artsGeo.eastQuadSignGeometry);
 console.log('Mounted gold lettering and right-hand brick bay:',JSON.stringify(signBuild));
-if(!signBuild||!signBuild.visible||!signBuild.wallVisible||signBuild.width<5||signBuild.height<4)throw Error('East Quad gold sign missing from scene');
+if(!signBuild||!signBuild.visible||!signBuild.wallVisible||signBuild.width<4||signBuild.height<2||signBuild.frontOffset<=0||signBuild.frontOffset>.08)throw Error('East Quad gold sign missing from scene');
 if(Math.hypot(signBuild.position[0]-entries[0].mainWallMidpoint[0],signBuild.position[2]-entries[0].mainWallMidpoint[1])>12)throw Error('East Quad signage is not adjacent to northern doorway');
 const paving=await page.evaluate(()=>window.__artsGeo.eastQuadPavingAudit);
 console.log('East Quad paved forecourt:',JSON.stringify(paving));
@@ -139,31 +140,116 @@ if(await page.locator('#overlay').getAttribute('hidden')!==null)throw Error('Map
 await page.screenshot({path:'/tmp/arts-geo-mission-map.png',fullPage:true});
 await page.keyboard.press('m');
 if(await page.locator('#overlay').getAttribute('hidden')===null)throw Error('M did not close map');
-const eastIndex=g.missions.findIndex(m=>m.name==='East Quad');
-await page.evaluate(i=>window.__artsGeo.visit(i),eastIndex);
-const npcHeightDifference=await page.evaluate(()=>window.__artsGeo.closestNpcVerticalDifference);
-if(npcHeightDifference===null||Math.abs(npcHeightDifference)>.35)throw Error('East Quad interaction character is not at player standing elevation');
-const pos=await page.evaluate(()=>window.__artsGeo.position);
-const eastHeight=await page.evaluate(()=>window.__artsGeo.terrainPlayerHeight);
-if(Math.abs(eastHeight)>.7)throw Error('East Quad player floor did not track terrain');
-console.log('Player location after east-quad waypoint:',JSON.stringify(pos));
-await page.screenshot({path:'/tmp/arts-geo-east-quad.png',fullPage:true});
-const numberOfNpcs=await page.evaluate(()=>window.__artsGeo.npcs);
-console.log('Authored campus NPCs:',numberOfNpcs);
-if(numberOfNpcs<3)throw Error('Expected multiple campus NPCs at mapped walkable destinations');
-await page.waitForTimeout(300);
-await page.keyboard.press('e');
-if(await page.locator('#npcDialog').getAttribute('hidden')!==null)throw Error('E-to-talk dialogue did not open near mapped campus NPC');
-const spoken=await page.locator('#npcText').innerText();
-if(!spoken.includes('Semester 1')&&!spoken.includes('preferences'))throw Error('East Quad student ambassador dialogue missing the programme-specific induction message');
-await page.locator('#npcClose').click();
-if(await page.locator('#npcDialog').getAttribute('hidden')===null)throw Error('Closing NPC dialogue failed');
+// Place the player at real exterior trigger points. An E keypress must
+// still resolve the correct local NPC or observation and unlock its next step.
+async function place(group,id){
+ const placed=await page.evaluate(([group,id])=>{
+  const g=window.__artsGeo,[x,n]=g.encounterPoints[group][id];
+  return g.reviewPose(x,n,x,n-5);
+ },[group,id]);
+ if(!placed)throw Error('Blocked encounter point: '+id);
+}
+const choose=name=>page.getByRole('button',{name,exact:false}).click();
+const closePhone=()=>page.locator('#closeMap').click();
+const checkStory=async (predicate,message)=>{
+ if(!await page.evaluate(predicate))throw Error(message);
+};
+async function talk(npc,title){
+ await place('characters',npc);
+ await page.keyboard.press('e');
+ if(await page.locator('#npcTitle').innerText()!==title)throw Error('Wrong conversation at '+npc);
+}
+await page.keyboard.press('m');
+await choose('Timetable');
+if(!await page.getByText('Awaiting publication').isVisible())throw Error('Timetable published before induction');
+await closePhone();
 
-// Default game URL should now be a practical East Quad façade test, while
-// ?start=luas preserves the original full-walk induction experience.
+await talk('induction','Welcome to BA Arts');
+const npcHeightDifference=await page.evaluate(()=>window.__artsGeo.closestNpcVerticalDifference);
+if(npcHeightDifference===null||Math.abs(npcHeightDifference)>.35)throw Error('East Quad character elevation differs from the player');
+if(Math.abs(await page.evaluate(()=>window.__artsGeo.terrainPlayerHeight))>.7)throw Error('East Quad player floor did not track terrain');
+await choose('Meet my academic adviser');
+await talk('adviser','Which directions interest you?');
+await choose('I want to explore people, society and history');
+await page.locator('#constraintNote').fill('Travel to campus');
+await choose('Save and continue');
+if(!await page.getByText('Society and culture and History',{exact:false}).isVisible())throw Error('Induction preference did not affect adviser response');
+await choose('Join the sustainability team');
+await talk('sustainability','The campus is your first challenge');
+await choose('Start exploring');
+await talk('induction','Keep exploring');
+await choose('Back to the hunt');
+const order=['library','laurence','lower','glass','rathdown'];
+for(const id of order){
+ await place('stops',id);
+ await page.keyboard.press('e');
+ const observe=page.getByRole('button',{name:'Record an observation',exact:true});
+ if(await observe.isVisible())await observe.click();
+ if(await page.locator('#npcTitle').innerText()!=='What do you notice?')throw Error('Hunt stop not playable: '+id);
+ await page.locator('#npcChoices button').first().click();
+ await choose('Continue exploring');
+ if(id==='laurence'){
+  await page.reload();
+  await page.waitForFunction(()=>window.__artsGeo?.ready);
+  await checkStory(()=>window.__artsGeo.story.huntDone.join() === 'library,laurence','Reload lost hunt notes or allowed the wrong order');
+ }
+}
+await checkStory(()=>!window.__artsGeo.story.timetablePublished,'Timetable published before the debrief');
+await talk('induction','Welcome back to East Quad');
+await choose('Finish induction');
+if(await page.locator('#npcTitle').innerText()!=='Friday before teaching begins')throw Error('Missing Friday publication scene');
+await choose('Open my timetable');
+if(!await page.getByText('Semester 1 · illustrative timetable').isVisible())throw Error('Missing illustrative timetable');
+await closePhone();
+
+await talk('cian','The missing module');
+await choose('Look at Cian’s preference and timetable before deciding');
+await choose('Compare the details and save a note');
+await closePhone();
+await choose('maybe you can just pick something else now');
+await choose('Go and find Dr Byrne');
+await talk('adviser','What do you actually know?');
+if(!await page.getByText('You can tell her what Cian ranked',{exact:false}).isVisible())throw Error('Case evidence did not affect the advising discussion');
+await choose('Couldn’t you just tell him what to take?');
+await choose('Go to Rathdown House');
+await talk('support','Finding the right route');
+await choose('programme operations about the record');
+await choose('Go back to Dr Byrne');
+await talk('adviser','Your advising record and timetable');
+await choose('Finish the mission');
+if(!await page.getByText('Your first instinct was to assume a swap would be easy',{exact:false}).isVisible())throw Error('Cian choice missing from reflection');
+await choose('Find Saoirse at Lower House');
+await talk('union','A place to find your people');
+await choose('Ask what else is nearby');
+await choose('Add that to my notes');
+await talk('gym','Looking after yourself');
+await choose('Save the location');
+await talk('saoirse','Something unexpected');
+await choose('surely you can change your timetable now');
+await choose('Go to East Quad');
+await talk('lecturer','A possible pathway');
+await choose('Ask whether an enjoyable taster guarantees a place next semester');
+await choose('Return to East Quad');
+await talk('adviser','Exploration with a plan');
+await choose('Record the new interest and agree what to check next');
+await choose('Review the advising record');
+if(!await page.getByText('Travel to campus',{exact:true}).isVisible())throw Error('Original advising constraint missing');
+await closePhone();
+await choose('Explore more of Grangegorman');
+await page.reload();
+await page.waitForFunction(()=>window.__artsGeo?.ready);
+await checkStory(()=>{
+ const story=window.__artsGeo.story;
+ return story.stage==='complete'&&story.caseChecked&&story.decisions.saoirse1===1&&
+  story.formA.interests[0]==='Society and culture'&&!!story.formA.newInterest&&
+  Object.keys(story.huntEvidence).length===5&&story.timetablePublished;
+},'Reload lost completion, decisions or field notes');
+await page.close();
+
 const eqReview=await browser.newPage({viewport:{width:1365,height:768}});
-await eqReview.goto('http://127.0.0.1:8765/geo/',{waitUntil:'domcontentloaded',timeout:40000});
+await eqReview.goto('http://127.0.0.1:8765/geo/?start=east-quad&review',{waitUntil:'domcontentloaded',timeout:40000});
 await eqReview.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
+await eqReview.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
 const review=await eqReview.evaluate(()=>({location:window.__artsGeo.spawnLocation,distance:window.__artsGeo.startDistanceFromEastQuad,entries:window.__artsGeo.entrancePrototypes}));
 console.log('East Quad direct-review spawn:',JSON.stringify(review));
 const signLine=await eqReview.evaluate(()=>window.__artsGeo.eastQuadSignSightline);
@@ -198,14 +284,22 @@ await eqReview.evaluate(()=>window.__artsGeo.setPerspective(true));
 
 if(Math.abs(calibration.eye-1.65)>.06)throw Error('First-person eye height unexpectedly changed');
 const comparison=await browser.newPage({viewport:{width:1365,height:768}});
-await comparison.goto('http://127.0.0.1:8765/geo/?npc=original&scale=1',{waitUntil:'domcontentloaded',timeout:40000});
+await comparison.goto('http://127.0.0.1:8765/geo/?start=east-quad&npc=original&scale=1',{waitUntil:'domcontentloaded',timeout:40000});
 await comparison.waitForFunction(()=>window.__artsGeo?.ready||!document.querySelector('#error').hidden,{timeout:55000});
 const original=await comparison.evaluate(()=>({variant:window.__artsGeo.npcVariant,visible:window.__artsGeo.humanReferenceVisible,dimensions:window.__artsGeo.eastQuadNpcDimensions}));
 console.log('Original 1.74m mannequin comparison:',JSON.stringify(original));
 if(original.variant!=='original-mannequin'||!original.visible||Math.abs(original.dimensions.height-1.74)>.12)throw Error('Original NPC comparison and human scale reference missing');
 await comparison.close();
-if(review.location!=='East Quad review'||review.distance>30)throw Error('Default direct test spawn must face north entrance of East Quad');
-await eqReview.screenshot({path:'/tmp/arts-geo-north-entrance-review.png',fullPage:true});
+if(review.location!=='East Quad review'||review.distance>30)throw Error('Direct review spawn must face the north entrance of East Quad');
+for (const [view,pose] of [
+ ['luas-approach',[116,-74,95,-99,5]],
+ ['north-entrance',[94,-88,91,-103,4.2]],
+ ['doors-and-sign',[98,-94,89,-101,3]],
+]){
+ if(!await eqReview.evaluate(pose=>window.__artsGeo.reviewPose(...pose),pose))throw Error('Blocked photo review position: '+view);
+ await eqReview.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ await eqReview.screenshot({path:'/tmp/arts-geo-'+view+'.png'});
+}
 await eqReview.close();
 if(errors.length)throw Error('Browser errors: '+JSON.stringify(errors.slice(0,8)));
 console.log('Georeferenced 3D world, mission map and source-faithful map markers passed.');

@@ -2,11 +2,25 @@
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#f4f4ed;background:#0e2025}*{box-sizing:border-box}body{margin:0;overflow:hidden}#stage{position:fixed;inset:0}#heads{position:fixed;top:16px;left:18px;right:18px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:18px}.pane{border:1px solid #aec2ae80;background:#102a30eb;box-shadow:0 10px 40px #0007;border-radius:12px;padding:13px 17px;max-width:380px}.pane small{font-size:10px;letter-spacing:.18em;color:#eccf98;font-weight:800}.pane h1{font:normal 27px Georgia,serif;margin:4px 0}.pane p{font-size:12px;color:#d3e1d9;margin:5px 0;line-height:1.5}.right{max-width:300px;text-align:right}#foot{position:fixed;left:18px;bottom:20px;right:18px;display:flex;justify-content:space-between;align-items:flex-end;gap:14px;pointer-events:none}.controls{font-size:12px;line-height:1.9}.controls strong{color:#edcf8f}.buttons{display:flex;gap:8px;pointer-events:auto}.buttons button,#closeMap,#missionList button{border:1px solid #849f93;color:#f7f5e9;background:#21444b;border-radius:8px;padding:11px 15px;cursor:pointer;font:inherit}.buttons button:hover,#missionList button:hover{background:#386069}.buttons button:focus-visible,#closeMap:focus-visible,#missionList button:focus-visible{outline:3px solid #e7bd70}#mini{position:fixed;right:18px;bottom:92px;width:195px;height:195px;border:2px solid #7ba39c;background:#203e37ec;border-radius:50%;box-shadow:0 8px 28px #0007;cursor:pointer}#overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#041b23e9;z-index:8;padding:20px}#overlay[hidden]{display:none}#mapShell{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;width:min(1140px,96vw);height:min(780px,91vh)}#mapFrame{position:relative;min-height:0;border:2px solid #69867d;border-radius:12px;overflow:hidden;background:#263e37}#map{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}#side{min-height:0;display:flex;flex-direction:column;gap:9px}#side .pane{overflow:auto;max-width:none}#closeMap{font-weight:800}#missionList{overflow:auto;flex:1}#missionList button{display:block;width:100%;text-align:left;margin:7px 0;font-size:13px}#missionList button.active{border-color:#eed394;background:#6c5538}#mapNote{font-size:12px;line-height:1.5;color:#c6d9ce}#attribution{font-size:11px;color:#c7d5cc}#error{position:fixed;inset:0;background:#132b34;display:flex;align-items:center;justify-content:center;padding:28px;z-index:15}#error[hidden]{display:none}#error article{max-width:680px}#error a{color:#f0ce8f}@media(max-width:720px){#heads .right{display:none}.pane h1{font-size:20px}#mapShell{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}#side{max-height:230px}#missionList{max-height:120px}#mini{width:130px;height:130px;bottom:108px}.controls{display:none}}
 #npcHint{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#15343beb;border:1px solid #d4bf8c;border-radius:9px;color:white;padding:12px 16px;z-index:5;font-size:13px}#npcHint[hidden],#npcDialog[hidden]{display:none}#npcDialog{position:fixed;inset:0;z-index:9;background:#031921c9;display:grid;place-items:center;padding:16px}#npcDialog article{background:#18343c;border:1px solid #e1c38f;border-radius:13px;padding:28px;max-width:610px;color:white}#npcDialog h2{font:normal 32px Georgia,serif;margin:0 0 12px}#npcDialog p{font-size:16px;line-height:1.7}#npcDialog button{padding:12px 18px;border:0;border-radius:8px;background:#e1bb75;color:#122932;font-weight:750;cursor:pointer}
-</style></head><body><div id="stage"></div>
-<div id="npcHint" hidden role="status"></div><div id="npcDialog" hidden role="dialog" aria-modal="true" aria-label="Campus conversation"><article><h2 id="npcTitle"></h2><p id="npcText"></p><button id="npcClose">Continue exploring</button></article></div><div id="heads"><div class="pane"><small>FIRST SEMESTER · AN ARTS STORY</small><h1>Grangegorman · Mission Map</h1><p id="objective">Rathdown-centred world · provisional Luas–East Quad slope</p></div><div class="pane right"><small>GEOGRAPHIC BASE · OSM</small><p id="status">Reading Rathdown map data…</p><p><b>WASD</b> walk · hold <b>Space + WASD</b> look · <b>Shift</b> run · <b>E</b> talk · <b>M</b> map · <b>V</b> view</p></div></div>
+
+#npcDialog article{width:min(100%,680px);max-width:680px;max-height:calc(100dvh - 32px);overflow:auto}
+#npcSpeaker{color:#f1ce90;font-weight:700;margin:0 0 .45rem}
+#npcText{white-space:pre-line}#npcChoices{display:grid;gap:8px;margin:16px 0}
+#npcDialog #npcChoices button{text-align:left;font:inherit;font-weight:650}
+#npcDialog #npcClose{background:transparent;color:#f4f4ed;border:1px solid #849f93;font:inherit}
+#npcDialog button:focus-visible,#phoneTabs button:focus-visible,#npcHint:focus-visible{outline:3px solid #fff1c6;outline-offset:2px}
+#constraintNote{display:block;width:100%;margin-top:6px;padding:8px;font:inherit}
+#npcHint{cursor:pointer}
+#phoneTabs{display:flex;flex-wrap:wrap;gap:5px}
+#phoneTabs button{background:#21444b;color:#f7f5e9;border:1px solid #849f93;border-radius:6px;padding:6px 8px;cursor:pointer}
+#phoneTabs [aria-pressed=true]{background:#6c5538;border-color:#eed394}
+#missionList h2{font-size:16px;margin:10px 0 4px}#missionList p{font-size:14px}
+@media (max-width:720px){#side{max-height:42vh}}
+</style></head><body><div id="stage" tabindex="-1"></div>
+<button id="npcHint" hidden type="button"></button><div id="npcDialog" hidden role="dialog" aria-modal="true" aria-labelledby="npcTitle"><article><p id="npcSpeaker"></p><h2 id="npcTitle"></h2><p id="npcText"></p><div id="npcConstraints" hidden><label for="constraintNote">Practical constraints (optional)</label><textarea id="constraintNote" rows="2" maxlength="240"></textarea></div><div id="npcChoices"></div><button id="npcClose" type="button">Close conversation</button></article></div><div id="heads"><div class="pane"><small>FIRST SEMESTER · AN ARTS STORY</small><h1>Grangegorman · Mission Map</h1><p id="objective">Rathdown-centred world · provisional Luas–East Quad slope</p></div><div class="pane right"><small>GEOGRAPHIC BASE · OSM</small><p id="status">Reading Rathdown map data…</p><p><b>WASD</b> walk · hold <b>Space + WASD</b> look · <b>Shift</b> run · <b>E</b> talk · <b>M</b> map · <b>V</b> view</p></div></div>
 <canvas id="mini" width="390" height="390" aria-label="Open the mission map" role="button" tabindex="0"></canvas>
-<div id="foot"><div class="pane controls">1 world unit = <strong>1 metre</strong> · provisional graded terrain (unsurveyed)<br>Buildings: scaled footprints · walls and hedges: solid widths + heights<br><span id="pos"></span></div><div class="buttons"><button id="mapBtn">☰ Open mission map (M)</button><button id="viewMode" aria-pressed="true">Switch to third person (V)</button><button id="restart">Restart at Luas</button></div></div>
-<div id="overlay" hidden role="dialog" aria-modal="true" aria-label="Grangegorman mission map"><div id="mapShell"><div id="mapFrame"><canvas id="map" width="1000" height="1000" aria-label="Mapped campus with mission markers"></canvas></div><div id="side"><button id="closeMap">✕ Return to game (M)</button><div class="pane"><small>RATHDOWN ORIGIN · 1 KM RADIUS</small><h1>Mission map</h1><p>One game unit equals one metre. Click a marker or select a mission. The dashed gold line is a <b>bearing, not a verified walking route</b>. Terrain elevation is a provisional 21→25 m OD scenario, not surveyed.</p><p id="attribution">© OpenStreetMap contributors · ODbL</p></div><div id="missionList" class="pane"></div><div id="mapNote">Mapped footprints and walls are based on OpenStreetMap tags. Heights are estimates. Lower House is a provisional mapping of the Sports and Student Facility footprint pending campus-plan verification; elevations are not yet surveyed.</div></div></div></div>
+<div id="foot"><div class="pane controls">1 world unit = <strong>1 metre</strong> · provisional graded terrain (unsurveyed)<br>Buildings: scaled footprints · walls and hedges: solid widths + heights<br><span id="pos"></span></div><div class="buttons"><button id="mapBtn">☰ Phone / map (M)</button><button id="viewMode" aria-pressed="true">Switch to third person (V)</button><button id="restart">Restart at Luas</button></div></div>
+<div id="overlay" hidden role="dialog" aria-modal="true" aria-label="Phone and campus map"><div id="mapShell"><div id="mapFrame"><canvas id="map" width="1000" height="1000" aria-label="Mapped campus with mission markers"></canvas></div><div id="side"><button id="closeMap">✕ Return to game (M)</button><div class="pane"><small>RATHDOWN ORIGIN · 1 KM RADIUS</small><h1>Mission map</h1><p>One game unit equals one metre. Click a marker or select a mission. The dashed gold line is a <b>bearing, not a verified walking route</b>. Terrain elevation is a provisional 21→25 m OD scenario, not surveyed.</p><p id="attribution">© OpenStreetMap contributors · ODbL</p></div><nav id="phoneTabs" aria-label="Phone sections"></nav><div id="missionList" class="pane"></div><div id="mapNote">Mapped footprints and walls are based on OpenStreetMap tags. Heights are estimates. Lower House is a provisional mapping of the Sports and Student Facility footprint pending campus-plan verification; elevations are not yet surveyed.</div></div></div></div>
 <div id="error" hidden><article><h1>Verified geographic data unavailable</h1><p id="errorText"></p><p>The game will not substitute invented geography for missing OpenStreetMap data. <a href="../review/">Open the older experimental route</a> or review the <a href="https://github.com/ShaunFerns/an_arts_story/blob/main/docs/geographic-and-visual-reset.md">geographic specification</a>.</p></article></div>
 <script type="importmap">{"imports":{"three":"../vendor/three.module.js","three/addons/":"../vendor/addons/"}}</script>
 <script type="module">
@@ -14,6 +28,7 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone as cloneSkinned} from 'three/addons/utils/SkeletonUtils.js';
 import {makeCollisionWorld,barrierDimensions} from './collision.mjs';
+import {characters, createInduction, places} from './assets/induction/induction.mjs';
 const $=id=>document.getElementById(id),data=await fetch('./data.json').then(r=>{if(!r.ok)throw Error('No OSM snapshot (HTTP '+r.status+')');return r.json()}).catch(e=>{ $('error').hidden=false;$('errorText').textContent=e.message;throw e});
 if(!data.features?.length||!data.anchor||data.radius!==1000){$('error').hidden=false;$('errorText').textContent='Geographic snapshot is incomplete.';throw Error('Invalid OSM snapshot')}
 const zone=data.features,origin=data.anchor,MAX=1000,$map=$('map'),mapCtx=$map.getContext('2d'),miniCtx=$('mini').getContext('2d');
@@ -216,7 +231,16 @@ function createAnimations(root,bones){
 const animationController=riggedPlayer?createAnimations(modelRig,rigBones):null;
 player.position.set(0,.05,0);let yaw=.4,pitch=.08,follow=5.5,angle=0,playing=true,selected=null,mapOpen=false,mapZoom=1.85,firstPerson=true;
 function setPerspective(first){firstPerson=first;player.visible=!first;if(!first){const eye=player.position.clone().add(new THREE.Vector3(0,1.6,0));camera.position.copy(eye.clone().add(new THREE.Vector3(Math.sin(yaw)*follow,1.25,Math.cos(yaw)*follow))) }const b=$('viewMode');if(b){b.textContent=first?'Switch to third person (V)':'Switch to first person (V)';b.setAttribute('aria-pressed',String(first));}}
-const landmarkMatches=[['Rathdown House',/rathdown house|ráth an dúin|rath an duin/i,'Student services and finding help'],['East Quad',/east quad/i,'Meet Arts staff and academic advisers'],['Lower House',/lower house/i,'Find the Students’ Union'],['Central Quad',/central quad/i,'Discover teaching and shared spaces'],['Broadstone–University',/^Broadstone - University$/i,'Find the Broadstone–University Luas stop']];
+const landmarkMatches=[
+ ['Rathdown House',/rathdown house|ráth an dúin|rath an duin/i,'Student Hub'],
+ ['East Quad',/east quad/i,'Arts induction and academic advising'],
+ ['Lower House',/lower house/i,'Students’ Union','way/307799384'],
+ ['Central Quad',/central quad/i,'Teaching and shared spaces'],
+ ['Broadstone–University',/^Broadstone - University$/i,'Luas arrival'],
+ ['Glassmanogue',/^Glassmanogue$/i,'Gym'],
+ ['St Laurence’s',/^St\. Laurence$/i,'Historic campus building'],
+ ['Academic Hub & Library',/academic hub/i,'Library','way/1361416599'],
+];
 function contains2D(pt,poly){
  let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){
   const a=poly[i],b=poly[j];
@@ -235,21 +259,20 @@ function nearestWalkable(centre,footprint){
  }
  return best;
 }
-const missions=landmarkMatches.map(([name,re,desc])=>{
+const missions=landmarkMatches.map(([name,re,description,fallback])=>{
  const matches=zone.filter(f=>re.test(f.name));
- // Lower House is not named as such in this OSM extract. A probable matching
- // OSM footprint is mapped as "Sports and Student Facility", way/307799384.
- // TU Dublin documents Lower House's student and sports functions; the
- // Lower House archaeological site point (53.352671,-6.278262) lies ~21m
- // from this footprint. Keep this explicitly PROVISIONAL until plan review.
- const inferredLower=name==='Lower House'&&matches.length===0;
- if(inferredLower){
-   const candidate=zone.find(f=>f.id==='way/307799384'&&f.kind==='building');
-   if(candidate)matches.push(candidate);
- }
- matches.sort((a,b)=>{const score=f=>(f.tags?.railway==='tram_stop'?10:0)+(f.kind==='building'?2:0)+(f.id==='node/8398652317'?1:0);return score(b)-score(a)});
- const f=matches[0],centre=f?midpoint(f.coords):null,approach=centre?nearestWalkable(centre,f.kind==='building'?f:null):null;
- return {name,description:inferredLower&&f?desc+' · footprint provisional':desc,found:!!(f&&approach),provisional:!!(f&&inferredLower),position:approach?.point||null,centre,source:f?.id,approachWay:approach?.road};
+ const inferred=!matches.length&&fallback?zone.find(f=>f.id===fallback&&f.kind==='building'):null;
+ if(inferred)matches.push(inferred);
+ matches.sort((a,b)=>{
+  const score=f=>(f.tags?.railway==='tram_stop'?10:0)+(f.kind==='building'?2:0)+(f.id==='node/8398652317'?1:0);
+  return score(b)-score(a);
+ });
+ const f=matches[0],centre=f?midpoint(f.coords):null;
+ // TU Dublin places the Library entrance on the playing-fields side.
+ const reference=name==='Academic Hub & Library'&&centre?[centre[0],Math.min(...f.coords.map(p=>p[1]))-7]:centre;
+ const approach=reference?nearestWalkable(reference,f.kind==='building'?f:null):null;
+ return {name,description,found:!!(f&&approach),provisional:!!inferred,position:approach?.point||null,
+  centre,source:f?.id,approachWay:approach?.road};
 });
 // The player is represented by a 1.74-metre upright capsule; its ground
 // contact is a circular 0.34m radius. Building footprints and *thick* wall,
@@ -263,7 +286,15 @@ const collision=makeCollisionWorld(zone,{playerRadius:.34,worldRadius:990,worldE
 const entryPrototypes=[];
 const eastQuadOriginalApproach=[...(missions.find(m=>m.name==='East Quad')?.position||[])];
 let eastQuadNorthFaceKey=null;
-let eastQuadGoldTexture=null;
+// The polygon winds clockwise in east/north coordinates. Using its winding
+// also gives the correct outward normal for the recessed entrance return.
+const eastQuadWinding=Math.sign(eastFeature.coords.slice(1).reduce((area,b,i)=>{
+ const a=eastFeature.coords[i];return area+a[0]*b[1]-b[0]*a[1];
+},0));
+function eastQuadOutward(a,b){
+ const dx=b[0]-a[0],dn=b[1]-a[1],length=Math.hypot(dx,dn);
+ return [eastQuadWinding*dn/length,-eastQuadWinding*dx/length];
+}
 function nearestPointOnSegment2D(p,a,b){
  const dx=b[0]-a[0],dy=b[1]-a[1],len2=dx*dx+dy*dy;
  const f=len2>.0001?THREE.MathUtils.clamp(((p[0]-a[0])*dx+(p[1]-a[1])*dy)/len2,0,1):0;
@@ -273,7 +304,7 @@ function createEastQuadEntry(north=true){
  const m=missions.find(x=>x.name==='East Quad'&&x.found);
  const feature=zone.find(f=>f.id===m?.source&&f.kind==='building');
  if(!m||!feature)return null;
- const pts=feature.coords,centre=m.centre;
+ const pts=feature.coords;
  const segments=[];
  for(let i=1;i<pts.length;i++){
   const a=pts[i-1],b=pts[i],length=Math.hypot(b[0]-a[0],b[1]-a[1]);
@@ -292,10 +323,7 @@ function createEastQuadEntry(north=true){
  segments.sort((a,b)=>{
   if(north){
    const normalScore=seg=>{
-    const vx=seg.b[0]-seg.a[0],vn=seg.b[1]-seg.a[1],len=Math.hypot(vx,vn);
-    const n1=vx/len,n2=-vx/len;
-    const chosen=(n1*(seg.mid[1]-centre[1])>=n2*(seg.mid[1]-centre[1]))?n1:n2;
-    return chosen;
+    return eastQuadOutward(seg.a,seg.b)[1];
    };
    const diff=normalScore(b)-normalScore(a);
    if(Math.abs(diff)>.015)return diff;
@@ -312,12 +340,8 @@ function createEastQuadEntry(north=true){
  }
  const seg=segments[0],cx=seg.mid[0],cn=seg.mid[1];
  if(north)eastQuadNorthFaceKey=seg.key;
- let outX=cn-centre[1],outN=centre[0]-cx;
- // Calculate a wall-perpendicular direction pointing away from footprint centre.
  const ddx=seg.b[0]-seg.a[0],ddn=seg.b[1]-seg.a[1];
- outX=-ddn;outN=ddx;
- if(outX*(cx-centre[0])+outN*(cn-centre[1])<0){outX=-outX;outN=-outN}
- const norm=Math.hypot(outX,outN);outX/=norm;outN/=norm;
+ const [outX,outN]=eastQuadOutward(seg.a,seg.b);
  const worldOutZ=-outN;
  const baseY=groundHeight(cx,cn);
  // Face panel is outside the solid, collidable OSM footprint. No interior
@@ -339,11 +363,16 @@ function createEastQuadEntry(north=true){
  // Reference: https://www.ste.ie/east-quad-grangegorman-ahr-architects
  // Exact glazing dimensions and bay counts are *approximate*.
  if(north){
- const glassDark=new THREE.MeshPhysicalMaterial({color:0x354f59,roughness:.22,metalness:.14,transparent:true,opacity:.77,side:THREE.DoubleSide,depthWrite:false});
+ const glassDark=new THREE.MeshPhysicalMaterial({color:0x304e61,roughness:.23,metalness:.12});
  const glazingHeight=20.6,glazingWidth=8.8;
  // On the mapped building wall, a dark glazed entrance bay with bronze
  // mullions and transoms. Its solid footprint remains collision-blocking.
- add(new THREE.BoxGeometry(glazingWidth,glazingHeight,.07),glassDark,0,glazingHeight/2,-.06);
+ const transoms=[0,3.45,6.05,9.0,12.0,15.0,18.5,glazingHeight];
+ for(let i=1;i<transoms.length;i++){
+  const lower=transoms[i-1],upper=transoms[i],pane=glassDark.clone();
+  pane.color.setHex([0x35566a,0x36596d,0x3d5e73,0x416578,0x456a7e,0x49728a,0x4f768a][i-1]);
+  add(new THREE.BoxGeometry(glazingWidth,upper-lower,.07),pane,0,(upper+lower)/2,-.06);
+ }
  for(const x of [-4.4,-2.8,-1.4,0,1.4,2.8,4.4])
   add(new THREE.BoxGeometry(.075,glazingHeight,.14),darkMetal,x,glazingHeight/2,.06);
  for(const y of [3.45,6.05,9.0,12.0,15.0,18.5])
@@ -377,31 +406,6 @@ function createEastQuadEntry(north=true){
  // Plaza paving and dark threshold channel visible in the source photograph.
  add(new THREE.BoxGeometry(8.6,.08,2.65),threshold,0,.014,1.25);
  add(new THREE.BoxGeometry(8.6,.035,.11),darkMetal,0,.063,2.35);
- if(north){
- // Keep the verified sign lettering as one original surface texture;
- // it is mounted later on the existing adjacent footprint wall.
- // Wording and letter hierarchy checked against TU Dublin's photograph:
- // https://pxl01-tudublinie.terminalfour.net/prod01/tudublin-cdn-pxl/media/website/research/images/East-Quad.jpeg
- const lettersCanvas=document.createElement('canvas');
- lettersCanvas.width=1200;lettersCanvas.height=1100;
- const lc=lettersCanvas.getContext('2d');
- const gold='#e4cc94',labelColor='#b5a99c';
- lc.textBaseline='alphabetic';
- lc.fillStyle=gold;
- lc.font='900 180px Arial,Helvetica,sans-serif';lc.fillText('T',105,430);
- lc.font='900 200px Arial,Helvetica,sans-serif';lc.fillText('DUBLIN',102,635);
- lc.font='bold 36px Arial,Helvetica,sans-serif';
- lc.fillText('OLLSCOIL TEICNEOLAÍOCHTA',355,384);
- lc.fillText('BHAILE ÁTHA CLIATH',355,428);
- lc.font='bold 30px Arial,Helvetica,sans-serif';
- lc.fillText('TECHNOLOGICAL',570,684);
- lc.fillText('UNIVERSITY DUBLIN',570,723);
- lc.fillStyle=labelColor;lc.font='bold 32px Arial,Helvetica,sans-serif';
- lc.fillText('AN CHEARNÓG THOIR - EAST QUAD',122,855);
- const lettersTexture=new THREE.CanvasTexture(lettersCanvas);
- lettersTexture.colorSpace=THREE.SRGBColorSpace;
- eastQuadGoldTexture=lettersTexture;
- }
 
  scene.add(group);
  // Path-side interaction node: prefer pedestrian position outside the entry.
@@ -420,8 +424,7 @@ function createEastQuadEntry(north=true){
   mainWallMidpoint:[cx,cn],position:[group.position.x,-group.position.z],
   interaction:north?m.position:(target||m.position),northFacing:north,provisional:true,doorComposition:north?'northern glazed atrium, side doors and revolving entrance':'secondary glazed door / revolving door / glazed door',sourcePhoto:north?'https://www.ste.ie/east-quad-grangegorman-ahr-architects':null,
   wallLength:seg.length,distanceFromOriginalApproach:seg.distance,
-  sign:north?{side:'right when facing main entrance',mountedOnBrick:true,
-    location:'existing adjacent long north brick wall',verifiedTextFromPhoto:true}:null};
+  sign:null};
  entryPrototypes.push(info);
  return info;
 }
@@ -435,12 +438,12 @@ const eastQuadSecondaryEntrance=createEastQuadEntry(false);
 const eastQuadFacadeAudit={source:eastFeature.id,wallFaces:0,windowBays:0,brickCoverageM:0};
 function makeEastQuadBrickTexture(){
  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
- const c=canvas.getContext('2d');c.fillStyle='#827a71';c.fillRect(0,0,512,512);
+ const c=canvas.getContext('2d');c.fillStyle='#554d45';c.fillRect(0,0,512,512);
  let seed=19271;const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
  for(let row=0;row<32;row++)for(let col=-1;col<10;col++){
   const off=row%2?27:0,x=col*55+off,y=row*16;
   const a=rnd(),warm=rnd()>.66;
-  const rgb=warm?[103+a*34,91+a*27,80+a*23]:[91+a*35,93+a*30,90+a*27];
+  const rgb=warm?[82+a*34,68+a*29,58+a*26]:[75+a*30,68+a*27,62+a*25];
   c.fillStyle='rgb('+rgb.map(Math.round).join(',')+')';
   c.fillRect(x+1,y+1,53,14);
   c.fillStyle='rgba(24,27,27,.12)';c.fillRect(x+1,y+13,53,2);
@@ -451,99 +454,117 @@ function makeEastQuadBrickTexture(){
  texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
  return texture;
 }
+function makeEastQuadSignTexture(){
+ // Original artwork, read from TU Dublin's East Quad close-up and Ste Murray's
+ // views 0235 and 0693. The branding and the building line use different finishes.
+ const canvas=document.createElement('canvas');
+ canvas.width=1536;canvas.height=850;
+ const c=canvas.getContext('2d');
+ const gold=c.createLinearGradient(0,60,0,660);
+ gold.addColorStop(0,'#f1d99d');gold.addColorStop(.55,'#cba668');gold.addColorStop(1,'#e7cd95');
+ c.fillStyle=gold;
+ c.shadowColor='#211912';c.shadowOffsetX=5;c.shadowOffsetY=6;c.shadowBlur=4;
+ c.fillRect(366,56,268,62);c.fillRect(466,116,70,198);
+ function lettering(label,x,baseline,width,font){
+  c.font=font;
+  c.save();c.translate(x,baseline);c.scale(width/c.measureText(label).width,1);c.fillText(label,0,0);c.restore();
+ }
+ lettering('DUBLIN',74,592,1375,'600 380px Arial');
+ lettering('OLLSCOIL TEICNEOLAÍOCHTA',665,198,771,'500 88px Arial');
+ lettering('BHAILE ÁTHA CLIATH',665,277,590,'500 88px Arial');
+ lettering('TECHNOLOGICAL',872,666,487,'500 72px Arial');
+ lettering('UNIVERSITY DUBLIN',872,733,562,'500 72px Arial');
+ c.fillStyle='#c0b2a3';
+ lettering('AN CHEARNÓG THOIR – EAST QUAD',607,825,826,'500 66px Arial');
+ const texture=new THREE.CanvasTexture(canvas);
+ texture.colorSpace=THREE.SRGBColorSpace;
+ texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+ return texture;
+}
 function buildEastQuadFacade(){
- const f=eastFeature,poly=f.coords,center=midpoint(poly);
- const storeyHeight=4,buildingHeight=existingQuadHeightEstimates.eastQuad.height;
- const bricks=makeEastQuadBrickTexture(),glassMat=new THREE.MeshPhysicalMaterial({
-  color:0x425862,metalness:.14,roughness:.19,transparent:false
- });
- const frameMat=mat(0x383c3c,.45),bronzeMat=mat(0x806d5a,.56);
+ const poly=eastFeature.coords,buildingHeight=existingQuadHeightEstimates.eastQuad.height;
+ const bricks=makeEastQuadBrickTexture();
+ const glassMat=new THREE.MeshPhysicalMaterial({color:0x415c6d,metalness:.10,roughness:.20});
+ const frameMat=mat(0x33383b,.45),bronzeMat=mat(0x84725b,.48);
  const glassGeo=new THREE.BoxGeometry(.98,2.9,.055);
- const frameGeo=new THREE.BoxGeometry(1.17,3.07,.10);
+ const frameGeo=new THREE.BoxGeometry(1.13,3.04,.10);
  const windows=[];
- const matchSegment=(a,b,entry)=>entry&&
-  ((Math.hypot(a[0]-entry.face[0][0],a[1]-entry.face[0][1])<.2&&Math.hypot(b[0]-entry.face[1][0],b[1]-entry.face[1][1])<.2)||
-   (Math.hypot(b[0]-entry.face[0][0],b[1]-entry.face[0][1])<.2&&Math.hypot(a[0]-entry.face[1][0],a[1]-entry.face[1][1])<.2));
+ const [doorRight,doorLeft]=eastQuadEntrance.face;
+ const near=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<.2;
+ const matchSegment=(a,b,entry)=>entry&&near(a,entry.face[0])&&near(b,entry.face[1]);
  for(let i=1;i<poly.length;i++){
-  const a=poly[i-1],b=poly[i],dx=b[0]-a[0],dn=b[1]-a[1],len=Math.hypot(dx,dn);
+  const a=poly[i-1],b=poly[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);
   if(len<.65)continue;
   const cx=(a[0]+b[0])/2,cn=(a[1]+b[1])/2;
-  let ox=-dn/len,on=dx/len;
-  if(ox*(cx-center[0])+on*(cn-center[1])<0){ox=-ox;on=-on}
+  const [ox,on]=eastQuadOutward(a,b);
   const ang=Math.atan2(ox,-on),base=groundHeight(cx,cn)+.02;
   const main=matchSegment(a,b,eastQuadEntrance),secondary=matchSegment(a,b,eastQuadSecondaryEntrance);
-  // No carved-out short returns or projecting sign-bay geometry.
-  // The original mapped footprint remains continuous.
-  const rightReturn=false,rightReturnBase=0;
+  const signWall=!main&&near(b,doorRight);
+  const cornerWall=!signWall&&near(poly[i+1]??a,doorRight);
+  const leftWing=!main&&!signWall&&i>=2&&near(poly[i-2],doorLeft);
   const wall=new THREE.Group();wall.position.set(cx+ox*.095,base,-cn-on*.095);wall.rotation.y=ang;
-  // The photographed main atrium occupies the first ~21m of its wall.
-  // Avoid covering it with a brick layer; the entrance geometry remains.
-  if(!main){
-   const map=bricks.clone();map.needsUpdate=true;
-   const faceHeight=rightReturn?buildingHeight-rightReturnBase:buildingHeight;
-   map.repeat.set(len/3.3,faceHeight/3.3);
-   const brick=new THREE.Mesh(new THREE.PlaneGeometry(len,faceHeight),
-     new THREE.MeshStandardMaterial({map,roughness:.92,side:THREE.DoubleSide}));
-   brick.position.y=(buildingHeight+(rightReturn?rightReturnBase:0))/2;
-   brick.receiveShadow=true;wall.add(brick);
-   eastQuadFacadeAudit.brickCoverageM+=len;
-  }else{
-   const upper=new THREE.Mesh(new THREE.PlaneGeometry(len,buildingHeight-20.6),
-     new THREE.MeshStandardMaterial({map:bricks.clone(),roughness:.92,side:THREE.DoubleSide,color:0xb0a69a}));
-   upper.material.map.wrapS=upper.material.map.wrapT=THREE.RepeatWrapping;
-   upper.material.map.repeat.set(len/3.3,(buildingHeight-20.6)/3.3);
-   upper.material.map.needsUpdate=true;
-   upper.position.y=(buildingHeight+20.6)/2;wall.add(upper);
-   eastQuadFacadeAudit.brickCoverageM+=len;
+  function surface(width,height,x,y){
+   const map=bricks.clone();
+   map.repeat.set(width/2.36,height/2.36);
+   map.needsUpdate=true;
+   const face=new THREE.Mesh(new THREE.PlaneGeometry(width,height),
+     new THREE.MeshStandardMaterial({map,roughness:.92}));
+   face.position.set(x,y,0);face.receiveShadow=true;wall.add(face);
+   return face;
   }
+  if(main){
+   const opening=8.8,top=20.6,sideWidth=(len-opening)/2;
+   surface(len,buildingHeight-top,0,(buildingHeight+top)/2);
+   if(sideWidth>0)for(const side of [-1,1])surface(sideWidth,top,side*(opening+sideWidth)/2,top/2);
+  }else{
+   const face=surface(len,buildingHeight,0,buildingHeight/2);
+   if(signWall)face.name='EastQuadRightSignBrickWall';
+  }
+  eastQuadFacadeAudit.brickCoverageM+=len;
   const band=new THREE.Mesh(new THREE.BoxGeometry(len,.16,.16),bronzeMat);
   band.position.set(0,buildingHeight-.28,.10);wall.add(band);
-  // IMPORTANT: viewed from the Luas/north approach, the existing wall
-  // immediately to the RIGHT of the glass doors adjoins face[0], NOT face[1].
-  // The previous implementation used face[1], putting the sign to the left.
-  // Attach the flat lettering to that existing wall; no new wall geometry.
-  const doorRightCorner=eastQuadEntrance.face[0];
-  const da=Math.hypot(a[0]-doorRightCorner[0],a[1]-doorRightCorner[1]);
-  const db=Math.hypot(b[0]-doorRightCorner[0],b[1]-doorRightCorner[1]);
-  const rightAdjacent=!main&&len>7.5&&Math.min(da,db)<.25;
-  if(rightAdjacent&&eastQuadGoldTexture){
-   // 5.2 m-wide sign on the original facade, next to the doorway.
-   const signWidth=Math.min(5.2,len-1.0);
-   const fromCorner=Math.min(3.25,(len-signWidth)/2+.15);
-   const signLocalX=(da<db?-1:1)*(len/2-fromCorner);
-   // Swap the previous generic wall material for darker brick backing.
-   const brickWall=wall.children.find(o=>o.geometry?.type==='PlaneGeometry');
-   if(brickWall){
-    brickWall.name='EastQuadRightSignBrickWall';
-    brickWall.material.color.set(0x78675f);
-   }
-   const sign=new THREE.Mesh(new THREE.PlaneGeometry(signWidth,4.9),
-    new THREE.MeshBasicMaterial({map:eastQuadGoldTexture,transparent:true,
-      depthWrite:false,side:THREE.DoubleSide,alphaTest:.045}));
+  if(signWall){
+   // World points on the existing return, measured from the atrium corner.
+   // Plane +Z and the UV winding both face the plaza.
+   const fraction=8.5/len;
+   const x=b[0]+(a[0]-b[0])*fraction,n=b[1]+(a[1]-b[1])*fraction;
+   const localX=(x-cx)*Math.cos(ang)+(n-cn)*Math.sin(ang);
+   const sign=new THREE.Mesh(new THREE.PlaneGeometry(4.45,2.46),
+    new THREE.MeshBasicMaterial({map:makeEastQuadSignTexture(),transparent:true,alphaTest:.12,toneMapped:false}));
    sign.name='EastQuadGoldNorthEntranceWallSign';
-   // This wall's camera-visible face is the reverse surface of the OSM
-   // segment. Mount the thin sign texture on that visible face rather than
-   // hiding it behind the footprint extrusion.
-   sign.position.set(signLocalX,5.2,-.82);
-   wall.add(sign);
+   sign.position.set(localX,groundHeight(x,n)-base+2.76,.04);wall.add(sign);
    const world=wall.localToWorld(sign.position.clone());
-   eastQuadEntrance.sign={side:'right when facing main entrance',
-     mountedOnBrick:true,existingFootprintWall:true,exactTextVerified:true,
-     wallFace:[a,b],projectedCentre:[world.x,world.y,-world.z]};
+   eastQuadEntrance.sign={side:'right when facing main entrance',mountedOnBrick:true,
+    existingFootprintWall:true,wallFace:[a,b],projectedCentre:[world.x,world.y,-world.z]};
   }
+  function glazedBay(x,width,height){
+   const border=new THREE.Mesh(new THREE.BoxGeometry(width+.20,height+.30,.10),bronzeMat);
+   border.position.set(x,height/2+.12,.08);wall.add(border);
+   const pane=new THREE.Mesh(new THREE.BoxGeometry(width,height,.06),glassMat);
+   pane.position.set(x,height/2+.12,.16);wall.add(pane);
+   for(const y of [height/3,height*2/3]){
+    const bar=new THREE.Mesh(new THREE.BoxGeometry(width,.055,.07),frameMat);
+    bar.position.set(x,y,.20);wall.add(bar);
+   }
+  }
+  // At the front corner, the large bronze-framed glazed bay wraps onto
+  // the next face. The rest of the sign wall has narrow, vertically stacked lights.
+  const projectionX=point=>(point[0]-cx)*Math.cos(ang)+(point[1]-cn)*Math.sin(ang);
+  const toward=point=>Math.sign(projectionX(point));
+  if(signWall||cornerWall)glazedBay(toward(signWall?a:b)*(len/2-1.27),2.35,7.65);
+  if(leftWing)glazedBay(toward(a)*(len/2-2.3),4.15,10.2);
   scene.add(wall);eastQuadFacadeAudit.wallFaces++;
-  if(len<2.1)continue;
-  const bays=Math.max(1,Math.floor((len-.5)/4.35));
+  if(main||len<2.1)continue;
+  const spacing=signWall?2.65:3.75;
+  const bays=Math.max(1,Math.floor((len-.5)/spacing));
   for(let bay=0;bay<bays;bay++){
    const offset=(bay+.5)*len/bays-len/2;
-   for(let floor=0;floor<5;floor++){
-    const y=2.15+floor*4.45;
-    if(y+1.55>buildingHeight-.5)continue;
-    if(main&&y<21.0)continue;
-    if(rightAdjacent&&y<8.6)continue;
-    if(rightReturn&&y<rightReturnBase+1.5)continue;
-    if(secondary&&floor===0&&Math.abs(offset)<4.6)continue;
-    // World position derives from wall-local x basis and its outward normal.
+   const fromCorner=len/2-offset*toward(signWall?a:cornerWall?b:a);
+   for(const y of [2.15,6.95,11.31,15.67,20.03]){
+    if(signWall&&(y<6||fromCorner<2.85&&y<9))continue;
+    if(cornerWall&&fromCorner<2.85&&y<9)continue;
+    if(leftWing&&fromCorner<4.7&&y<11)continue;
+    if(secondary&&y<4&&Math.abs(offset)<4.6)continue;
     const px=wall.position.x+Math.cos(ang)*offset+ox*.19;
     const pz=wall.position.z-Math.sin(ang)*offset-on*.19;
     windows.push({px,py:base+y,pz,ang,ox,on});
@@ -754,7 +775,7 @@ function buildMissionBuildingDoors(){
  // The position is the closest mapped building wall to its existing pedestrian
  // approach: it is explicitly provisional wherever no surveyed door plan exists.
  for(const mission of missions){
-  if(!mission.found||['East Quad','Broadstone–University'].includes(mission.name))continue;
+  if(!mission.found||!['Rathdown House','Lower House','Central Quad'].includes(mission.name))continue;
   const footprint=zone.find(f=>f.id===mission.source&&f.kind==='building');
   if(!footprint||!mission.position)continue;
   const c=mission.centre,points=footprint.coords;
@@ -817,13 +838,6 @@ function buildMissionBuildingDoors(){
 }
 buildMissionBuildingDoors();
 
-const npcStories={
- 'Rathdown House':['Student services guide','Welcome to Grangegorman. Your academic adviser can help you understand academic choices and pathways, while different university services offer other kinds of support.'],
- 'East Quad':['Arts student ambassador','Induction is a chance to meet staff and other first years. Your preferences help shape Semester 1 planning, but are not confirmed module allocations or a final Major choice.'],
- 'Lower House':['Students’ Union representative','The Students’ Union is here to support students, and it is worth finding out about student activities and ways to meet people.'],
- 'Central Quad':['Student guide','Teaching and shared learning spaces are spread across campus. The phone map can help you navigate between different buildings.'],
- 'Broadstone–University':['New first-year student','I got off the Luas here too. The campus is bigger than it first looks. I am practising the walk to East Quad before classes start.']
-};
 // Temporary everyday-clothing overlays, proportioned for the current 1.74m character rig.
 // These are prototype costumes, not approved character assets. Replace with properly
 // skinned/rigged clothing once the model's proportions and licences are reviewed.
@@ -879,14 +893,27 @@ if(!originalNpcRig){
  human.visible=false;head.visible=false;direction.visible=false;
  addClothedNpc(player,0);
 }
-const npcs=[];let nearbyNpc=null;
-for(const [i,m] of missions.entries()){
- const story=npcStories[m.name];if(!m.found||!story)continue;
+const npcs=[];
+function clearPoint([x,n], offsets) {
+ for(const [dx,dn] of offsets){
+  const p=[x+dx,n+dn];
+  if(!collision.query(...p)&&!intersectsPlanter(...p))return p;
+ }
+ return null;
+}
+const landmarksByPlace = Object.fromEntries(Object.entries(places).map(([id,place])=>[
+ id,missions.find(m=>m.name===place.landmark&&m.found),
+]));
+for(const [i,[id,npc]] of Object.entries(characters).entries()){
+ const m=landmarksByPlace[npc.place];
+ if(!m)throw Error('Missing campus landmark for '+npc.name);
+ const [dx,dn]=npc.offset;
+ const offsets=[[dx,dn],[dx,dn+1],[dx,dn+2],[dx,dn-1],[dx*1.4,dn+2]];
+ const position=clearPoint(m.position,offsets);
+ if(!position)throw Error('No walkable point for '+npc.name);
+ const [x,n]=position;
  const body=new THREE.Group();
- const isEast=m.name==='East Quad';
- // Clear the door's central sightline; keep dialogue tied to NPC position.
- body.position.set(m.position[0]+(isEast?2.1:(i%2?.8:-.8)),.05,-m.position[1]+(isEast?-1.2:(i%3-1)*.7));
- body.position.y=groundHeight(body.position.x,-body.position.z)+.05;
+ body.position.set(x,groundHeight(x,n)+.05,-n);
  if(originalNpcRig&&modelRig){
   const figure=cloneSkinned(modelRig);body.add(figure);
   const npcBones={};figure.traverse(o=>{
@@ -896,7 +923,7 @@ for(const [i,m] of missions.entries()){
   body.userData.animation=createAnimations(figure,npcBones);
  }else addClothedNpc(body,i);
  const marker=new THREE.Mesh(new THREE.OctahedronGeometry(.10),mat(0xecc580));marker.position.y=originalNpcRig?2.12:1.63;body.add(marker);
- scene.add(body);npcs.push({body,story,name:m.name});
+ scene.add(body);npcs.push({body,id,name:m.name,label:npc.name,marker,position});
 }
 // Campus sign families, based on photographic references and the external
 // Wayfinders design documentation. Positions are prototype approximations,
@@ -905,7 +932,7 @@ for(const [i,m] of missions.entries()){
 // the East Quad ambassador. Comparison is about proportions, not DXF heights.
 const showHumanScaleReference=new URLSearchParams(location.search).get('scale')==='1';
 if(showHumanScaleReference){
- const eq=npcs.find(n=>n.name==='East Quad');
+ const eq=npcs.find(n=>n.id==='induction');
  if(eq){
   const pole=new THREE.Group();
   const rulerMat=new THREE.MeshStandardMaterial({color:0xf0c66e,roughness:.8});
@@ -957,23 +984,82 @@ function addCampusSignAt(m,kind,label){
 }
 // The East Quad identity is now represented on its actual façade family above; no duplicate freestanding blue sign.
 addCampusSignAt(missions.find(m=>m.name==='Rathdown House'),'wayfinding','Rathdown House');
-function closeConversation(){$('npcDialog').hidden=true;nearbyNpc=null;}
-$('npcClose').onclick=closeConversation;
-function talkToNpc(){
- if(mapOpen||!$('npcDialog').hidden)return;
- const npc=nearestNpc();if(!npc)return;
- $('npcTitle').textContent=npc.story[0];$('npcText').textContent=npc.story[1];
- $('npcDialog').hidden=false;$('npcClose').focus();
+const huntMarkers=Object.entries(landmarksByPlace).filter(([id])=>id!=='east').map(([id,m])=>{
+ if(!m)throw Error('Missing campus landmark for '+id);
+ const position=clearPoint(m.position,[[0,0],[0,1],[1,0],[-1,0],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]);
+ if(!position)throw Error('No walkable observation point for '+id);
+ const [x,n]=position;
+ const marker=new THREE.Mesh(new THREE.OctahedronGeometry(.30),new THREE.MeshBasicMaterial({color:0xffce67}));
+ marker.position.set(x,groundHeight(x,n)+1.06,-n);
+ marker.visible=false;
+ scene.add(marker);
+ return {id,position,marker};
+});
+const params=new URLSearchParams(location.search);
+const reviewStartAtLuas=params.get('start')!=='east-quad';
+const story=createInduction({
+ storage:window.localStorage,saveKey:reviewStartAtLuas?'arts-geo-induction-v1':'arts-geo-induction-review-v1',
+ ui:{
+  pose:()=>({x:player.position.x,n:-player.position.z,yaw,pitch}),
+  refresh:refreshStory,
+  saveUnavailable:()=>{$('status').textContent='Progress could not be saved in this browser.'},
+  constraint:()=>$('constraintNote').value,
+  showDialogue,
+  hideDialogue:()=>{$('npcDialog').hidden=true;$('stage').focus({preventScroll:true});},
+  openPhone:()=>setMap(true),
+ },
+});
+function showDialogue({speaker,title,text,choices,constraints=null}){
+ $('npcSpeaker').textContent=speaker;
+ $('npcTitle').textContent=title;
+ $('npcText').textContent=text;
+ $('npcConstraints').hidden=constraints===null;
+ $('constraintNote').value=constraints??'';
+ const list=$('npcChoices');
+ list.replaceChildren(...choices.map(choice=>makeButton(choice.text,choice.select)));
+ $('npcDialog').hidden=false;
+ (constraints===null?list.firstElementChild:$('constraintNote'))?.focus();
 }
-function nearestNpc(){let best=null,d=2.7;for(const n of npcs){const k=n.body.position.distanceTo(player.position);if(k<d){best=n;d=k}}return best}
-// Rathdown remains the metre-based geographic origin; the narrative starts at the Luas.
+function makeButton(label,select){
+ const button=document.createElement('button');
+ button.type='button';button.textContent=label;button.onclick=select;
+ return button;
+}
+$('npcClose').onclick=()=>story.close();
+function nearestNpc(){
+ let best=null,d=2.7;
+ for(const npc of npcs){
+  if(!story.nodeFor(npc.id))continue;
+  const distance=npc.body.position.distanceTo(player.position);
+  if(distance<d){best=npc;d=distance;}
+ }
+ return best;
+}
+function nearestObservation(){
+ return huntMarkers.find(({id,marker})=>story.stopAvailable(id)&&
+  Math.hypot(marker.position.x-player.position.x,marker.position.z-player.position.z)<2.2);
+}
+function interaction(){
+ const npc=nearestNpc(),observation=nearestObservation();
+ if(!npc&&!observation)return null;
+ if(npc&&observation)return {
+  label:'Press E · talk or record an observation',
+  select:()=>showDialogue({speaker:places[observation.id].name,title:'What would you like to do?',text:'',
+   choices:[{text:'Talk to '+npc.label,select:()=>story.talk(npc.id)},
+    {text:'Record an observation',select:()=>story.observe(observation.id)}]}),
+ };
+ if(observation)return {label:'Press E to observe · '+places[observation.id].name,select:()=>story.observe(observation.id)};
+ return {label:'Press E to talk · '+npc.label,select:()=>story.talk(npc.id)};
+}
+function talkToNpc(){
+ if(gameplayActive())interaction()?.select();
+}
+$('npcHint').onclick=talkToNpc;
+
 const home=missions.find(m=>m.name==='Broadstone–University'&&m.found);
 const eastQuad=missions.find(m=>m.name==='East Quad'&&m.found);
 if(!home)throw Error('Cannot begin induction: mapped Broadstone–University Luas stop missing');
 let spawnPoint=null;
-// Default to East Quad for rapid façade/plaza review. Full induction arrival
-// remains available at ?start=luas.
-const reviewStartAtLuas=new URLSearchParams(location.search).get('start')==='luas';
 function chooseEastQuadReviewSpawn(){
  if(!eastQuadEntrance)return null;
  const face=eastQuadEntrance.face,centre=eastQuadEntrance.mainWallMidpoint;
@@ -1033,14 +1119,77 @@ function placeAtArrival(){
  const target=nearEast&&eastQuadEntrance?eastQuadEntrance.mainWallMidpoint:eastQuad.position;
  if(target){
   const dx=target[0]-result.x,dz=-target[1]+result.n;
-  yaw=Math.atan2(-dx,-dz);pitch=0;
+  yaw=Math.atan2(-dx,-dz);pitch=nearEast?-.14:0;
  }
 }
 placeAtArrival();
-$('restart').textContent=reviewStartAtLuas?'Restart at Luas':'Restart outside East Quad';
+const pose=story.savedPose;
+if(reviewStartAtLuas&&pose&&[pose.x,pose.n,pose.yaw,pose.pitch].every(Number.isFinite)&&
+ !collision.query(pose.x,pose.n)&&!intersectsPlanter(pose.x,pose.n)){
+ player.position.set(pose.x,groundHeight(pose.x,pose.n)+.05,-pose.n);
+ yaw=pose.yaw;pitch=pose.pitch;
+}
+$('restart').textContent=reviewStartAtLuas?'Return to Luas':'Return to review position';
 
-function missionList(){const list=$('missionList');list.innerHTML='';for(const [i,m] of missions.entries()){const b=document.createElement('button');b.className=selected===i?'active':'';b.disabled=!m.found;b.textContent=m.found?`◉ ${m.name} · ${m.description}`:`○ ${m.name} · not tagged in this OSM snapshot`;b.onclick=()=>{selected=i;missionList();updateObjective();drawMaps()};list.appendChild(b)} }
-function updateObjective(){const m=selected===null?null:missions[selected];$('objective').textContent=m?`Waypoint: ${m.name} · ${m.description}`:'Choose a mission on the map (M). Waypoints use OSM feature coordinates.'}
+function refreshStory(followObjective){
+ if(followObjective){
+  const target=landmarksByPlace[story.waypoint()];
+  selected=target?missions.indexOf(target):null;
+ }
+ for(const stop of huntMarkers)stop.marker.visible=story.stopAvailable(stop.id);
+ for(const npc of npcs){
+  npc.marker.visible=!!story.nodeFor(npc.id);
+  npc.marker.scale.setScalar(npc.id===story.targetCharacter?1.8:1);
+ }
+ updateObjective();
+ if(mapOpen){missionList();drawMaps();}
+}
+function missionList(){
+ const tabs=$('phoneTabs'),list=$('missionList');
+ tabs.replaceChildren(...story.tabs.map(id=>{
+  const button=makeButton(story.labels[id],()=>{story.setTab(id);tabs.querySelector('[aria-pressed="true"]')?.focus();});
+  button.setAttribute('aria-pressed',String(story.tab===id));
+  return button;
+ }));
+ list.replaceChildren();
+ if(story.tab==='map'){
+  for(const [i,m] of missions.entries()){
+   const stop=Object.keys(places).find(id=>places[id].landmark===m.name);
+   const choose=()=>{
+    selectWaypoint(i);
+    list.querySelector('.active')?.focus();
+   };
+   const button=makeButton(m.name+' · '+m.description,choose);
+   button.className=selected===i?'active':'';
+   button.disabled=!m.found;
+   if(stop&&story.stopAvailable(stop))button.textContent+=' · Observation available';
+   list.appendChild(button);
+  }
+  return;
+ }
+ for(const entry of story.phoneContent()){
+  if(entry.title){const heading=document.createElement('h2');heading.textContent=entry.title;list.appendChild(heading);}
+  const text=document.createElement('p');text.textContent=entry.text;list.appendChild(text);
+  if(entry.button)list.appendChild(makeButton(entry.button.text,entry.button.select));
+ }
+ list.scrollTop=0;
+}
+function selectWaypoint(index){
+ const m=missions[index];
+ const stop=Object.keys(places).find(id=>places[id].landmark===m.name);
+ if(stop&&story.stopAvailable(stop))story.selectStop(stop);
+ selected=index;missionList();updateObjective();drawMaps();
+}
+function mapPosition(m){
+ const expected=story.waypoint();
+ if(landmarksByPlace[expected]!==m)return m.position;
+ const stop=huntMarkers.find(s=>s.id===expected&&story.stopAvailable(s.id));
+ return stop?.position||npcs.find(n=>n.id===story.targetCharacter)?.position||m.position;
+}
+function updateObjective(){
+ const m=missions[selected];
+ $('objective').textContent=story.objective()+(m?' Waypoint: '+m.name+'.':'');
+}
 function canvasMap(ctx,canvas,radius,focus=false){const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#263e37';ctx.fillRect(0,0,w,h);const span=radius*2,scale=Math.min(w,h)/span,px=x=>(x-(focus?player.position.x:0))*scale+w/2,py=y=>((focus?-player.position.z:0)-y)*scale+h/2;
  ctx.strokeStyle='#bba57b';ctx.setLineDash([9,7]);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(px(0),py(0),MAX*scale,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
  for(const f of zone){const p=f.coords;if(p.length<2)continue;const t=f.tags||{};if(f.kind==='land'){ctx.fillStyle='#54764f';ctx.strokeStyle='#557d55'}else if(f.kind==='building'){ctx.fillStyle='#777d79';ctx.strokeStyle='#aab0a4'}else if(f.kind==='barrier'){ctx.strokeStyle=t.barrier==='hedge'?'#73996c':'#e3be83'}else if(f.kind==='road'){ctx.strokeStyle=['footway','pedestrian','path'].includes(t.highway)?'#c5bba4':'#69787a'}else{ctx.strokeStyle='#928d7c'}
@@ -1048,17 +1197,21 @@ function canvasMap(ctx,canvas,radius,focus=false){const w=canvas.width,h=canvas.
  if(f.kind==='building'||f.kind==='land'){ctx.closePath();ctx.fill();ctx.stroke();}else{ctx.lineWidth=f.kind==='road'?Math.max(1,roadWidth(t.highway)*scale):f.kind==='barrier'?Math.max(1.5,1.4*scale):1.2;ctx.stroke()}
  }
  const playerPx=px(player.position.x),playerPy=py(-player.position.z);
- if(selected!==null&&missions[selected].position){const p=missions[selected].position;const x=px(p[0]),y=py(p[1]);ctx.strokeStyle='#f3d68e';ctx.setLineDash([8,7]);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(playerPx,playerPy);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([])}
- for(const [i,m] of missions.entries()){if(!m.found)continue;const x=px(m.position[0]),y=py(m.position[1]);if(x<0||y<0||x>w||y>h)continue;ctx.fillStyle=selected===i?'#f8ce73':'#edf0d9';ctx.strokeStyle='#1b3637';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,selected===i?9:7,0,Math.PI*2);ctx.fill();ctx.stroke();if(!focus){ctx.fillStyle='#f8f4e7';ctx.font='bold 16px system-ui';ctx.fillText(m.name,x+12,y+5)}}
+ if(selected!==null&&missions[selected].position){const p=mapPosition(missions[selected]);const x=px(p[0]),y=py(p[1]);ctx.strokeStyle='#f3d68e';ctx.setLineDash([8,7]);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(playerPx,playerPy);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([])}
+ for(const [i,m] of missions.entries()){if(!m.found)continue;const [mx,my]=mapPosition(m);const x=px(mx),y=py(my);if(x<0||y<0||x>w||y>h)continue;ctx.fillStyle=selected===i?'#f8ce73':'#edf0d9';ctx.strokeStyle='#1b3637';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,selected===i?9:7,0,Math.PI*2);ctx.fill();ctx.stroke();if(!focus){ctx.fillStyle='#f8f4e7';ctx.font='bold 16px system-ui';ctx.fillText(m.name,x+12,y+5)}}
  ctx.save();ctx.translate(playerPx,playerPy);ctx.rotate(-yaw);ctx.fillStyle='#fff5b1';ctx.strokeStyle='#173a42';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(-9,10);ctx.lineTo(9,10);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
  ctx.fillStyle='#e7dbb8';ctx.font='bold 17px system-ui';ctx.fillText('N ↑',w-65,30);if(!focus){ctx.fillText('1 km',16,h-18);ctx.fillText('Rathdown origin (0,0)',16,26)}
 }
 function drawMaps(){canvasMap(mapCtx,$map,1000/mapZoom);canvasMap(miniCtx,$('mini'),160,true)}
 $('mapBtn').onclick=()=>setMap(true);$('closeMap').onclick=()=>setMap(false);$('mini').onclick=()=>setMap(true);$('mini').onkeydown=e=>{if(e.key==='Enter'||e.key===' ')setMap(true)};
-function setMap(v){mapOpen=v;$('overlay').hidden=!v;if(v){missionList();drawMaps()}}
-$('restart').onclick=()=>placeAtArrival();
+function setMap(v){
+ mapOpen=v;$('overlay').hidden=!v;
+ if(v){missionList();drawMaps();$('closeMap').focus();}
+ else {$('stage').focus({preventScroll:true});story.resumePhone();}
+}
+$('restart').onclick=()=>{placeAtArrival();story.persist();$('stage').focus();};
 $map.addEventListener('wheel',e=>{e.preventDefault();mapZoom=THREE.MathUtils.clamp(mapZoom+Math.sign(-e.deltaY)*.16,1,3.4);drawMaps()},{passive:false});
-$map.addEventListener('click',e=>{const b=$map.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*$map.width,y=(e.clientY-b.top)/b.height*$map.height,scale=$map.width/(2000/mapZoom),mx=(x-$map.width/2)/scale,my=($map.height/2-y)/scale;let best=-1,d=Infinity;missions.forEach((m,i)=>{if(!m.found)return;const dd=Math.hypot(mx-m.position[0],my-m.position[1]);if(dd<d){d=dd;best=i}});if(best>=0&&d<45/mapZoom){selected=best;missionList();updateObjective();drawMaps()}});
+$map.addEventListener('click',e=>{const b=$map.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*$map.width,y=(e.clientY-b.top)/b.height*$map.height,scale=$map.width/(2000/mapZoom),mx=(x-$map.width/2)/scale,my=($map.height/2-y)/scale;let best=-1,d=Infinity;missions.forEach((m,i)=>{if(!m.found)return;const [x,n]=mapPosition(m);const dd=Math.hypot(mx-x,my-n);if(dd<d){d=dd;best=i}});if(best>=0&&d<45/mapZoom)selectWaypoint(best)});
 // Track physical keys rather than typed characters so Space+WASD is reliable
 // with different keyboard layouts and after the browser loses focus.
 const keys={};
@@ -1067,13 +1220,13 @@ function gameplayActive(){return !mapOpen&&$('npcDialog').hidden}
 addEventListener('keydown',e=>{
  const code=e.code,k=e.key.toLowerCase(),typing=e.target instanceof HTMLElement&&
    (e.target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName));
- if(typing)return;
+ if(typing&&k!=='escape')return;
  if(movementCodes.has(code)&&gameplayActive())e.preventDefault();
  keys[code]=true;
  if(k==='e'&&!e.repeat&&gameplayActive()){e.preventDefault();talkToNpc()}
  if(k==='v'&&!e.repeat&&gameplayActive()){e.preventDefault();setPerspective(!firstPerson)}
  if(k==='m'&&!e.repeat&&$('npcDialog').hidden){e.preventDefault();setMap(!mapOpen)}
- if(k==='escape'){if(!$('npcDialog').hidden)closeConversation();else if(mapOpen)setMap(false)}
+ if(k==='escape'){if(!$('npcDialog').hidden)story.close();else if(mapOpen)setMap(false)}
 });
 addEventListener('keyup',e=>{keys[e.code]=false});
 addEventListener('blur',()=>{for(const key in keys)keys[key]=false});
@@ -1085,7 +1238,20 @@ function controlAxes(){
 }
 let dragging=false,mouseX=0,mouseY=0;renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;mouseX=e.clientX;mouseY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;yaw-=(e.clientX-mouseX)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-mouseY)*.005,-1.35,1.35);mouseX=e.clientX;mouseY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>dragging=false);renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();follow=THREE.MathUtils.clamp(follow+Math.sign(e.deltaY)*.55,3.8,8)},{passive:false});
 $('viewMode').onclick=()=>setPerspective(!firstPerson);setPerspective(true);
-let t=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-t)/1000,.055);t=now;let movingRig=false;nearbyNpc=nearestNpc();$('npcHint').hidden=!nearbyNpc||mapOpen||!$('npcDialog').hidden;if(nearbyNpc)$('npcHint').textContent='Press E to talk · '+nearbyNpc.story[0];if(gameplayActive()){
+let t=performance.now(),sceneRendered=false;
+function frame(now){
+ requestAnimationFrame(frame);
+ const dt=Math.min((now-t)/1000,.055);t=now;
+ const active=gameplayActive();
+ if(!active&&sceneRendered){
+  $('npcHint').hidden=true;
+  return;
+ }
+ let movingRig=false;
+ const action=active?interaction():null;
+ $('npcHint').hidden=!action;
+ if(action&&$('npcHint').textContent!==action.label)$('npcHint').textContent=action.label;
+ if(active){
  const {looking,forward,right}=controlAxes();
  if(looking){
   // Keyboard camera mode: W/S look up/down, A/D turn left/right.
@@ -1132,18 +1298,27 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
   );
   camera.position.lerp(followPosition,.22);
   camera.lookAt(target);
- }renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
-const available=missions.filter(m=>m.found);selected=missions.indexOf(home);missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.name==='East Quad');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get missionDoorRegistry(){return missionDoorRegistry},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get eastQuadPavingAudit(){return eastQuadPavingAudit},get eastQuadSignRelativeScreenPosition(){
+ }renderer.render(scene,camera);sceneRendered=true;$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
+refreshStory(true);if(reviewStartAtLuas)story.start();
+addEventListener('pagehide',()=>story.persist());$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.id==='induction');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get missionDoorRegistry(){return missionDoorRegistry},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get eastQuadPavingAudit(){return eastQuadPavingAudit},get eastQuadSignRelativeScreenPosition(){
  const sign=scene.getObjectByName('EastQuadGoldNorthEntranceWallSign');
  if(!sign||!eastQuadEntrance)return null;
  scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);
  const pos=sign.getWorldPosition(new THREE.Vector3());
  const center=eastQuadEntrance.mainWallMidpoint;
- const door=new THREE.Vector3(center[0],groundHeight(center[0],center[1])+5.2,-center[1]);
+ const door=new THREE.Vector3(center[0],groundHeight(center[0],center[1])+2.76,-center[1]);
  const a=pos.clone().project(camera),b=door.project(camera);
  return {signX:a.x,doorX:b.x,screenRight:a.x>b.x,
    delta:a.x-b.x,signInView:a.x>-1&&a.x<1&&a.y>-1&&a.y<1};
-},get eastQuadSignSightline(){const sign=scene.getObjectByName('EastQuadGoldNorthEntranceWallSign');if(!sign)return null;sign.updateWorldMatrix(true,false);const target=sign.getWorldPosition(new THREE.Vector3()),eye=player.position.clone().add(new THREE.Vector3(0,1.65,0)),v=target.clone().sub(eye),d=v.length();const ray=new THREE.Raycaster(eye,v.normalize(),0,d+.4);const hits=ray.intersectObjects(scene.children,true);return {distance:d,hits:hits.filter(h=>h.distance>.1).slice(0,6).map(h=>({name:h.object.name||h.object.type,distance:h.distance,sign:h.object===sign}))};},get eastQuadSignGeometry(){let sign=null,panel=null;scene.traverse(o=>{if(o.name==='EastQuadGoldNorthEntranceWallSign')sign=o;if(o.name==='EastQuadRightSignBrickWall')panel=o});if(!sign||!panel)return null;sign.updateWorldMatrix(true,false);panel.updateWorldMatrix(true,false);const p=sign.getWorldPosition(new THREE.Vector3()),q=panel.getWorldPosition(new THREE.Vector3());return {position:[p.x,p.y,-p.z],wallPosition:[q.x,q.y,-q.z],frontOffset:p.distanceTo(q),width:5.6,height:5.1,visible:sign.visible,wallVisible:panel.visible}},get facingYaw(){return player.rotation.y},get plazaFeatures(){return eastQuadPlazaFeatures},plazaCollision:(x,n)=>intersectsPlanter(x,n),get closestNpcVerticalDifference(){const n=nearestNpc();return n?n.body.position.y-player.position.y:null},get npcVisualDiagnostics(){return npcs.map(n=>{const figure=n.body.children.find(c=>c.type==='Group');const figureBox=figure?new THREE.Box3().setFromObject(figure):null;const bodyBox=new THREE.Box3().setFromObject(n.body);return {name:n.name,groundY:groundHeight(n.body.position.x,-n.body.position.z),originY:n.body.position.y,rigBottom:figureBox?.min.y,rigTop:figureBox?.max.y,rigHeight:figureBox?.max.y-figureBox?.min.y,wholeHeight:bodyBox.max.y-bodyBox.min.y}})},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],groundHeight(m.position[0],m.position[1])+.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
-requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+},get eastQuadSignSightline(){const sign=scene.getObjectByName('EastQuadGoldNorthEntranceWallSign');if(!sign)return null;sign.updateWorldMatrix(true,false);const target=sign.getWorldPosition(new THREE.Vector3()),eye=player.position.clone().add(new THREE.Vector3(0,1.65,0)),v=target.clone().sub(eye),d=v.length();const ray=new THREE.Raycaster(eye,v.normalize(),0,d+.4);const hits=ray.intersectObjects(scene.children,true);return {distance:d,hits:hits.filter(h=>h.distance>.1).slice(0,6).map(h=>({name:h.object.name||h.object.type,distance:h.distance,sign:h.object===sign}))};},get eastQuadSignGeometry(){let sign=null,panel=null;scene.traverse(o=>{if(o.name==='EastQuadGoldNorthEntranceWallSign')sign=o;if(o.name==='EastQuadRightSignBrickWall')panel=o});if(!sign||!panel)return null;sign.updateWorldMatrix(true,false);panel.updateWorldMatrix(true,false);const p=sign.getWorldPosition(new THREE.Vector3()),q=panel.getWorldPosition(new THREE.Vector3());return {position:[p.x,p.y,-p.z],wallPosition:[q.x,q.y,-q.z],frontOffset:sign.position.z,width:sign.geometry.parameters.width,height:sign.geometry.parameters.height,visible:sign.visible,wallVisible:panel.visible}},get story(){return story.snapshot},get encounterPoints(){return {
+ characters:Object.fromEntries(npcs.map(n=>[n.id,n.position])),stops:Object.fromEntries(huntMarkers.map(m=>[m.id,m.position])),
+ }},reviewPose:(x,n,tx,tn,height=0)=>{
+ if(!params.has('review')||collision.query(x,n)||intersectsPlanter(x,n))return false;
+ player.position.set(x,groundHeight(x,n)+.05,-n);
+ yaw=Math.atan2(x-tx,tn-n);
+ pitch=-Math.atan2(height-1.65,Math.hypot(tx-x,tn-n));
+ return true;
+ },get facingYaw(){return player.rotation.y},get plazaFeatures(){return eastQuadPlazaFeatures},plazaCollision:(x,n)=>intersectsPlanter(x,n),get closestNpcVerticalDifference(){const n=nearestNpc();return n?n.body.position.y-player.position.y:null},get npcVisualDiagnostics(){return npcs.map(n=>{const figure=n.body.children.find(c=>c.type==='Group');const figureBox=figure?new THREE.Box3().setFromObject(figure):null;const bodyBox=new THREE.Box3().setFromObject(n.body);return {name:n.name,groundY:groundHeight(n.body.position.x,-n.body.position.z),originY:n.body.position.y,rigBottom:figureBox?.min.y,rigTop:figureBox?.max.y,rigHeight:figureBox?.max.y-figureBox?.min.y,wholeHeight:bodyBox.max.y-bodyBox.min.y}})},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],groundHeight(m.position[0],m.position[1])+.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);sceneRendered=false;});
 </script></body></html>

@@ -35,4 +35,4 @@ The opening should be more than navigation or an entertaining video. Its value l
 
 A brief visual sequence at the East Quad social plaza as groups meet; a Lower House encounter that uses the southern seating terrace; and an initial week-of-class arrival scene showing changing campus activity. Add these only if they contribute to narrative meaning and do not delay player control.
 
-**Build status:** [Current first-person geographic build](https://shaunferns.github.io/an_arts_story/geo/). The [earlier narrative build](https://shaunferns.github.io/an_arts_story/story/) is retained as a reference for integration. See the [README](../README.md) for current links.
+**Build status:** [Current first-person geographic build](https://shaunferns.github.io/an_arts_story/geo/). The [earlier narrative build](https://shaunferns.github.io/an_arts_story/story/) is retained as the source of the dialogue integrated in the geographic build. See the [README](../README.md) for current links.
