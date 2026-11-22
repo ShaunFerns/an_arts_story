@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install pinned Three.js library
-        run: npm install --no-audit --no-fund --no-save three@0.160.0
+        run: npm install --no-audit --no-fund --no-save three@0.160.0 playwright@1.56.1
       - name: Prepare self-contained site assets
         run: |
           test -f index.html || { echo "::error::Upload the current game as index.html at repository root."; exit 1; }
@@ -44,6 +44,13 @@ jobs:
                   (Path('dist') / name).write_bytes(src.read_bytes())
           PY
           touch dist/.nojekyll
+      - name: Install Chromium for startup test
+        run: npx playwright install --with-deps chromium
+      - name: Verify 3D in browser
+        run: |
+          python3 -m http.server 8765 --directory dist > /tmp/arts-test-server.log 2>&1 &
+          sleep 2
+          node tests/smoke-test.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
