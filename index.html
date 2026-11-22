@@ -1127,7 +1127,40 @@
       else{title.textContent='Find your way to East Quad.';desc.textContent='Induction is where you meet fellow students, university services, staff and your academic adviser.';}
       if(t>10)finishArrival();
     }
-    document.getElementById('arrivalSkip').onclick=finishArrival;
+    // Brief story transition: Operations publishes initial timetables on Friday before teaching.
+    let fridayRunning=false,fridaySeconds=0;
+    function startFriday(){
+      fridayRunning=true;fridaySeconds=0;arrivalOverlay.hidden=false;
+      document.getElementById('hud').style.opacity='0';
+      player.position.set(28*CAMPUS_SPREAD,.05,26*CAMPUS_SPREAD);
+      document.getElementById('arrivalSkip').textContent='Continue story ↗';
+      document.querySelector('#arrivalScene .eyebrow').textContent='LATER · FRIDAY BEFORE TEACHING BEGINS';
+    }
+    function finishFriday(){
+      if(!fridayRunning)return;
+      fridayRunning=false;arrivalOverlay.hidden=true;document.getElementById('hud').style.opacity='';
+      document.getElementById('arrivalSkip').textContent='Skip arrival ↗';
+      state.inductionDone=true;state.timetablePublished=true;state.mission='findCian';
+      state.currentPlace='east';
+      addMessage('Programme Operations','Your initial Semester 1 timetable is now available. It reflects module availability, capacity, programme requirements and your preferences; contact the programme team for allocation questions.');
+      addMessage('Cian','I can see my first timetable now. Something I ranked highly is missing. Could we look at it outside East Quad?');
+      state.activeReferral={place:'east',person:'Cian · fellow student',note:'Cian is outside East Quad. A subject he hoped for is missing from his newly published timetable.',npc:'cian'};
+      updateMission('Meet Cian outside East Quad','The first timetables have been published. Cian has a question about a subject he hoped to study.');
+      showToast('First timetables published · find Cian');
+      saveGame();
+    }
+    function updateFriday(dt){
+      if(!fridayRunning)return;
+      fridaySeconds+=dt;
+      const t=fridaySeconds,focus=player.position.clone().add(new THREE.Vector3(0,3.6,0));
+      camera.position.lerp(focus.clone().add(new THREE.Vector3(12+Math.sin(t*.38)*5,7,15-Math.cos(t*.38)*3)),.08);
+      camera.lookAt(focus.x,focus.y,focus.z);
+      const title=document.getElementById('arrivalTitle'),line=document.getElementById('arrivalLine');
+      if(t<2.5){title.textContent='You have a starting direction.';line.textContent='The conversations and activities from induction have helped you discover the campus, meet people and identify academic interests.';}
+      else{title.textContent='Your first timetable arrives.';line.textContent='It is Friday, before the first week of classes. Programme Operations has published the initial Semester 1 timetable. The next questions begin.';}
+      if(t>6.2)finishFriday();
+    }
+    document.getElementById('arrivalSkip').onclick=()=>{if(fridayRunning)finishFriday();else finishArrival();};
     window.__artsArrival={get active(){return arrivalRunning},skip:finishArrival};
     // A floating beacon over the current referral NPC, visible during campus navigation.
     const beacon=new THREE.Group();
@@ -1250,7 +1283,7 @@ ${huntSummary()}
 
 You recognise the route you took, even if someone else might have chosen differently. Bríd asks if you could help another student find one of those places next week. You think you could.
 
-“Cian's been looking for you,” she adds. “He's got a timetable question.”`,choices:[{text:'Go and find Cian',primary:true,action(){state.inductionDone=true;state.mission='findCian';state.activeReferral={place:'east',person:'Cian · fellow student',note:'Cian is outside East Quad and wants to ask about a subject missing from his timetable.',npc:'cian'};addMessage('Cian','Are you back from the scavenger hunt? I’m outside East Quad — could you take a look at my timetable question?');updateMission('Meet Cian outside East Quad','Cian has a question about his module choices. Find him near the Arts entrance.');closeDialogue();}}]},
+“You'll hear from Operations when the first timetable is ready,” she adds. “Then classes begin. Remember, you can always come back to your adviser with new questions.”`,choices:[{text:'Finish induction · move to the Friday before classes',primary:true,action(){closeDialogue();startFriday();}}]},
       induction2:{speaker:'Bríd · Arts induction',title:'The day is underway',text:`“There’s a lot to take in,” Bríd says, “but you don't need to remember it all now. Start with the people around you. Cian said he wanted to ask something after induction.”
 
 You hear people leaving for different buildings. The campus has begun to feel less like a map and more like somewhere you might belong.`,choices:[{text:'Find Cian',primary:true,action(){closeDialogue();}},{text:'Check my phone',action(){state.phoneTab='map';togglePhone(true);}}]},
@@ -1548,7 +1581,7 @@ You look around and make a mental note that some people are here for the first t
       });
     }
     function updatePlayer(dt){
-      if(state.dialogueOpen || state.phoneOpen || demoActive || arrivalRunning || !document.getElementById('startScreen').hidden) return;
+      if(state.dialogueOpen || state.phoneOpen || demoActive || arrivalRunning || fridayRunning || !document.getElementById('startScreen').hidden) return;
       const speed = (keys['shift'] ? 15 : 8.1);
       const move = new THREE.Vector3();
       if(keys['w']||keys['arrowup']) move.z -= 1;
@@ -1618,7 +1651,7 @@ You look around and make a mental note that some people are here for the first t
       updatePlayer(dt);
       if(!arrivalRunning)animateAvatar(body,playerMoving?playerStride:performance.now()*.001,playerMoving,keys['shift']?1.35:1);
       const now=performance.now()*.001;Object.values(npcs).forEach((n,i)=>animateAvatar(n,now+i*.33,false));
-      if(arrivalRunning)updateArrival(dt);else updateCamera();
+      if(arrivalRunning)updateArrival(dt);else if(fridayRunning)updateFriday(dt);else updateCamera();
       animateAmbience(dt);
       animateSocial(performance.now()*.001);
       animateTram(dt);
@@ -1655,6 +1688,7 @@ You look around and make a mental note that some people are here for the first t
     const demoOverlay=document.getElementById('demoOverlay');
     function showDemo(index=0){
       if(arrivalRunning){arrivalRunning=false;arrivalFinished=true;arrivalOverlay.hidden=true;document.getElementById('hud').style.opacity='';disembarking.forEach(a=>a.visible=false);}
+      if(fridayRunning){fridayRunning=false;arrivalOverlay.hidden=true;document.getElementById('hud').style.opacity='';}
       if(!demoActive){demoActive=true;closeDialogue();closePhone();document.getElementById('startScreen').hidden=true;}
       demoIndex=Math.max(0,Math.min(demoScenes.length-1,index));
       const step=demoScenes[demoIndex];
@@ -1683,7 +1717,7 @@ You look around and make a mental note that some people are here for the first t
       if(Number.isFinite(stored.yaw))yaw=stored.yaw;
       if(Number.isFinite(stored.pitch))pitch=stored.pitch;
       document.getElementById('startScreen').hidden=true;
-      arrivalFinished=true;arrivalRunning=false;
+      arrivalFinished=true;arrivalRunning=false;fridayRunning=false;
       state.started=true;
       missionTitle.textContent=stored.missionTitle||'Explore Grangegorman';
       missionText.textContent=stored.missionText||'Continue your journey.';
