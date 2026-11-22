@@ -165,10 +165,12 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
             part('shade',t,.105,y,width+.24,h+.26,.28);
             part((j+k)%4?'glass':'glassLight',t,.262,y,width,h,.052);
             part('polishedStone',t,.25,y-h*.55,width+.27,.16,.40);
+            if(wide)part('steel',t+.12/count,.30,y,.045,h,.05);
             if(libraryFront&&(k===0||k===1||k===4))
              part('steel',t-.39/count,.40,y,.11,h+.25,.59);
           }else{
-            const width=bay*(historic?.38:palette==='contemporary'?.64:.36);
+            const lowerHouse=feature.id==='way/307799384';
+            const width=bay*(historic?(chapel?.48:lowerHouse?.32:.36):palette==='contemporary'?.64:.36);
             const h=floor*(chapel?.52:historic?.51:.58);
             if(chapel){
              part('arch historic',t,.255,y,width+.24,h+.26,1);
@@ -181,7 +183,9 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
              if(historic){
               part('sash',t,.264,y,.065,h,.053);
               part('sash',t,.267,y+h*.12,width,.06,.055);
+              if(!lowerHouse)part('sash',t,.267,y-h*.18,width,.036,.045);
               part('historic',t,.16,y-h*.54,width+.24,.17,.34);
+              part('historic',t,.12,y+h*.53,width+.25,.12,.21);
              }
             }
           }

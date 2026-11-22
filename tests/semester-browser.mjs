@@ -48,10 +48,14 @@ try {
 
   const audit=await model(()=>{
     const g=window.__artsGeo;
-    return {doors:g.missionDoorRegistry,bridge:g.underpass,facades:g.campusFacadeAudit,
+    return {doors:g.missionDoorRegistry,bridge:g.underpass,facades:g.campusFacadeAudit,paving:g.entrancePaving,
       missions:g.missions,spawn:g.position};
   });
   console.log('World snapshots: '+JSON.stringify({doors:audit.doors,bridge:audit.bridge,missions:audit.missions,spawn:audit.spawn}));
+  assert.equal(audit.paving?.length,6);
+  assert(audit.paving.every(surface=>surface.triangles>30));
+  const chapelDoor=audit.doors.find(door=>door.id==='laurence');
+  assert(chapelDoor.door[1]<-62&&chapelDoor.outward[0]>.8,'Chapel entrance should face east from the south end');
   assert.equal(audit.doors.length,8);
   assert(audit.bridge.clearance>=8&&audit.bridge.clearance<=10);
   assert(audit.facades.some(f=>f.palette==='central'&&f.windowCount>120&&f.wallMaterial==='centralBrick'&&f.roof.profile==='terrace'));

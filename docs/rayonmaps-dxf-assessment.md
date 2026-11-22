@@ -41,3 +41,9 @@ The DXF offers a compact CAD-style plan and detailed tree/landscape outlines tha
 6. Keep building **height** and **terrain elevation** separate from two-dimensional footprint data. This DXF provides neither. Do not introduce proposed buildings into the current campus from conceptual planning drawings.
 
 **Decision:** retain the game's active OSM geographic source; do not ingest the DXF automatically. Use the DXF for coordinate-registered comparison and landscaping after suitable reference-point alignment. 
+
+## Registration check
+
+Matched corresponding vertices on St Laurence’s, Rathdown House, Glassmanogue, Central Quad, the mapped south volume of the Academic Hub and East Quad. With duplicate closing points removed, the similarity transform across **129 vertices** had a scale of **0.998865**, a counter-clockwise rotation of **0.00372°**, and an East/North translation of **(+51.258, +79.940) m**. The fitted RMS discrepancy was **0.040 m** and the largest vertex residual **0.070 m**. This measures agreement between two map datasets and does not establish survey accuracy. Lower House was excluded from the fit because its south outline is clipped in the DXF.
+
+The nature outlines helped establish where to retain the planted court at Central Quad. The CAD contains no door or window symbols, point features or door schedule. Door placement therefore uses building photographs, public plans and descriptions, with exact positions treated as estimates.
