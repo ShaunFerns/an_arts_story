@@ -66,21 +66,39 @@ try {
 }catch(e){console.warn('Using temporary character fallback:',e.message)}
 // Rig-compatible keyframed animation states; keep these separate from movement physics.
 // These preliminary poses are authored in-game, not third-party motion-capture.
+// Move imported T-pose upper arms into a relaxed resting direction before animation.
+// Use the shoulder-to-elbow vector, not an assumed bone-local rotation axis.
+function relaxedArmQuaternion(bone){
+ const elbow=bone.children.find(c=>c.isBone&&c.position.lengthSq()>.000001)
+   ||bone.children.find(c=>c.isBone);
+ if(!elbow)return bone.quaternion.clone();
+ bone.updateWorldMatrix(true,true);elbow.updateWorldMatrix(true,false);
+ const shoulderWorld=bone.getWorldPosition(new THREE.Vector3());
+ const elbowWorld=elbow.getWorldPosition(new THREE.Vector3());
+ const current=elbowWorld.sub(shoulderWorld).normalize();
+ if(current.lengthSq()<.01)return bone.quaternion.clone();
+ const side=Math.abs(current.x)>.03?Math.sign(current.x):(/_l$|left/i.test(bone.name)?1:-1);
+ const desired=new THREE.Vector3(side*.19,-.97,.08).normalize();
+ const worldCorrection=new THREE.Quaternion().setFromUnitVectors(current,desired);
+ const parentWorld=bone.parent.getWorldQuaternion(new THREE.Quaternion());
+ return parentWorld.clone().invert().multiply(worldCorrection).multiply(parentWorld).multiply(bone.quaternion.clone());
+}
 function createAnimations(root,bones){
  const entries=[['leftleg',1,'leg'],['rightleg',-1,'leg'],['leftarm',1,'arm'],['rightarm',-1,'arm']]
    .map(([name,sign,type])=>({bone:bones[name],sign,type})).filter(x=>x.bone);
  if(entries.length<2)return null;
+ root.updateWorldMatrix(true,true);
  const mixer=new THREE.AnimationMixer(root),actions={};
+ const restingPoses=new Map(entries.map(({bone,type})=>[bone,type==='arm'?relaxedArmQuaternion(bone):bone.quaternion.clone()]));
  for(const [name,period,strength] of [['idle',2.6,0],['walk',.9,.42],['run',.58,.66]]){
   const times=[0,period*.25,period*.5,period*.75,period],swing=[0,1,0,-1,0];
   const tracks=[];
   for(const {bone,sign,type} of entries){
-   const initial=bone.quaternion.clone(),values=[];
+   const rest=restingPoses.get(bone),values=[];
    for(let i=0;i<times.length;i++){
-    const amp=type==='leg'?swing[i]*strength*sign:-swing[i]*strength*sign*.65;
-    const lowerArm=0; // Do not impose a fixed sideways arm lift on the source rig.
-    const dq=new THREE.Quaternion().setFromEuler(new THREE.Euler(amp,0,lowerArm));
-    const pose=initial.clone().multiply(dq);values.push(pose.x,pose.y,pose.z,pose.w);
+    const amp=type==='leg'?swing[i]*strength*sign:-swing[i]*strength*sign*.38;
+    const dq=new THREE.Quaternion().setFromEuler(new THREE.Euler(amp,0,0));
+    const pose=rest.clone().multiply(dq);values.push(pose.x,pose.y,pose.z,pose.w);
    }
    tracks.push(new THREE.QuaternionKeyframeTrack(bone.name+'.quaternion',times,values));
   }
@@ -88,13 +106,15 @@ function createAnimations(root,bones){
   actions[name].setLoop(THREE.LoopRepeat);
  }
  actions.idle.play();let current='idle';
+ // Prime the mixer immediately so characters do not appear in the GLB's T-pose on arrival.
+ mixer.update(.001);
  return {update(dt,next){
     if(next!==current&&actions[next]){actions[current].fadeOut(.18);actions[next].reset().fadeIn(.18).play();current=next}
     mixer.update(dt);
    },get state(){return current},names:Object.keys(actions)};
 }
 const animationController=riggedPlayer?createAnimations(modelRig,rigBones):null;
-player.position.set(0,.05,0);let yaw=.4,pitch=.48,follow=16,angle=0,playing=true,selected=null,mapOpen=false,mapZoom=.6,firstPerson=true;
+player.position.set(0,.05,0);let yaw=.4,pitch=.08,follow=16,angle=0,playing=true,selected=null,mapOpen=false,mapZoom=.6,firstPerson=true;
 function setPerspective(first){firstPerson=first;player.visible=!first;const b=$('viewMode');if(b){b.textContent=first?'Switch to third person (V)':'Switch to first person (V)';b.setAttribute('aria-pressed',String(first));}}
 const landmarkMatches=[['Rathdown House',/rathdown house|ráth an dúin|rath an duin/i,'Student services and finding help'],['East Quad',/east quad/i,'Meet Arts staff and academic advisers'],['Lower House',/lower house/i,'Find the Students’ Union'],['Central Quad',/central quad/i,'Discover teaching and shared spaces'],['Broadstone–University',/^Broadstone - University$/i,'Find the Broadstone–University Luas stop']];
 function contains2D(pt,poly){
@@ -184,13 +204,13 @@ $('restart').onclick=()=>{if(home)player.position.set(home.position[0],.05,-home
 $map.addEventListener('wheel',e=>{e.preventDefault();mapZoom=THREE.MathUtils.clamp(mapZoom+Math.sign(-e.deltaY)*.12,.45,2.3);drawMaps()},{passive:false});
 $map.addEventListener('click',e=>{const b=$map.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*$map.width,y=(e.clientY-b.top)/b.height*$map.height,scale=$map.width/(2000/mapZoom),mx=(x-$map.width/2)/scale,my=($map.height/2-y)/scale;let best=-1,d=Infinity;missions.forEach((m,i)=>{if(!m.found)return;const dd=Math.hypot(mx-m.position[0],my-m.position[1]);if(dd<d){d=dd;best=i}});if(best>=0&&d<45/mapZoom){selected=best;missionList();updateObjective();drawMaps()}});
 const keys={};addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k==='e'&&!e.repeat){e.preventDefault();talkToNpc()}if(k==='v'&&!e.repeat){e.preventDefault();setPerspective(!firstPerson)}if(k==='m'&&$('npcDialog').hidden){e.preventDefault();setMap(!mapOpen)}if(k==='escape'){if(!$('npcDialog').hidden)closeConversation();else if(mapOpen)setMap(false)}});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
-let dragging=false,mouseX=0,mouseY=0;renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;mouseX=e.clientX;mouseY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;yaw-=(e.clientX-mouseX)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-mouseY)*.005,.2,.95);mouseX=e.clientX;mouseY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>dragging=false);renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();follow=THREE.MathUtils.clamp(follow+Math.sign(e.deltaY)*1.1,8,30)},{passive:false});
+let dragging=false,mouseX=0,mouseY=0;renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;mouseX=e.clientX;mouseY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;yaw-=(e.clientX-mouseX)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-mouseY)*.005,-1.35,1.35);mouseX=e.clientX;mouseY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>dragging=false);renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();follow=THREE.MathUtils.clamp(follow+Math.sign(e.deltaY)*1.1,8,30)},{passive:false});
 $('viewMode').onclick=()=>setPerspective(!firstPerson);setPerspective(true);
 let t=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-t)/1000,.055);t=now;let movingRig=false;nearbyNpc=nearestNpc();$('npcHint').hidden=!nearbyNpc||mapOpen||!$('npcDialog').hidden;if(nearbyNpc)$('npcHint').textContent='Press E to talk · '+nearbyNpc.story[0];if(!mapOpen&&$('npcDialog').hidden){const forward=+!!(keys.w||keys.arrowup)-+!!(keys.s||keys.arrowdown),right=+!!(keys.d||keys.arrowright)-+!!(keys.a||keys.arrowleft);if(forward||right){const x=-Math.sin(yaw)*forward+Math.cos(yaw)*right,z=-Math.cos(yaw)*forward-Math.sin(yaw)*right;const m=Math.hypot(x,z),speed=keys.shift?8:4.5;movingRig=true;const dx=x/m*dt*speed,dz=z/m*dt*speed;const resolved=collision.move(player.position.x,-player.position.z,dx,-dz);player.position.x=resolved.x;player.position.z=-resolved.y;player.rotation.y=Math.atan2(x,z)} }
  if(animationController)animationController.update(dt,movingRig?(keys.shift?'run':'walk'):'idle');
  for(const npc of npcs)npc.body.userData.animation?.update(dt,'idle');
  const target=player.position.clone().add(new THREE.Vector3(0,1.6,0));if(firstPerson){camera.position.copy(target);camera.lookAt(target.clone().add(new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch),-Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch))));}else{const pos=target.clone().add(new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*follow,Math.sin(pitch)*follow,Math.cos(yaw)*Math.cos(pitch)*follow));camera.position.lerp(pos,.13);camera.lookAt(target);}renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=available.length?missions.indexOf(available[0]):null;missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
