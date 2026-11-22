@@ -586,12 +586,12 @@ function createEastQuadCurvedSeating(){
  const choices=[];
  for(const side of [1,-1])
  for(const lateral of [10,11.5,13,14.5,16])
- for(const outward of [7,8.5,10,11.5,13,15]){
+ for(const outward of [7,8.5,10,11.5,13,15,17,19,21]){
   const x=cx+side*lateral*tangentX+outward*outwardX,
         n=cn+side*lateral*tangentN+outward*outwardN;
   const interaction=entry.interaction;
   const clearance=Math.hypot(x-interaction[0],n-interaction[1]);
-  if(clearance<rx+4||clearance>25)continue;
+  if(clearance<rx+4||clearance>33)continue;
   const clear=Array.from({length:30},(_,i)=>{
    const ang=2*Math.PI*i/30;
    const sx=x+(rx+.35)*Math.cos(ang)*tangentX+(rz+.35)*Math.sin(ang)*outwardX,
@@ -601,10 +601,10 @@ function createEastQuadCurvedSeating(){
   if(!clear||collision.query(x,n))continue;
   const walkway=nearestWalkable([x,n],null);
   const pathDist=walkway?Math.hypot(x-walkway.point[0],n-walkway.point[1]):99;
-  if(pathDist<2.4||pathDist>12)continue;
+  if(pathDist<2.4)continue;
   choices.push({x,n,localX:side*lateral,localZ:outward,side,pathDist,
     tangentX,tangentN,outwardX,outwardN,
-    score:pathDist*.9+clearance*.22+Math.abs(outward-9)*.26+(side<0?4:0)});
+    score:pathDist*.22+clearance*.75+Math.abs(outward-9)*.35+(side<0?6:0)});
  }
  choices.sort((a,b)=>a.score-b.score);
  const choice=choices[0]||null;
