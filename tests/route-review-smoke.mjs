@@ -21,6 +21,11 @@ const dx=ex-sx,dz=ez-sz;
 const leftDot=dx*(bz-sz)-dz*(bx-sx);
 console.log('East Quad left-of-approach check:',JSON.stringify({leftDot,approach:[sx,sz,ex,ez],building:[bx,bz]}));
 if(leftDot>=0)throw Error('East Quad must be left of the arriving player, not ahead or right');
+const north=measure.eastQuadEntrances.north,south=measure.eastQuadEntrances.south;
+console.log('Relative approach and entrances:',JSON.stringify({north,south,axes:measure.cardinalAxes}));
+if(!(north[0]>south[0]))throw Error('Opposed East Quad entrances not placed across north/south facades');
+if(Math.abs(north[1]-south[1])>3)throw Error('East Quad entrances do not align along the intended north/south axis');
+
 if(!status.rigged)throw Error('The CC0 rigged GLB character must load; no placeholder-only deployment');
 if(status.stops.length!==5)throw Error('Missing one or more grounded geographic review stops');
 if(errors.length)throw Error('Browser errors: '+JSON.stringify(errors));
