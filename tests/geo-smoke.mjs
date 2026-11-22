@@ -24,7 +24,11 @@ const arrival=await page.evaluate(()=>({
 console.log('Induction arrival, map and temporary NPC clothing:',JSON.stringify(arrival));
 if(arrival.location!=='Broadstone–University'||arrival.distance>13)throw Error('Induction must start close to Broadstone Luas');
 if(arrival.zoom<1.7)throw Error('Main campus mission map should be zoomed in from the old overview');
-if(arrival.height<19||arrival.height>23)throw Error('East Quad five-floor provisional height missing');
+if(arrival.height<23||arrival.height>27)throw Error('East Quad revised provisional 22-28m height missing');
+const heightAudit=await page.evaluate(()=>window.__artsGeo.visualHeightAudit);
+console.log('Campus visual height estimates:',JSON.stringify(heightAudit));
+if(!heightAudit.some(x=>x.source==='visual_estimate_east_quad'&&x.height===arrival.height))throw Error('East Quad OSM footprint did not receive revised height');
+if(heightAudit.some(x=>/west quad|broadstone gate/i.test(x.name)))throw Error('Proposed development must not be represented as existing');
 if(arrival.dressed<3)throw Error('Expected multiple NPCs with clothing overlays');
 
 const perspective=await page.evaluate(()=>window.__artsGeo.perspective);
