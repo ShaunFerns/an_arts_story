@@ -149,6 +149,17 @@ console.log('East Quad NPC vs reference 2.10m door:',JSON.stringify(calibration)
 if(calibration.variant!=='clothed-82-percent')throw Error('Wrong default NPC variant');
 if(!calibration.npc||!(calibration.npc.height>1.1&&calibration.npc.height<2.10))throw Error('NPC is not shorter than reference 2.10m door');
 if(calibration.npc.width>.9)throw Error('NPC shoulder width still disproportionate');
+const thirdPerson=await eqReview.evaluate(()=>{
+ const g=window.__artsGeo;
+ g.setPerspective(false);
+ return {body:g.playerVisualDiagnostics,npc:g.eastQuadNpcDimensions,eye:g.eyeHeightAboveGround};
+});
+console.log('Third-person player / NPC body comparison:',JSON.stringify(thirdPerson));
+if(thirdPerson.body?.type!=='clothed-student'||!thirdPerson.body.visible)throw Error('Third-person still uses the giant untextured mannequin');
+if(Math.abs(thirdPerson.body.height-thirdPerson.npc.height)>.09)throw Error('Third-person player and NPC do not have comparable height');
+if(thirdPerson.body.width>.9)throw Error('Third-person player is disproportionately wide');
+await eqReview.evaluate(()=>window.__artsGeo.setPerspective(true));
+
 if(Math.abs(calibration.eye-1.65)>.06)throw Error('First-person eye height unexpectedly changed');
 const comparison=await browser.newPage({viewport:{width:1365,height:768}});
 await comparison.goto('http://127.0.0.1:8765/geo/?npc=original&scale=1',{waitUntil:'domcontentloaded',timeout:40000});
