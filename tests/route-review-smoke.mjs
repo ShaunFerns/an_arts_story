@@ -9,6 +9,10 @@ const status=await page.evaluate(()=>({rigged:window.__artsRouteReview.rigged,st
 console.log('Review initial state:',JSON.stringify(status));
 const measure=await page.evaluate(()=>window.__artsRouteReview.diagnostics());
 console.log('Scale measurements:',JSON.stringify(measure));
+const clearance=measure.underpass.soffit-measure.underpass.walkingGrade-measure.underpass.playerHeight;
+console.log('Underpass standing clearance above player:',clearance.toFixed(2),'metres');
+if(clearance<8||clearance>10)throw Error('Broadstone underpass must give 8–10 m of height above character');
+
 if(!(measure.characterHeight>1.6&&measure.characterHeight<1.85))throw Error('Player should be human height, not oversized');
 if(measure.doorHeight.lower < measure.characterHeight*1.3 || measure.doorHeight.lower > measure.characterHeight*1.8)throw Error('Lower House doorway is out of proportion with the rigged student');
 if(measure.doorHeight.rathdown < measure.characterHeight*1.3 || measure.doorHeight.rathdown > measure.characterHeight*1.8)throw Error('Rathdown entrance doorway scale is unrealistic');
