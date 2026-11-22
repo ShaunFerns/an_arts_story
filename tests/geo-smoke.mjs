@@ -64,9 +64,14 @@ await page.keyboard.down('w');await page.waitForTimeout(350);await page.keyboard
 const afterWalk=await page.evaluate(()=>window.__artsGeo.position);
 if(Math.hypot(afterWalk.x-afterYaw.position.x,afterWalk.north-afterYaw.position.north)<.01)throw Error('W without Space should walk');
 const perspective=await page.evaluate(()=>window.__artsGeo.perspective);
+const signCount=await page.evaluate(()=>window.__artsGeo.signCount);
+if(signCount<2)throw Error('Two distinct mapped-campus sign prototypes missing');
 if(perspective!=='first-person')throw Error('Default camera must be first-person');
 await page.keyboard.press('v');
 if(await page.evaluate(()=>window.__artsGeo.perspective)!=='third-person')throw Error('V did not switch to third-person');
+await page.waitForTimeout(200);
+const chase=await page.evaluate(()=>({offset:window.__artsGeo.chaseCameraOffset,follow:window.__artsGeo.followDistance}));
+if(chase.offset>5||chase.follow>9)throw Error('Third-person camera must not fly high above the human-scale scene');
 await page.keyboard.press('v');
 if(await page.evaluate(()=>window.__artsGeo.perspective)!=='first-person')throw Error('V did not restore first-person');
 await page.mouse.move(650,410);await page.mouse.down();await page.mouse.move(650,160,{steps:10});await page.mouse.up();

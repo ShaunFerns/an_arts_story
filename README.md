@@ -48,3 +48,6 @@ This is an experimental, independently developed educational project, **not an o
 ---
 
 *November 2026 · [Source repository](https://github.com/ShaunFerns/an_arts_story)*
+
+### Scale and signs (November 2026)
+The character rig is kept at a measured 1.74 m; temporary clothing is narrower. Third-person uses a bounded low chase camera rather than an elevated 16 m orbit. Two **approximate-position sign prototypes** represent the distinct dark-grey Grangegorman wayfinding and TU Dublin blue identity/sign family. Their placements and detailed lettering remain to be checked on site and are not exact reproductions. References: [Wayfinders Grangegorman](https://wayfindersgroup.com/work/dit-grangegorman) and [TU Dublin external programme](https://wayfindersgroup.com/work/tu-dublin-external-programme).
