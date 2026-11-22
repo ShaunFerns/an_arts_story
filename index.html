@@ -142,6 +142,14 @@
     .launch-art{position:absolute;inset:0;pointer-events:none;overflow:hidden}.launch-floor{position:absolute;left:20%;right:0;bottom:-15%;height:33%;transform:skewY(-11deg);background:#aeb7a0}
     .launch-building{position:absolute;right:14%;bottom:20%;width:28%;height:42%;background:#343e45;border-top:15px solid #546267;box-shadow:30px -12px 0 #23313b,50px 0 60px #05212a55}.launch-building:after{content:'';position:absolute;inset:12%;background:repeating-linear-gradient(90deg,#9dbec4 0 14px,#2c414c 14px 20px);opacity:.85}
     .launch-building.left{right:36%;width:18%;height:29%;background:#b4a28a;opacity:.77}
+    /* In-world cinematic with an always-available skip control. */
+    .arrival-scene{position:fixed;inset:0;z-index:66;pointer-events:none;display:flex;align-items:flex-end;padding:clamp(22px,5vw,70px);background:linear-gradient(180deg,#08202700 40%,#082027ce 100%)}
+    .arrival-scene[hidden]{display:none!important}
+    .arrival-scene .caption{max-width:700px}
+    .arrival-scene .eyebrow{font-size:12px;letter-spacing:.18em;color:#f3cd7c;font-weight:750}
+    .arrival-scene h2{font:normal clamp(35px,5vw,65px)/1.1 Georgia,serif;margin:10px 0;color:#fff6e7}
+    .arrival-scene p{font-size:17px;line-height:1.6;color:#e5f0ec}
+    .arrival-scene button{position:absolute;right:clamp(20px,5vw,70px);top:30px;pointer-events:auto;border:1px solid #dcb878;border-radius:9px;background:#15303be8;color:white;padding:11px 17px;font-weight:700;cursor:pointer}
     .demo-overlay{position:fixed;inset:0;z-index:64;background:#081b24a0;display:flex;align-items:flex-end;justify-content:center;padding:18px;pointer-events:auto}
     .demo-overlay[hidden],.launch-screen[hidden]{display:none!important}
     .demo-pane{width:min(860px,97vw);max-height:84dvh;overflow:auto;padding:24px clamp(20px,3vw,34px) 18px;background:#102e39f5;color:#f6f5ed;border:1px solid #8ca8a4;border-top:5px solid #e9bd68;border-radius:17px;box-shadow:0 18px 60px #00121baa}
@@ -240,6 +248,11 @@
     </div>
   </div>
 
+  <div id="arrivalScene" class="arrival-scene" hidden>
+    <button id="arrivalSkip" type="button">Skip arrival ↗</button>
+    <div class="caption"><div class="eyebrow">BROADSTONE–UNIVERSITY · FIRST DAY</div><h2 id="arrivalTitle">Your first steps.</h2>
+      <p id="arrivalLine">The Luas arrives. A group of new students steps towards the doors.</p></div>
+  </div>
   <div id="demoOverlay" class="demo-overlay" role="dialog" aria-modal="true" aria-labelledby="demoTitle" hidden>
     <div class="demo-pane">
       <div class="demo-head"><span id="demoCount">01 / 05</span><span>GRANGEGORMAN · GUIDED TOUR</span></div>
@@ -983,10 +996,19 @@
     platform.position.set(42*CAMPUS_SPREAD,.14,36*CAMPUS_SPREAD);scene.add(platform);
     for(const tz of [34.2,37.8]){const line=new THREE.Mesh(new THREE.BoxGeometry(20,.055,.11),brickMat(0x6a7779));line.position.set(42*CAMPUS_SPREAD,.28,tz*CAMPUS_SPREAD);scene.add(line);}
     const tram=new THREE.Group();
+    const tramDoors=[];
     for(let k=0;k<3;k++){
       const coach=new THREE.Mesh(new THREE.BoxGeometry(7.2,2.8,2.7),brickMat(k===1?0xf2f2e9:0xcfe3eb));coach.position.set((k-1)*7.05,1.6,36);coach.castShadow=true;tram.add(coach);
       const stripe=new THREE.Mesh(new THREE.BoxGeometry(6.8,.5,2.75),brickMat(0x8862a6));stripe.position.set((k-1)*7.05,1.0,36);tram.add(stripe);
       for(const xoff of [-2.1,0,2.1]){const win=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.0,.07),glassMat);win.position.set((k-1)*7.05+xoff,2.0,34.62);tram.add(win);}
+    }
+    const tramDoorMat=new THREE.MeshStandardMaterial({color:0xdbe3e4,metalness:.38,roughness:.37});
+    for(const side of [-1,1]){
+      const panel=new THREE.Mesh(new THREE.BoxGeometry(1,2.35,.14),tramDoorMat);
+      panel.position.set(side*.52,1.52,34.60);
+      const glass=new THREE.Mesh(new THREE.BoxGeometry(.67,.85,.145),glassMat);
+      glass.position.y=.4;panel.add(glass);tram.add(panel);
+      tramDoors.push({panel,side});
     }
     tram.position.set(42*(CAMPUS_SPREAD-1),0,36*(CAMPUS_SPREAD-1));scene.add(tram);
     const tramStopSign=makeTextBillboard('Broadstone – University\nLuas',330,100,'#243c44','#fff4f2');tramStopSign.position.set(42*CAMPUS_SPREAD,4,39*CAMPUS_SPREAD);scene.add(tramStopSign);
@@ -1046,11 +1068,66 @@
     }
     let tramElapsed=0;
     function animateTram(dt){
-      if(state.dialogueOpen&&state.mission==='induction')return;
+      if(!arrivalFinished || arrivalRunning || (state.dialogueOpen&&state.mission==='induction'))return;
       tramElapsed+=dt;
       tram.position.x=Math.max(-42,-Math.max(0,tramElapsed-6)*3.8);
     }
 
+    // A short skippable camera scene inside the actual 3D world.
+    const arrivalOverlay=document.getElementById('arrivalScene');
+    let arrivalRunning=false,arrivalFinished=false,arrivalSeconds=0;
+    const onTrain=new THREE.Vector3(42*CAMPUS_SPREAD,.05,36*CAMPUS_SPREAD-1.9);
+    const onCampus=new THREE.Vector3(39*CAMPUS_SPREAD,.05,33*CAMPUS_SPREAD);
+    const disembarking=[];
+    for(let i=0;i<4;i++){
+      const a=makeAvatar({shirt:[0x816d89,0x658a85,0x9b7955,0x6b839d][i],trousers:0x394751,
+        hair:hairPalette[i%hairPalette.length],skin:skinPalette[i%skinPalette.length],backpack:i%2===0,hairStyle:i%4});
+      a.position.copy(onTrain);a.position.x+=(i-1.5)*1.25;scene.add(a);a.visible=false;disembarking.push(a);
+    }
+    function startArrival(){
+      arrivalRunning=true;arrivalFinished=false;arrivalSeconds=0;tramElapsed=0;
+      document.getElementById('startScreen').hidden=true;
+      document.getElementById('hud').style.opacity='0';
+      arrivalOverlay.hidden=false;
+      player.position.copy(onTrain);
+      disembarking.forEach(a=>a.visible=true);
+      tramDoors.forEach(d=>d.panel.position.x=d.side*.52);
+      keys['w']=keys['s']=keys['a']=keys['d']=false;
+    }
+    function finishArrival(){
+      if(!arrivalRunning)return;
+      arrivalRunning=false;arrivalFinished=true;arrivalOverlay.hidden=true;
+      document.getElementById('hud').style.opacity='';
+      disembarking.forEach(a=>a.visible=false);
+      player.position.copy(onCampus);
+      yaw=.5;pitch=.5;
+      openNode('intro');saveGame();
+    }
+    function updateArrival(dt){
+      if(!arrivalRunning)return;
+      arrivalSeconds+=dt;
+      const t=arrivalSeconds;
+      const door=THREE.MathUtils.smoothstep(t,1.4,3.2);
+      tramDoors.forEach(d=>d.panel.position.x=d.side*(.52+1.06*door));
+      const p=THREE.MathUtils.smoothstep(t,3,9);
+      player.position.lerpVectors(onTrain,onCampus,p);
+      body.rotation.y=-2.45;animateAvatar(body,t,p>.001&&p<.999);
+      for(let i=0;i<disembarking.length;i++){
+        const a=disembarking[i],m=THREE.MathUtils.smoothstep(t,2.5+i*.4,8.2+i*.2);
+        a.position.set(onTrain.x+(i-1.5)*1.25-(i+.5)*m,.05,onTrain.z+.3-(7+i)*m);
+        a.rotation.y=-2.55;animateAvatar(a,t+i,m>.001&&m<.99);
+      }
+      const look=player.position.clone();look.y+=1.7;
+      camera.position.lerp(look.clone().add(new THREE.Vector3(9-p*2,5.4-p,12.5)),.09);
+      camera.lookAt(look.x,look.y,look.z-2.0);
+      const title=document.getElementById('arrivalTitle'),desc=document.getElementById('arrivalLine');
+      if(t<3){title.textContent='Welcome to Grangegorman.';desc.textContent='The Luas slows to a stop. People collect their bags. The doors slide open.';}
+      else if(t<7){title.textContent='A whole campus ahead.';desc.textContent='You step onto the platform with other students. The scale of the campus catches your attention.';}
+      else{title.textContent='Find your way to East Quad.';desc.textContent='Induction is where you meet fellow students, university services, staff and your academic adviser.';}
+      if(t>10)finishArrival();
+    }
+    document.getElementById('arrivalSkip').onclick=finishArrival;
+    window.__artsArrival={get active(){return arrivalRunning},skip:finishArrival};
     // A floating beacon over the current referral NPC, visible during campus navigation.
     const beacon=new THREE.Group();
     const orb=new THREE.Mesh(new THREE.SphereGeometry(.32,12,10),new THREE.MeshBasicMaterial({color:0x62b8ff}));beacon.add(orb);
@@ -1442,7 +1519,7 @@ You look around and make a mental note that some people are here for the first t
       });
     }
     function updatePlayer(dt){
-      if(state.dialogueOpen || state.phoneOpen || demoActive || !document.getElementById('startScreen').hidden) return;
+      if(state.dialogueOpen || state.phoneOpen || demoActive || arrivalRunning || !document.getElementById('startScreen').hidden) return;
       const speed = (keys['shift'] ? 15 : 8.1);
       const move = new THREE.Vector3();
       if(keys['w']||keys['arrowup']) move.z -= 1;
@@ -1510,9 +1587,9 @@ You look around and make a mental note that some people are here for the first t
       requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.03);
       updatePlayer(dt);
-      animateAvatar(body,playerMoving?playerStride:performance.now()*.001,playerMoving,keys['shift']?1.35:1);
+      if(!arrivalRunning)animateAvatar(body,playerMoving?playerStride:performance.now()*.001,playerMoving,keys['shift']?1.35:1);
       const now=performance.now()*.001;Object.values(npcs).forEach((n,i)=>animateAvatar(n,now+i*.33,false));
-      updateCamera();
+      if(arrivalRunning)updateArrival(dt);else updateCamera();
       animateAmbience(dt);
       animateSocial(performance.now()*.001);
       animateTram(dt);
@@ -1548,6 +1625,7 @@ You look around and make a mental note that some people are here for the first t
     let demoActive=false,demoIndex=0;
     const demoOverlay=document.getElementById('demoOverlay');
     function showDemo(index=0){
+      if(arrivalRunning){arrivalRunning=false;arrivalFinished=true;arrivalOverlay.hidden=true;document.getElementById('hud').style.opacity='';disembarking.forEach(a=>a.visible=false);}
       if(!demoActive){demoActive=true;closeDialogue();closePhone();document.getElementById('startScreen').hidden=true;}
       demoIndex=Math.max(0,Math.min(demoScenes.length-1,index));
       const step=demoScenes[demoIndex];
@@ -1564,7 +1642,7 @@ You look around and make a mental note that some people are here for the first t
       document.getElementById('chapterSubtitle').textContent='A short journey through campus';
     }
     function endDemo(){demoActive=false;demoOverlay.hidden=true;state.started=true;document.getElementById('chapterSubtitle').textContent='Explore Grangegorman';openNode('intro');saveGame();}
-    document.getElementById('startFull').onclick=()=>{state.started=true;document.getElementById('startScreen').hidden=true;openNode('intro');saveGame();};
+    document.getElementById('startFull').onclick=()=>{state.started=true;startArrival();};
     const continueButton=document.getElementById('startContinue'),resetButton=document.getElementById('startReset');
     continueButton.hidden=!hasSavedGame;resetButton.hidden=!hasSavedGame;
     continueButton.onclick=()=>{
@@ -1576,6 +1654,7 @@ You look around and make a mental note that some people are here for the first t
       if(Number.isFinite(stored.yaw))yaw=stored.yaw;
       if(Number.isFinite(stored.pitch))pitch=stored.pitch;
       document.getElementById('startScreen').hidden=true;
+      arrivalFinished=true;arrivalRunning=false;
       state.started=true;
       missionTitle.textContent=stored.missionTitle||'Explore Grangegorman';
       missionText.textContent=stored.missionText||'Continue your journey.';
