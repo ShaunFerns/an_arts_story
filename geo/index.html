@@ -331,13 +331,13 @@ function createEastQuadEntry(north=true){
  // Exact glazing dimensions and bay counts are *approximate*.
  if(north){
  const glassDark=new THREE.MeshPhysicalMaterial({color:0x354f59,roughness:.22,metalness:.14,transparent:true,opacity:.77,side:THREE.DoubleSide,depthWrite:false});
- const glazingHeight=12.4,glazingWidth=8.8;
+ const glazingHeight=20.6,glazingWidth=8.8;
  // On the mapped building wall, a dark glazed entrance bay with bronze
  // mullions and transoms. Its solid footprint remains collision-blocking.
  add(new THREE.BoxGeometry(glazingWidth,glazingHeight,.07),glassDark,0,glazingHeight/2,-.06);
  for(const x of [-4.4,-2.8,-1.4,0,1.4,2.8,4.4])
   add(new THREE.BoxGeometry(.075,glazingHeight,.14),darkMetal,x,glazingHeight/2,.06);
- for(const y of [3.45,6.05,8.65,11.4])
+ for(const y of [3.45,6.05,9.0,12.0,15.0,18.5])
   add(new THREE.BoxGeometry(glazingWidth,.075,.13),darkMetal,0,y,.06);
  // A recessed bronze side panel echoes the real material palette.
  add(new THREE.BoxGeometry(.9,7.2,.17),bronze,-4.85,3.6,.04);
@@ -402,12 +402,20 @@ function createEastQuadEntry(north=true){
   new THREE.PlaneGeometry(5.6,12.3),
   new THREE.MeshStandardMaterial({map:brickTexture,roughness:.94,side:THREE.DoubleSide})
  );
- brickPanel.position.set(7.25,6.15,.01);group.add(brickPanel);
+ // The earlier sign was a flat sheet projected *beyond* the 9.6m OSM
+ // north doorway segment. The adjoining footprint return hid the lettering.
+ // Build its own brick-faced, shallow architectural bay physically attached
+ // to the right side of the atrium, with the letters forward of masonry.
+ // The bay is a photo-informed reconstruction, not CAD-measured depth.
+ const signWall=add(new THREE.BoxGeometry(5.65,12.3,.92),
+   new THREE.MeshStandardMaterial({map:brickTexture,roughness:.96}),7.2,6.15,.62);
+ signWall.name='EastQuadRightSignBrickWall';
+ brickPanel.position.set(7.2,6.15,1.10);group.add(brickPanel);
  // Tall narrow metal-framed windows above the wall-mounted lettering.
  const windowMat=new THREE.MeshPhysicalMaterial({color:0x465c66,roughness:.23,metalness:.18,transparent:true,opacity:.87,side:THREE.DoubleSide});
- for(const x of [5.55,7.14,8.73]){
-  const frame=add(new THREE.BoxGeometry(1.20,3.65,.14),darkMetal,x,9.9,.10);
-  add(new THREE.BoxGeometry(1.04,3.48,.018),windowMat,x,9.9,.185);
+ for(const x of [5.7,7.15,8.62]){
+  const frame=add(new THREE.BoxGeometry(1.03,3.65,.17),darkMetal,x,9.9,1.19);
+  add(new THREE.BoxGeometry(.87,3.48,.028),windowMat,x,9.9,1.31);
  }
  // Transparent canvas lets the lettering sit on the brick and shadow
  // independently: no background rectangle/advertising-board effect.
@@ -431,11 +439,12 @@ function createEastQuadEntry(north=true){
  lettersTexture.colorSpace=THREE.SRGBColorSpace;
  const faceMaterial=new THREE.MeshBasicMaterial({map:lettersTexture,transparent:true,depthWrite:false,side:THREE.DoubleSide,alphaTest:.04});
  const signFace=new THREE.Mesh(new THREE.PlaneGeometry(5.60,5.1),faceMaterial);
- signFace.position.set(7.25,4.9,.145);group.add(signFace);
+ signFace.position.set(7.2,4.9,1.28);group.add(signFace);
+ signFace.name='EastQuadGoldNorthEntranceWallSign';
  // Give letters a soft backing shadow to suggest raised metal lettering.
  const shadow=new THREE.Mesh(new THREE.PlaneGeometry(5.60,5.1),
   new THREE.MeshBasicMaterial({map:lettersTexture,color:0x443a32,transparent:true,opacity:.25,depthWrite:false,side:THREE.DoubleSide,alphaTest:.04}));
- shadow.position.set(7.27,4.87,.116);group.add(shadow);
+ shadow.position.set(7.22,4.87,1.235);group.add(shadow);
  }
  scene.add(group);
  // Path-side interaction node: prefer pedestrian position outside the entry.
@@ -454,7 +463,10 @@ function createEastQuadEntry(north=true){
   mainWallMidpoint:[cx,cn],position:[group.position.x,-group.position.z],
   interaction:north?m.position:(target||m.position),northFacing:north,provisional:true,doorComposition:north?'northern glazed atrium, side doors and revolving entrance':'secondary glazed door / revolving door / glazed door',sourcePhoto:north?'https://www.ste.ie/east-quad-grangegorman-ahr-architects':null,
   wallLength:seg.length,distanceFromOriginalApproach:seg.distance,
-  sign:north?{side:'right when facing main entrance',mountedOnBrick:true,localX:7.25}:null};
+  sign:north?{side:'right when facing main entrance',mountedOnBrick:true,
+    localX:7.2,localZ:1.28,localY:4.9,
+    onBrickBayWidth:5.65,entranceClearance:7.2-4.4,
+    projectedCentre:(()=>{const p=group.localToWorld(new THREE.Vector3(7.2,4.9,1.28));return [p.x,p.y,-p.z]})()}:null};
  entryPrototypes.push(info);
  return info;
 }
@@ -491,8 +503,8 @@ function buildEastQuadFacade(){
   color:0x425862,metalness:.14,roughness:.19,transparent:false
  });
  const frameMat=mat(0x383c3c,.45),bronzeMat=mat(0x806d5a,.56);
- const glassGeo=new THREE.BoxGeometry(1.38,2.55,.055);
- const frameGeo=new THREE.BoxGeometry(1.56,2.72,.10);
+ const glassGeo=new THREE.BoxGeometry(.98,2.9,.055);
+ const frameGeo=new THREE.BoxGeometry(1.17,3.07,.10);
  const windows=[];
  const matchSegment=(a,b,entry)=>entry&&
   ((Math.hypot(a[0]-entry.face[0][0],a[1]-entry.face[0][1])<.2&&Math.hypot(b[0]-entry.face[1][0],b[1]-entry.face[1][1])<.2)||
@@ -506,7 +518,7 @@ function buildEastQuadFacade(){
   const ang=Math.atan2(ox,-on),base=groundHeight(cx,cn)+.02;
   const main=matchSegment(a,b,eastQuadEntrance),secondary=matchSegment(a,b,eastQuadSecondaryEntrance);
   const wall=new THREE.Group();wall.position.set(cx+ox*.095,base,-cn-on*.095);wall.rotation.y=ang;
-  // The photographed main atrium occupies the first ~12m of its wall.
+  // The photographed main atrium occupies the first ~21m of its wall.
   // Avoid covering it with a brick layer; the entrance geometry remains.
   if(!main){
    const map=bricks.clone();map.needsUpdate=true;
@@ -516,25 +528,25 @@ function buildEastQuadFacade(){
    brick.position.y=buildingHeight/2;brick.receiveShadow=true;wall.add(brick);
    eastQuadFacadeAudit.brickCoverageM+=len;
   }else{
-   const upper=new THREE.Mesh(new THREE.PlaneGeometry(len,buildingHeight-12.3),
+   const upper=new THREE.Mesh(new THREE.PlaneGeometry(len,buildingHeight-20.6),
      new THREE.MeshStandardMaterial({map:bricks.clone(),roughness:.92,side:THREE.DoubleSide,color:0xb0a69a}));
    upper.material.map.wrapS=upper.material.map.wrapT=THREE.RepeatWrapping;
-   upper.material.map.repeat.set(len/3.3,(buildingHeight-12.3)/3.3);
+   upper.material.map.repeat.set(len/3.3,(buildingHeight-20.6)/3.3);
    upper.material.map.needsUpdate=true;
-   upper.position.y=(buildingHeight+12.3)/2;wall.add(upper);
+   upper.position.y=(buildingHeight+20.6)/2;wall.add(upper);
    eastQuadFacadeAudit.brickCoverageM+=len;
   }
   const band=new THREE.Mesh(new THREE.BoxGeometry(len,.16,.16),bronzeMat);
   band.position.set(0,buildingHeight-.28,.10);wall.add(band);
   scene.add(wall);eastQuadFacadeAudit.wallFaces++;
   if(len<2.1)continue;
-  const bays=Math.max(1,Math.floor((len-.5)/3.1));
+  const bays=Math.max(1,Math.floor((len-.5)/4.35));
   for(let bay=0;bay<bays;bay++){
    const offset=(bay+.5)*len/bays-len/2;
-   for(let floor=0;floor<6;floor++){
-    const y=1.95+floor*4;
-    if(y+1.36>buildingHeight-.5)continue;
-    if(main&&y<13.0)continue;
+   for(let floor=0;floor<5;floor++){
+    const y=2.15+floor*4.45;
+    if(y+1.55>buildingHeight-.5)continue;
+    if(main&&y<21.0)continue;
     if(secondary&&floor===0&&Math.abs(offset)<4.6)continue;
     // World position derives from wall-local x basis and its outward normal.
     const px=wall.position.x+Math.cos(ang)*offset+ox*.19;
