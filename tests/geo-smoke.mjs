@@ -44,6 +44,23 @@ if(!heightAudit.some(x=>x.source==='visual_estimate_east_quad'&&x.height===arriv
 if(heightAudit.some(x=>/west quad|broadstone gate/i.test(x.name)))throw Error('Proposed development must not be represented as existing');
 if(arrival.dressed<3)throw Error('Expected multiple NPCs with clothing overlays');
 
+// Keyboard-only play should not require a mouse/trackpad.
+const beforeKeyboard=await page.evaluate(()=>({yaw:window.__artsGeo.lookYaw,pitch:window.__artsGeo.lookPitch,position:window.__artsGeo.position}));
+await page.keyboard.down('Space');
+await page.keyboard.down('KeyW');
+await page.waitForTimeout(430);
+const afterKeyboardLook=await page.evaluate(()=>({yaw:window.__artsGeo.lookYaw,pitch:window.__artsGeo.lookPitch,position:window.__artsGeo.position,mode:window.__artsGeo.controlMode}));
+await page.keyboard.up('KeyW');
+await page.keyboard.up('Space');
+if(afterKeyboardLook.mode!=='look'||afterKeyboardLook.pitch>=beforeKeyboard.pitch-.25)throw Error('Space+W should tilt camera up without mouse');
+if(Math.hypot(afterKeyboardLook.position.x-beforeKeyboard.position.x,afterKeyboardLook.position.north-beforeKeyboard.position.north)>.1)throw Error('Space+W must not walk');
+await page.keyboard.down('Space');await page.keyboard.down('KeyD');await page.waitForTimeout(390);
+const afterYaw=await page.evaluate(()=>({yaw:window.__artsGeo.lookYaw,position:window.__artsGeo.position}));
+await page.keyboard.up('KeyD');await page.keyboard.up('Space');
+if(Math.abs(afterYaw.yaw-afterKeyboardLook.yaw)<.3)throw Error('Space+D should turn right');
+await page.keyboard.down('KeyW');await page.waitForTimeout(350);await page.keyboard.up('KeyW');
+const afterWalk=await page.evaluate(()=>window.__artsGeo.position);
+if(Math.hypot(afterWalk.x-afterYaw.position.x,afterWalk.north-afterYaw.position.north)<.03)throw Error('W without Space should walk');
 const perspective=await page.evaluate(()=>window.__artsGeo.perspective);
 if(perspective!=='first-person')throw Error('Default camera must be first-person');
 await page.keyboard.press('v');
