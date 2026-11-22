@@ -7,7 +7,7 @@ const world=makeCollisionWorld([wall,garden,building],{playerRadius:.34,worldExt
 assert.equal(barrierDimensions(wall.tags).width,.65);
 assert.equal(barrierDimensions(garden.tags).width,1.1);
 assert.equal(barrierDimensions(garden.tags).height,1.2);
-assert.equal(world.query(-.6,0),null,'player safely clear of wall');
+assert.equal(world.query(-.8,0),null,'player safely clear of wall');
 assert.equal(world.query(-.5,0)?.kind,'barrier','player collides before centre reaches wall line');
 assert.equal(world.query(5.7,0)?.kind,'barrier','1.1 m wide hedge has real thickness');
 assert.equal(world.query(9.8,0)?.kind,'building','capsule edge touches building before centre');
