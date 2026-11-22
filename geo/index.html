@@ -460,6 +460,104 @@ function createEastQuadEntry(north=true){
 const eastQuadEntrance=createEastQuadEntry(true);
 const eastQuadSecondaryEntrance=createEastQuadEntry(false);
 
+// Continuous East Quad facade, following every *existing mapped perimeter*
+// segment. The sign and entrance are still separate, photograph-guided
+// components; this covers the formerly bare block's brick and window bays.
+// Materials, storey rhythm and depths remain visual approximations.
+const eastQuadFacadeAudit={source:eastFeature.id,wallFaces:0,windowBays:0,brickCoverageM:0};
+function makeEastQuadBrickTexture(){
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
+ const c=canvas.getContext('2d');c.fillStyle='#827a71';c.fillRect(0,0,512,512);
+ let seed=19271;const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ for(let row=0;row<32;row++)for(let col=-1;col<10;col++){
+  const off=row%2?27:0,x=col*55+off,y=row*16;
+  const a=rnd(),warm=rnd()>.66;
+  const rgb=warm?[103+a*34,91+a*27,80+a*23]:[91+a*35,93+a*30,90+a*27];
+  c.fillStyle='rgb('+rgb.map(Math.round).join(',')+')';
+  c.fillRect(x+1,y+1,53,14);
+  c.fillStyle='rgba(24,27,27,.12)';c.fillRect(x+1,y+13,53,2);
+ }
+ const texture=new THREE.CanvasTexture(canvas);
+ texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+ texture.colorSpace=THREE.SRGBColorSpace;
+ texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+ return texture;
+}
+function buildEastQuadFacade(){
+ const f=eastFeature,poly=f.coords,center=midpoint(poly);
+ const storeyHeight=4,buildingHeight=existingQuadHeightEstimates.eastQuad.height;
+ const bricks=makeEastQuadBrickTexture(),glassMat=new THREE.MeshPhysicalMaterial({
+  color:0x425862,metalness:.14,roughness:.19,transparent:false
+ });
+ const frameMat=mat(0x383c3c,.45),bronzeMat=mat(0x806d5a,.56);
+ const glassGeo=new THREE.BoxGeometry(1.38,2.55,.055);
+ const frameGeo=new THREE.BoxGeometry(1.56,2.72,.10);
+ const windows=[];
+ const matchSegment=(a,b,entry)=>entry&&
+  ((Math.hypot(a[0]-entry.face[0][0],a[1]-entry.face[0][1])<.2&&Math.hypot(b[0]-entry.face[1][0],b[1]-entry.face[1][1])<.2)||
+   (Math.hypot(b[0]-entry.face[0][0],b[1]-entry.face[0][1])<.2&&Math.hypot(a[0]-entry.face[1][0],a[1]-entry.face[1][1])<.2));
+ for(let i=1;i<poly.length;i++){
+  const a=poly[i-1],b=poly[i],dx=b[0]-a[0],dn=b[1]-a[1],len=Math.hypot(dx,dn);
+  if(len<.65)continue;
+  const cx=(a[0]+b[0])/2,cn=(a[1]+b[1])/2;
+  let ox=-dn/len,on=dx/len;
+  if(ox*(cx-center[0])+on*(cn-center[1])<0){ox=-ox;on=-on}
+  const ang=Math.atan2(ox,-on),base=groundHeight(cx,cn)+.02;
+  const main=matchSegment(a,b,eastQuadEntrance),secondary=matchSegment(a,b,eastQuadSecondaryEntrance);
+  const wall=new THREE.Group();wall.position.set(cx+ox*.095,base,-cn-on*.095);wall.rotation.y=ang;
+  // The photographed main atrium occupies the first ~12m of its wall.
+  // Avoid covering it with a brick layer; the entrance geometry remains.
+  if(!main){
+   const map=bricks.clone();map.needsUpdate=true;
+   map.repeat.set(len/3.3,buildingHeight/3.3);
+   const brick=new THREE.Mesh(new THREE.PlaneGeometry(len,buildingHeight),
+     new THREE.MeshStandardMaterial({map,roughness:.92,side:THREE.DoubleSide}));
+   brick.position.y=buildingHeight/2;brick.receiveShadow=true;wall.add(brick);
+   eastQuadFacadeAudit.brickCoverageM+=len;
+  }else{
+   const upper=new THREE.Mesh(new THREE.PlaneGeometry(len,buildingHeight-12.3),
+     new THREE.MeshStandardMaterial({map:bricks.clone(),roughness:.92,side:THREE.DoubleSide,color:0xb0a69a}));
+   upper.material.map.wrapS=upper.material.map.wrapT=THREE.RepeatWrapping;
+   upper.material.map.repeat.set(len/3.3,(buildingHeight-12.3)/3.3);
+   upper.material.map.needsUpdate=true;
+   upper.position.y=(buildingHeight+12.3)/2;wall.add(upper);
+   eastQuadFacadeAudit.brickCoverageM+=len;
+  }
+  const band=new THREE.Mesh(new THREE.BoxGeometry(len,.16,.16),bronzeMat);
+  band.position.set(0,buildingHeight-.28,.10);wall.add(band);
+  scene.add(wall);eastQuadFacadeAudit.wallFaces++;
+  if(len<2.1)continue;
+  const bays=Math.max(1,Math.floor((len-.5)/3.1));
+  for(let bay=0;bay<bays;bay++){
+   const offset=(bay+.5)*len/bays-len/2;
+   for(let floor=0;floor<6;floor++){
+    const y=1.95+floor*4;
+    if(y+1.36>buildingHeight-.5)continue;
+    if(main&&y<13.0)continue;
+    if(secondary&&floor===0&&Math.abs(offset)<4.6)continue;
+    // World position derives from wall-local x basis and its outward normal.
+    const px=wall.position.x+Math.cos(ang)*offset+ox*.19;
+    const pz=wall.position.z-Math.sin(ang)*offset-on*.19;
+    windows.push({px,py:base+y,pz,ang,ox,on});
+   }
+  }
+ }
+ // Two shared instanced meshes reduce the draw calls for hundreds of windows.
+ const frames=new THREE.InstancedMesh(frameGeo,frameMat,windows.length);
+ const panes=new THREE.InstancedMesh(glassGeo,glassMat,windows.length);
+ const obj=new THREE.Object3D();
+ windows.forEach((w,i)=>{
+  obj.position.set(w.px,w.py,w.pz);obj.rotation.set(0,w.ang,0);
+  obj.updateMatrix();frames.setMatrixAt(i,obj.matrix);
+  obj.position.x+=w.ox*.065;obj.position.z-=w.on*.065;obj.updateMatrix();
+  panes.setMatrixAt(i,obj.matrix);
+ });
+ frames.instanceMatrix.needsUpdate=true;panes.instanceMatrix.needsUpdate=true;
+ frames.castShadow=true;panes.receiveShadow=true;scene.add(frames,panes);
+ eastQuadFacadeAudit.windowBays=windows.length;
+}
+buildEastQuadFacade();
+
 // East Quad landscaped seating island, after the photographic reference:
 // https://excellentstreetimages.com/blog-view/?permalink=east-quad-complex-university-campus-grangegorman
 // Elongated curved grey concrete perimeter, timber seating slats and a
@@ -850,7 +948,7 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
  if(intersectsPlanter(resolved.x,resolved.y)){
   resolved.x=previousX;resolved.y=previousN;
  }
- player.position.x=resolved.x;player.position.z=-resolved.y;player.position.y=groundHeight(resolved.x,resolved.y)+.05;player.rotation.y=Math.atan2(x,z)} }
+ player.position.x=resolved.x;player.position.z=-resolved.y;player.position.y=groundHeight(resolved.x,resolved.y)+.05;player.rotation.y=Math.atan2(-x,-z)} }
  if(animationController&&originalNpcRig)animationController.update(dt,movingRig?((keys.ShiftLeft||keys.ShiftRight)?'run':'walk'):'idle');
  if(player.userData.walkArms){
   const phase=now*.009,swing=movingRig?Math.sin(phase)*.27:Math.sin(now*.0013)*.025;
@@ -884,6 +982,6 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
   camera.lookAt(target);
  }renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=missions.indexOf(home);missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.name==='East Quad');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get plazaFeatures(){return eastQuadPlazaFeatures},plazaCollision:(x,n)=>intersectsPlanter(x,n),get closestNpcVerticalDifference(){const n=nearestNpc();return n?n.body.position.y-player.position.y:null},get npcVisualDiagnostics(){return npcs.map(n=>{const figure=n.body.children.find(c=>c.type==='Group');const figureBox=figure?new THREE.Box3().setFromObject(figure):null;const bodyBox=new THREE.Box3().setFromObject(n.body);return {name:n.name,groundY:groundHeight(n.body.position.x,-n.body.position.z),originY:n.body.position.y,rigBottom:figureBox?.min.y,rigTop:figureBox?.max.y,rigHeight:figureBox?.max.y-figureBox?.min.y,wholeHeight:bodyBox.max.y-bodyBox.min.y}})},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],groundHeight(m.position[0],m.position[1])+.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.name==='East Quad');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get facingYaw(){return player.rotation.y},get plazaFeatures(){return eastQuadPlazaFeatures},plazaCollision:(x,n)=>intersectsPlanter(x,n),get closestNpcVerticalDifference(){const n=nearestNpc();return n?n.body.position.y-player.position.y:null},get npcVisualDiagnostics(){return npcs.map(n=>{const figure=n.body.children.find(c=>c.type==='Group');const figureBox=figure?new THREE.Box3().setFromObject(figure):null;const bodyBox=new THREE.Box3().setFromObject(n.body);return {name:n.name,groundY:groundHeight(n.body.position.x,-n.body.position.z),originY:n.body.position.y,rigBottom:figureBox?.min.y,rigTop:figureBox?.max.y,rigHeight:figureBox?.max.y-figureBox?.min.y,wholeHeight:bodyBox.max.y-bodyBox.min.y}})},setPerspective,origin,features:zone.length,counts,collisions:{buildings:collision.obstacles.filter(x=>x.kind==='building').length,barrierSegments:collision.sizes.barriers,playerRadius:collision.playerRadius},npcs:npcs.length,get npcArmVerticalities(){return npcs.flatMap(n=>n.body.userData.animation?.armVerticalities||[])},animationStates:animationController?.names||[],get animationState(){return animationController?.state||'fallback'},conversationOpen:()=>!$('npcDialog').hidden,collisionProbe:(x,n)=>collision.query(x,n)?{blocked:true,type:collision.query(x,n).kind,id:collision.query(x,n).id}: {blocked:false},collisionMove:(x,n,dx,dn)=>collision.move(x,n,dx,dn),missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay,provisional:m.provisional})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],groundHeight(m.position[0],m.position[1])+.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
