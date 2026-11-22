@@ -14,6 +14,19 @@ const eyeHeight=await page.evaluate(()=>window.__artsGeo.cameraHeight);
 console.log('Initial camera eye height and nearest NPC:',eyeHeight,spawnNpcDistance);
 if(spawnNpcDistance<3.5)throw Error('First-person starts too close to an NPC');
 if(eyeHeight<1.45||eyeHeight>2.0)throw Error('First-person eye height is outside expected standing range');
+const arrival=await page.evaluate(()=>({
+ location:window.__artsGeo.spawnLocation,
+ distance:window.__artsGeo.startDistanceFromLuas,
+ zoom:window.__artsGeo.mapZoom,
+ height:window.__artsGeo.eastQuadHeight,
+ dressed:window.__artsGeo.dressedNpcs
+}));
+console.log('Induction arrival, map and temporary NPC clothing:',JSON.stringify(arrival));
+if(arrival.location!=='Broadstone–University'||arrival.distance>13)throw Error('Induction must start close to Broadstone Luas');
+if(arrival.zoom<1.7)throw Error('Main campus mission map should be zoomed in from the old overview');
+if(arrival.height<19||arrival.height>23)throw Error('East Quad five-floor provisional height missing');
+if(arrival.dressed<3)throw Error('Expected multiple NPCs with clothing overlays');
+
 const perspective=await page.evaluate(()=>window.__artsGeo.perspective);
 if(perspective!=='first-person')throw Error('Default camera must be first-person');
 await page.keyboard.press('v');
