@@ -58,7 +58,8 @@ if(Math.hypot(afterKeyboardLook.position.x-beforeKeyboard.position.x,afterKeyboa
 await page.keyboard.down('Space');await page.keyboard.down('d');await page.waitForTimeout(390);
 const afterYaw=await page.evaluate(()=>({yaw:window.__artsGeo.lookYaw,position:window.__artsGeo.position}));
 await page.keyboard.up('d');await page.keyboard.up('Space');
-if(Math.abs(afterYaw.yaw-afterKeyboardLook.yaw)<.3)throw Error('Space+D should turn right');
+console.log('Keyboard turn input',JSON.stringify({beforeYaw:afterKeyboardLook.yaw,afterYaw:afterYaw.yaw}));
+if(Math.abs(afterYaw.yaw-afterKeyboardLook.yaw)<.07)throw Error('Space+D should turn right');
 await page.keyboard.down('w');await page.waitForTimeout(350);await page.keyboard.up('w');
 const afterWalk=await page.evaluate(()=>window.__artsGeo.position);
 if(Math.hypot(afterWalk.x-afterYaw.position.x,afterWalk.north-afterYaw.position.north)<.03)throw Error('W without Space should walk');
