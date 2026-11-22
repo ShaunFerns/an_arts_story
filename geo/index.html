@@ -83,6 +83,30 @@ const missions=landmarkMatches.map(([name,re,desc])=>{
  const f=matches[0],centre=f?midpoint(f.coords):null,approach=centre?nearestWalkable(centre,f.kind==='building'?f:null):null;
  return {name,description:desc,found:!!(f&&approach),position:approach?.point||null,centre,source:f?.id,approachWay:approach?.road};
 });
+const solidBuildings=zone.filter(f=>f.kind==='building'&&f.coords.length>3).map(f=>{
+ const xs=f.coords.map(p=>p[0]),ys=f.coords.map(p=>p[1]);
+ return {shape:f.coords,minX:Math.min(...xs),maxX:Math.max(...xs),minY:Math.min(...ys),maxY:Math.max(...ys)};
+}).filter(f=>Math.hypot((f.minX+f.maxX)/2,(f.minY+f.maxY)/2)<550);
+const solidEdges=[];
+for(const f of zone.filter(f=>f.kind==='barrier'&&['wall','fence','hedge','retaining_wall'].includes(f.tags?.barrier))){
+ const c=midpoint(f.coords);if(Math.hypot(c[0],c[1])>550)continue;
+ for(let i=1;i<f.coords.length;i++){
+  const a=f.coords[i-1],b=f.coords[i];if(Math.hypot(b[0]-a[0],b[1]-a[1])<.1)continue;
+  solidEdges.push({a,b,minX:Math.min(a[0],b[0])-.55,maxX:Math.max(a[0],b[0])+.55,minY:Math.min(a[1],b[1])-.55,maxY:Math.max(a[1],b[1])+.55});
+ }
+}
+function blockedAt(east,north){
+ for(const b of solidBuildings){
+  if(east<b.minX-.3||east>b.maxX+.3||north<b.minY-.3||north>b.maxY+.3)continue;
+  if(contains2D([east,north],b.shape))return true;
+ }
+ for(const e of solidEdges){
+  if(east<e.minX||east>e.maxX||north<e.minY||north>e.maxY)continue;
+  const dx=e.b[0]-e.a[0],dy=e.b[1]-e.a[1],t=THREE.MathUtils.clamp(((east-e.a[0])*dx+(north-e.a[1])*dy)/(dx*dx+dy*dy),0,1);
+  if((east-e.a[0]-dx*t)**2+(north-e.a[1]-dy*t)**2<.36)return true;
+ }
+ return false;
+}
 const home=missions.find(m=>m.name==='Rathdown House'&&m.found);
 if(home)player.position.set(home.position[0],.05,-home.position[1]);
 function missionList(){const list=$('missionList');list.innerHTML='';for(const [i,m] of missions.entries()){const b=document.createElement('button');b.className=selected===i?'active':'';b.disabled=!m.found;b.textContent=m.found?`◉ ${m.name} · ${m.description}`:`○ ${m.name} · not tagged in this OSM snapshot`;b.onclick=()=>{selected=i;missionList();updateObjective();drawMaps()};list.appendChild(b)} }
@@ -107,7 +131,7 @@ $map.addEventListener('wheel',e=>{e.preventDefault();mapZoom=THREE.MathUtils.cla
 $map.addEventListener('click',e=>{const b=$map.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*$map.width,y=(e.clientY-b.top)/b.height*$map.height,scale=$map.width/(2000/mapZoom),mx=(x-$map.width/2)/scale,my=($map.height/2-y)/scale;let best=-1,d=Infinity;missions.forEach((m,i)=>{if(!m.found)return;const dd=Math.hypot(mx-m.position[0],my-m.position[1]);if(dd<d){d=dd;best=i}});if(best>=0&&d<45/mapZoom){selected=best;missionList();updateObjective();drawMaps()}});
 const keys={};addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k==='m'){e.preventDefault();setMap(!mapOpen)}if(k==='escape'&&mapOpen)setMap(false)});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 let dragging=false,mouseX=0,mouseY=0;renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;mouseX=e.clientX;mouseY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;yaw-=(e.clientX-mouseX)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-mouseY)*.005,.2,.95);mouseX=e.clientX;mouseY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>dragging=false);renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();follow=THREE.MathUtils.clamp(follow+Math.sign(e.deltaY)*1.1,8,30)},{passive:false});
-let t=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-t)/1000,.055);t=now;let movingRig=false;if(!mapOpen){const forward=+!!(keys.w||keys.arrowup)-+!!(keys.s||keys.arrowdown),right=+!!(keys.d||keys.arrowright)-+!!(keys.a||keys.arrowleft);if(forward||right){const x=-Math.sin(yaw)*forward+Math.cos(yaw)*right,z=-Math.cos(yaw)*forward-Math.sin(yaw)*right;const m=Math.hypot(x,z),speed=keys.shift?8:4.5;movingRig=true;player.position.x+=x/m*dt*speed;player.position.z+=z/m*dt*speed;const radius=Math.hypot(player.position.x,player.position.z);if(radius>990){player.position.x*=990/radius;player.position.z*=990/radius}player.rotation.y=Math.atan2(x,z)} }
+let t=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-t)/1000,.055);t=now;let movingRig=false;if(!mapOpen){const forward=+!!(keys.w||keys.arrowup)-+!!(keys.s||keys.arrowdown),right=+!!(keys.d||keys.arrowright)-+!!(keys.a||keys.arrowleft);if(forward||right){const x=-Math.sin(yaw)*forward+Math.cos(yaw)*right,z=-Math.cos(yaw)*forward-Math.sin(yaw)*right;const m=Math.hypot(x,z),speed=keys.shift?8:4.5;movingRig=true;const dx=x/m*dt*speed,dz=z/m*dt*speed;if(!blockedAt(player.position.x+dx,-player.position.z))player.position.x+=dx;if(!blockedAt(player.position.x,-player.position.z-dz))player.position.z+=dz;const radius=Math.hypot(player.position.x,player.position.z);if(radius>990){player.position.x*=990/radius;player.position.z*=990/radius}player.rotation.y=Math.atan2(x,z)} }
  if(riggedPlayer){
   const swing=movingRig?Math.sin(now*.0078)*.42:Math.sin(now*.0012)*.015;
   if(rigBones.leftleg)rigBones.leftleg.rotation.x=swing;
@@ -117,6 +141,6 @@ let t=performance.now();function frame(now){requestAnimationFrame(frame);const d
  }
  const target=player.position.clone().add(new THREE.Vector3(0,1.6,0)),pos=target.clone().add(new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*follow,Math.sin(pitch)*follow,Math.cos(yaw)*Math.cos(pitch)*follow));camera.position.lerp(pos,.13);camera.lookAt(target);renderer.render(scene,camera);$('pos').textContent=`E ${player.position.x.toFixed(0)} m · N ${(-player.position.z).toFixed(0)} m`;if(now%130<30)drawMaps();}
 const available=missions.filter(m=>m.found);selected=available.length?missions.indexOf(available[0]):null;missionList();updateObjective();$('status').textContent=`${zone.length} OSM features · ${counts.building} 3D building blocks · ${counts.barrier} boundary features · ${missions.filter(m=>m.found).length}/${missions.length} named mission landmarks`;
-window.__artsGeo={ready:true,rigged:riggedPlayer,origin,features:zone.length,counts,missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
+window.__artsGeo={ready:true,rigged:riggedPlayer,origin,features:zone.length,counts,collisions:{buildings:solidBuildings.length,barrierSegments:solidEdges.length},missions:missions.map(m=>({name:m.name,found:m.found,position:m.position,centre:m.centre,source:m.source,approachWay:m.approachWay})),get position(){return {x:player.position.x,north:-player.position.z}},mapOpen:()=>mapOpen,openMap:()=>setMap(true),visit:(i)=>{const m=missions[i];if(m?.position){player.position.set(m.position[0],.05,-m.position[1]);selected=i;updateObjective();drawMaps()}}};
 requestAnimationFrame(frame);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
