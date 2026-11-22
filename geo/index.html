@@ -258,7 +258,7 @@ function nearestPointOnSegment2D(p,a,b){
  const f=len2>.0001?THREE.MathUtils.clamp(((p[0]-a[0])*dx+(p[1]-a[1])*dy)/len2,0,1):0;
  return [a[0]+dx*f,a[1]+dy*f];
 }
-function createEastQuadEntry(){
+function createEastQuadEntry(north=true){
  const m=missions.find(x=>x.name==='East Quad'&&x.found);
  const feature=zone.find(f=>f.id===m?.source&&f.kind==='building');
  if(!m||!feature)return null;
@@ -274,7 +274,22 @@ function createEastQuadEntry(){
   // Use the approach-facing face with adequate length for three bays.
   segments.push({a,b,mid,length,distance,wallDistance});
  }
- segments.sort((a,b)=>a.distance-b.distance||a.wallDistance-b.wallDistance);
+ // The photographed main entrance is on the *north* frontage. Its face
+ // must be selected by geographic orientation, never by nearest walkway.
+ // The earlier path-facing doorway is retained as a second, provisional door.
+ segments.sort((a,b)=>{
+  if(north){
+   const normalScore=seg=>{
+    const vx=seg.b[0]-seg.a[0],vn=seg.b[1]-seg.a[1],len=Math.hypot(vx,vn);
+    const n1=vx/len,n2=-vx/len;
+    const chosen=(n1*(seg.mid[1]-centre[1])>=n2*(seg.mid[1]-centre[1]))?n1:n2;
+    return chosen;
+   };
+   const diff=normalScore(b)-normalScore(a);
+   if(Math.abs(diff)>.015)return diff;
+  }
+  return a.distance-b.distance||a.wallDistance-b.wallDistance;
+ });
  if(!segments.length)return null;
  const seg=segments[0],cx=seg.mid[0],cn=seg.mid[1];
  let outX=cn-centre[1],outN=centre[0]-cx;
@@ -303,6 +318,7 @@ function createEastQuadEntry(){
  // between bronze and brick façade surfaces. The door bank is at its base.
  // Reference: https://www.ste.ie/east-quad-grangegorman-ahr-architects
  // Exact glazing dimensions and bay counts are *approximate*.
+ if(north){
  const glassDark=new THREE.MeshPhysicalMaterial({color:0x354f59,roughness:.22,metalness:.14,transparent:true,opacity:.77,side:THREE.DoubleSide,depthWrite:false});
  const glazingHeight=12.4,glazingWidth=8.8;
  // On the mapped building wall, a dark glazed entrance bay with bronze
@@ -314,6 +330,7 @@ function createEastQuadEntry(){
   add(new THREE.BoxGeometry(glazingWidth,.075,.13),darkMetal,0,y,.06);
  // A recessed bronze side panel echoes the real material palette.
  add(new THREE.BoxGeometry(.9,7.2,.17),bronze,-4.85,3.6,.04);
+ }
  // Ground-floor door assembly. A smaller central revolving cylinder, backed
  // by dark glazed side doors, is visible in the entrance photograph.
  add(new THREE.BoxGeometry(7.15,.13,.17),bronze,0,3.35,.22);
@@ -340,6 +357,7 @@ function createEastQuadEntry(){
  // Plaza paving and dark threshold channel visible in the source photograph.
  add(new THREE.BoxGeometry(8.6,.08,2.65),threshold,0,.014,1.25);
  add(new THREE.BoxGeometry(8.6,.035,.11),darkMetal,0,.063,2.35);
+ if(north){
  // East Quad's real identity sign is the recognition cue: individual warm
  // gold raised T / DUBLIN lettering against *dark variegated brick*, with
  // bilingual small lettering and AN CHEARNÓG THOIR — EAST QUAD below.
@@ -407,6 +425,7 @@ function createEastQuadEntry(){
  const shadow=new THREE.Mesh(new THREE.PlaneGeometry(5.60,5.1),
   new THREE.MeshBasicMaterial({map:lettersTexture,color:0x443a32,transparent:true,opacity:.25,depthWrite:false,side:THREE.DoubleSide,alphaTest:.04}));
  shadow.position.set(7.27,4.87,.116);group.add(shadow);
+ }
  scene.add(group);
  // Path-side interaction node: prefer pedestrian position outside the entry.
  let target=null;
@@ -419,15 +438,16 @@ function createEastQuadEntry(){
   if(target)break;
  }
  // Retain previous mapped approach if there is no clear new point.
- if(target)m.position=target;
- const info={name:'East Quad main entrance (prototype)',face:[seg.a,seg.b],width:6.65,
+ if(target&&north)m.position=target;
+ const info={name:north?'East Quad northern main entrance (photo-referenced)':'East Quad secondary entry (provisional)',face:[seg.a,seg.b],width:6.65,
   mainWallMidpoint:[cx,cn],position:[group.position.x,-group.position.z],
-  interaction:m.position,provisional:true,doorComposition:'photographic curtain-wall atrium, glazed side doors and central revolving entrance',sourcePhoto:'https://www.ste.ie/east-quad-grangegorman-ahr-architects',
+  interaction:north?m.position:(target||m.position),northFacing:north,provisional:true,doorComposition:north?'northern glazed atrium, side doors and revolving entrance':'secondary glazed door / revolving door / glazed door',sourcePhoto:north?'https://www.ste.ie/east-quad-grangegorman-ahr-architects':null,
   wallLength:seg.length,distanceFromOriginalApproach:seg.distance};
  entryPrototypes.push(info);
  return info;
 }
-const eastQuadEntrance=createEastQuadEntry();
+const eastQuadEntrance=createEastQuadEntry(true);
+const eastQuadSecondaryEntrance=createEastQuadEntry(false);
 
 // East Quad landscaped seating island, after the photographic reference:
 // https://excellentstreetimages.com/blog-view/?permalink=east-quad-complex-university-campus-grangegorman
