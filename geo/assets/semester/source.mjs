@@ -32,7 +32,7 @@ const CHAPTERS=[
  {id:6,period:'Weeks 11–12',name:'Looking forward',scene:'ch6a',minutes:'4–5 min',why:'Progression, transfer challenge and graduation reflection'}
 ];
 
-function degreeMarkup(){const major=Number(state.flags.degreeMajor||80),minor=state.flags.degreeMinor?40:0,remaining=240-major-80-minor;return `<div class="degree-mini"><div class="degree-segments"><span style="width:${major/240*100}%;background:#567EAC">Major ${major}</span><span style="width:${30/240*100}%;background:#8365A5">Spine</span><span style="width:${50/240*100}%;background:#C98B44">SARs</span>${minor?`<span style="width:${minor/240*100}%;background:#388878">Minor</span>`:''}${remaining?`<span style="width:${remaining/240*100}%;background:#697382">Other ${remaining}</span>`:''}</div><div class="degree-key">240 ECTS across four years · 60 ECTS per year · The visual is arithmetic only, not an approved pathway.</div></div>`}
+function degreeMarkup(state){const major=Number(state.flags.degreeMajor||80),minor=state.flags.degreeMinor?40:0,remaining=240-major-80-minor;return `<div class="degree-mini"><div class="degree-segments"><span style="width:${major/240*100}%;background:#567EAC">Major ${major}</span><span style="width:${30/240*100}%;background:#8365A5">Spine</span><span style="width:${50/240*100}%;background:#C98B44">SARs</span>${minor?`<span style="width:${minor/240*100}%;background:#388878">Minor</span>`:''}${remaining?`<span style="width:${remaining/240*100}%;background:#697382">Other ${remaining}</span>`:''}</div><div class="degree-key">240 ECTS across four years · 60 ECTS per year · The visual is arithmetic only, not an approved pathway.</div></div>`}
 
 // Practice-only allocation model: this is not TU Dublin allocation, registration or Form A data.
 const MODULES={

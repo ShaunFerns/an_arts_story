@@ -1646,7 +1646,8 @@ addEventListener('keydown',e=>{
   return;
  }
  if(typing)return;
- if(movementCodes.has(code)&&gameplayActive()&&(e.target===$('stage')||e.target===document.body||e.target===renderer.domElement)){
+ const spaceActivates=code==='Space'&&e.target instanceof Element&&e.target.closest('button,[role="button"]');
+ if(movementCodes.has(code)&&gameplayActive()&&!spaceActivates){
   e.preventDefault();keys[code]=true;
  }
  if(k==='e'&&!e.repeat&&gameplayActive()){e.preventDefault();talkToNpc();}

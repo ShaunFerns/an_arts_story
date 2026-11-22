@@ -57,6 +57,8 @@ jobs:
           touch dist/.nojekyll
       - name: Verify wall thickness and navigation physics
         run: node tests/collision.test.mjs
+      - name: Verify the complete semester graph
+        run: node tests/semester.test.mjs
       - name: Install Chromium for startup test
         run: npx playwright install --with-deps chromium
       - name: Verify 3D in browser
@@ -64,6 +66,7 @@ jobs:
           python3 -m http.server 8765 --directory dist > /tmp/arts-test-server.log 2>&1 &
           sleep 2
           node tests/geo-smoke.mjs
+          node tests/semester-browser.mjs
       - name: Attach location-review screenshots
         if: always()
         uses: actions/upload-artifact@v4

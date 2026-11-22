@@ -6,11 +6,22 @@ An independently developed educational narrative-game prototype exploring a new 
 
 **[OPEN THE CURRENT GAME — GEOGRAPHIC BUILD](https://shaunferns.github.io/an_arts_story/geo/)**
 
-The active game starts at **Broadstone–University Luas**. Walk to East Quad for the BA Arts welcome, speak with your adviser, and record your indicative Semester 1 preferences. Explore the five scavenger-hunt stops in any order, return for the debrief, and play the Friday timetable scene and Cian’s and Saoirse’s advising cases. Your browser saves your progress, choices and field notes.
+Start at **Broadstone–University Luas** and walk Grangegorman to play the seven chapters of the simulated BA Arts semester. Follow the destination in **Phone → What’s next**. **Phone → Campus** includes the East Quad orientation walk and optional conversations. Progress is saved in the browser.
 
-Use **WASD** to walk, **Space + WASD** to look, **Shift** to run, **E** to interact, **M** for the phone and map, and **V** to switch perspective. Mouse dragging also controls the camera. For façade review, [start directly outside East Quad](https://shaunferns.github.io/an_arts_story/geo/?start=east-quad).
+| Control | Action |
+| --- | --- |
+| **W / S**, or up / down arrows | Walk forwards / backwards |
+| **A / D**, or left / right arrows | Step left / right |
+| **Space + WASD**, or drag the view | Look around |
+| **Shift** | Run |
+| **E** | Talk or enter when a prompt is shown |
+| **M** | Open or close the student phone |
+| **Esc** | Close the active panel or skip the arrival |
+| **V** | Switch between first and third person |
 
-The [project homepage](https://shaunferns.github.io/an_arts_story/) points to the geographic game. The [earlier narrative prototype](https://shaunferns.github.io/an_arts_story/story/) remains available as the source for the dialogue and branches.
+In the phone map, use **+ / −** or the scroll wheel to zoom. Select a building from the list or directly on the map. The gold line shows the bearing to the selected destination.
+
+The [earlier 3D build](https://shaunferns.github.io/an_arts_story/story/) remains available. For façade review, [start outside East Quad](https://shaunferns.github.io/an_arts_story/geo/?start=east-quad).
 
 ## Purpose
 
@@ -22,7 +33,7 @@ The prototype explores how a story-based campus visit might help new students na
 - **Perspective:** first-person by default. This avoids assigning the player a particular gender, clothing or appearance and helps foreground their own experience. Third-person remains a testable option, not the default.
 - **Characters:** current NPCs have simple, coloured prototype clothing overlays on the existing Quaternius rig. These overlays are not finished skinned garments and need proportion, animation and appearance review. Use properly rigged outfits before a student-facing release.
 - **Environment:** geographic plausibility, walkable routes, site boundaries, campus recognition, access and performance come before detailed façades. East Quad is documented as five floors and now uses a **provisional 24.5 m** game height; Central Quad uses **26 m** and Academic Hub **24 m** where their mapped names identify them. These are visual-scale estimates above local ground, not as-built measurements. Proposed West Quad and Broadstone Gate developments are not added as existing buildings. Confirm all heights, footprints and ground levels from as-built drawings before treating the scene as geographically accurate.
-- **Integration:** the active game uses the archived induction and advising conversations at exterior campus points. Dialogue and progression are kept in separate modules under `geo/assets/induction/`.
+- **Integration:** the active game uses the recovered v1.3 chapter and encounter graph. The [narrative audit](docs/narrative-audit.md) and [world locations](docs/world-locations.md) record how its scenes connect to the campus and phone.
 - **Validation:** review screenshots and routes with people who know the campus, then test with students; automated browser checks alone do not establish geographic or educational quality.
 
 ## Repository layout
@@ -31,7 +42,7 @@ The prototype explores how a story-based campus visit might help new students na
 | --- | --- |
 | `index.html` | Stable landing page pointing to the active game |
 | `geo/` | Current first-person game, mission map, OSM source snapshot and character asset |
-| `story/` | Earlier narrative build, preserved as a reference |
+| `story/` | Earlier 3D story build, preserved as a reference |
 | `docs/` | Narrative, geographic and visual planning |
 | `scripts/` | Geographic snapshot generation |
 | `tests/` | Automated geographic and collision checks |

@@ -13,7 +13,7 @@ const sections = [
   section('const places=[', 'let state='),
   section('const html=s=>', 'const addUnique='),
   section('function storyMarkup(', 'function canBegin('),
-  section('function degreeMarkup(', 'function allocated('),
+  section('function degreeMarkup(', 'function allocated(').replace('function degreeMarkup()', 'function degreeMarkup(state)'),
   section('const N={', 'function renderIntro(')
     .replace('Sam’s idea','Cian’s idea')
     .replace("Sam's plan","Cian's plan")

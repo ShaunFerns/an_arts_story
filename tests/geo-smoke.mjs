@@ -81,19 +81,22 @@ if(arrival.dressed<3)throw Error('Expected multiple NPCs with clothing overlays'
 const beforeKeyboard=await page.evaluate(()=>({yaw:window.__artsGeo.lookYaw,pitch:window.__artsGeo.lookPitch,position:window.__artsGeo.position}));
 await page.keyboard.down('Space');
 await page.keyboard.down('w');
-await page.waitForTimeout(430);
+await page.waitForFunction(before=>window.__artsGeo.lookPitch<before-.045,beforeKeyboard.pitch);
 const afterKeyboardLook=await page.evaluate(()=>({yaw:window.__artsGeo.lookYaw,pitch:window.__artsGeo.lookPitch,position:window.__artsGeo.position,mode:window.__artsGeo.controlMode}));
 await page.keyboard.up('w');
 await page.keyboard.up('Space');
 console.log('Keyboard look input',JSON.stringify({beforeKeyboard,afterKeyboardLook}));
 if(afterKeyboardLook.mode!=='look'||afterKeyboardLook.pitch>=beforeKeyboard.pitch-.045)throw Error('Space+W should tilt camera up without mouse');
 if(Math.hypot(afterKeyboardLook.position.x-beforeKeyboard.position.x,afterKeyboardLook.position.north-beforeKeyboard.position.north)>.1)throw Error('Space+W must not walk');
-await page.keyboard.down('Space');await page.keyboard.down('d');await page.waitForTimeout(390);
+await page.keyboard.down('Space');await page.keyboard.down('d');
+await page.waitForFunction(before=>Math.abs(window.__artsGeo.lookYaw-before)>.07,afterKeyboardLook.yaw);
 const afterYaw=await page.evaluate(()=>({yaw:window.__artsGeo.lookYaw,position:window.__artsGeo.position}));
 await page.keyboard.up('d');await page.keyboard.up('Space');
 console.log('Keyboard turn input',JSON.stringify({beforeYaw:afterKeyboardLook.yaw,afterYaw:afterYaw.yaw}));
 if(Math.abs(afterYaw.yaw-afterKeyboardLook.yaw)<.07)throw Error('Space+D should turn right');
-await page.keyboard.down('w');await page.waitForTimeout(350);await page.keyboard.up('w');
+await page.keyboard.down('w');
+await page.waitForFunction(before=>Math.hypot(window.__artsGeo.position.x-before.x,window.__artsGeo.position.north-before.north)>.04,afterYaw.position);
+await page.keyboard.up('w');
 const afterWalk=await page.evaluate(()=>window.__artsGeo.position);
 if(Math.hypot(afterWalk.x-afterYaw.position.x,afterWalk.north-afterYaw.position.north)<.01)throw Error('W without Space should walk');
 const playerFacing=await page.evaluate(()=>window.__artsGeo.facingYaw);
@@ -186,6 +189,10 @@ for(const id of order){
  const observe=page.getByRole('button',{name:'Record an observation',exact:true});
  if(await observe.isVisible())await observe.click();
  if(await page.locator('#npcTitle').innerText()!=='What do you notice?')throw Error('Hunt stop not playable: '+id);
+ if(id==='library'){
+  await choose('Take another look first');
+  await choose('Choose an observation');
+ }
  await page.locator('#npcChoices button').first().click();
  await choose('Continue exploring');
  if(id==='laurence'){
@@ -201,6 +208,8 @@ if(await page.locator('#npcTitle').innerText()!=='Friday before teaching begins'
 await choose('Open my timetable');
 if(!await page.getByText('Semester 1 · illustrative timetable').isVisible())throw Error('Missing illustrative timetable');
 await closePhone();
+if(await page.locator('#npcTitle').innerText()!=='The day is underway')throw Error('Missing Bríd’s restored post-induction scene');
+await choose('Find Cian');
 
 await talk('cian','The missing module');
 await choose('Look at Cian’s preference and timetable before deciding');
