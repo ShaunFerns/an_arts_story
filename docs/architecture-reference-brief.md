@@ -36,3 +36,20 @@ Build a recognisable, navigable **TU Dublin Grangegorman** using verified buildi
 - GitHub Actions real-browser startup test passes; an additional manual visual walkthrough is required before sharing as an environment-focused review build.
 
 **Status:** reference research and design brief; this document does not claim that the game has been remodelled yet.
+
+## Corrected Broadstone–University arrival (November 2026)
+
+The initial game placed the Luas and East Quad as though they shared an open, level plaza. **That is geographically misleading.** On-site reviewer feedback describes disembarking, ascending a gentle incline, passing beneath a road and then entering the wider campus.
+
+- TU Dublin's sustainability/transport guide states that East Quad is between the Broadstone and Grangegorman stops and that visitors commonly alight at **Broadstone and walk up the ramp**: https://www.tudublin.ie/media/website/explore/about-the-university/sustainability/documents/Sustainability-events---EQ-Travel-and-Facilities.pdf
+- Photographic/location context describes the **road bridge over the Broadstone tram tracks** for bus depot access; the track runs below road level: https://excellentstreetimages.com/PublicTransportWordPress/luas-tram-stop-at-broadstone-and-the-entrance-to-grangegorman-university-campus/
+- East Quad reference photography shows the Luas corridor and pedestrian frontage: https://www.ste.ie/east-quad-grangegorman-ahr-architects
+
+**Spatial sequence to model:** lower-level tram and platforms → pedestrian climb → pass beneath access road structure → open approach with East Quad ahead. Verify precise ramp alignment, abutment placement, surface materials and sightlines in a future site walk; the current procedural interpretation is not survey-accurate.
+
+**Review criterion:** a student who has arrived by Luas should recognise the passage from the stop to East Quad without relying on a map label or narrated instruction.
+
+## Character asset direction
+
+The procedural v0.9 figures are placeholders, even after proportion, face, wardrobe and walk-cycle improvements. Do not describe them as realistic commercial-grade avatars. The target for the next significant visual release is licensed **rigged glTF/GLB humans with compatible skeletons and animations**: varied student-age clothing, natural walking/standing/seated motion, facial detail, plausible shadows and good browser performance. Record the model creators, redistribution rights, licence obligations and source URLs. Do not import commercial game assets or copyrighted character models without permission.
+
