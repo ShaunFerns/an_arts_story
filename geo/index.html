@@ -380,6 +380,8 @@ function createEastQuadEntry(north=true){
  if(north){
  // Keep the verified sign lettering as one original surface texture;
  // it is mounted later on the existing adjacent footprint wall.
+ // Wording and letter hierarchy checked against TU Dublin's photograph:
+ // https://pxl01-tudublinie.terminalfour.net/prod01/tudublin-cdn-pxl/media/website/research/images/East-Quad.jpeg
  const lettersCanvas=document.createElement('canvas');
  lettersCanvas.width=1200;lettersCanvas.height=1100;
  const lc=lettersCanvas.getContext('2d');
@@ -395,7 +397,7 @@ function createEastQuadEntry(north=true){
  lc.fillText('TECHNOLOGICAL',570,684);
  lc.fillText('UNIVERSITY DUBLIN',570,723);
  lc.fillStyle=labelColor;lc.font='bold 32px Arial,Helvetica,sans-serif';
- lc.fillText('AN CHEARNÓG THOIR – EAST QUAD',122,855);
+ lc.fillText('AN CHEARNÓG THOIR - EAST QUAD',122,855);
  const lettersTexture=new THREE.CanvasTexture(lettersCanvas);
  lettersTexture.colorSpace=THREE.SRGBColorSpace;
  eastQuadGoldTexture=lettersTexture;
@@ -419,7 +421,7 @@ function createEastQuadEntry(north=true){
   interaction:north?m.position:(target||m.position),northFacing:north,provisional:true,doorComposition:north?'northern glazed atrium, side doors and revolving entrance':'secondary glazed door / revolving door / glazed door',sourcePhoto:north?'https://www.ste.ie/east-quad-grangegorman-ahr-architects':null,
   wallLength:seg.length,distanceFromOriginalApproach:seg.distance,
   sign:north?{side:'right when facing main entrance',mountedOnBrick:true,
-    location:'existing adjacent long north brick wall',verifiedTextFromPhoto:false}:null};
+    location:'existing adjacent long north brick wall',verifiedTextFromPhoto:true}:null};
  entryPrototypes.push(info);
  return info;
 }
@@ -516,7 +518,7 @@ function buildEastQuadFacade(){
     const world=wall.localToWorld(gpos.clone());
     eastQuadEntrance.sign={side:'right when facing main entrance',
       mountedOnBrick:true,existingFootprintWall:true,
-      exactTextVerified:false,localX:signLocalX,
+      exactTextVerified:true,localX:signLocalX,
       projectedCentre:[world.x,world.y,-world.z]};
    }
   }
@@ -791,7 +793,7 @@ function buildMissionBuildingDoors(){
    add(new THREE.BoxGeometry(.045,.36,.055),frame,sx*.15,1.08,.225);
   }
   add(new THREE.BoxGeometry(width+.85,.08,1.12),threshold,0,.027,.55);
-  g.name='MissionDoor-'+mission.name.replace(/\\s+/g,'-');
+  g.name='MissionDoor-'+mission.name.replace(/\s+/g,'-');
   scene.add(g);
   // Approach waypoint is now at the actual exterior doorway, not the centre
   // of the georeferenced building volume.
