@@ -126,7 +126,6 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
     const door=entrances.find(e=>e.source===feature.id);
     const historic=palette==='heritage',chapel=feature.id==='way/310375420';
     const rathdown=feature.id==='way/310375422',glassmanogue=feature.id==='way/516821746';
-    const clocktower=feature.id==='way/516824969';
     const broadstone=feature.id==='way/281880562';
     const roof=addBuildingRoof(scene,feature,design,base,shellMaterial(palette,feature,height));
     const levels=design.levels||Math.max(1,Math.min(5,Math.floor(height/3.1)));
@@ -164,24 +163,6 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
        ring.position.set(0,1.39,.038);gable.add(ring);
        gable.name='Rathdown House · south entrance gable and oculus';
        scene.add(gable);
-      }
-      const clockFront=clocktower&&a[0]===87&&a[1]===-3.4&&b[0]===79;
-      if(clockFront){
-       const pediment=new THREE.Group();
-       const [x,n]=point(.5,.47);
-       pediment.position.set(x,base+design.eaves,-n);
-       pediment.rotation.y=yaw;
-       const shape=new THREE.Shape();
-       shape.moveTo(-9,-.18);shape.lineTo(9,-.18);shape.lineTo(0,2.35);shape.closePath();
-       const stone=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:.68,bevelEnabled:false}),materials.clockStone);
-       stone.position.z=-.39;pediment.add(stone);
-       for(const side of [-1,1]){
-        const trim=new THREE.Mesh(new THREE.BoxGeometry(9.40,.18,.67),materials.slate);
-        trim.position.set(-side*4.5,1.17,.16);trim.rotation.z=side*Math.atan2(2.35,9);pediment.add(trim);
-       }
-       pediment.name='Clocktower · street-facing pediment';
-       scene.add(pediment);
-       part('historic',.5,.29,design.eaves-.28,18.4,.34,.56);
       }
       const count=Math.max(1,Math.floor(len/(entryFace?2.7:palette==='central'?3.65:palette==='library'?3.1:3.35)));
       const bay=len/count;

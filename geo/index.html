@@ -49,6 +49,7 @@ import {locationNames} from './assets/semester/locations.mjs';
 import {phoneLabels, presentScene, phoneEntries, resourceMarkup} from './assets/semester/presentation.mjs';
 import {addCampusFacades, addUnderpass, bridgeSupports, buildingDesign, buildingPalette, shellMaterial, outsideNormal, winding, openLibraryApproach} from './assets/world/campus.mjs';
 import {addEntrancePaving, groundFinish} from './assets/world/surfaces.mjs';
+import {addClockTower,clockTowerId} from './assets/world/clocktower.mjs';
 import {addRathdownApproach,rathdownBarriers,rathdownRise} from './assets/world/rathdown.mjs';
 import {addLuasForecourt,createLuas} from './assets/world/arrival.mjs';
 const $=id=>document.getElementById(id),data=await fetch('./data.json').then(r=>{if(!r.ok)throw Error('No OSM snapshot (HTTP '+r.status+')');return r.json()}).catch(e=>{ $('error').hidden=false;$('errorText').textContent=e.message;throw e});
@@ -209,6 +210,7 @@ function districtStone(point){
  return closest;
 }
 const arrivalsConcrete=mat(0xafa99e,.96);
+const clockTowerBoundaryWalls=new Set(['way/549620691','way/1502766423']);
 const counts={building:0,road:0,barrier:0,land:0};
 for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MAX+50)continue;const t=f.tags||{};
  if(f.kind==='land'&&f.coords.length>3&&dist<470){const m=polygonMesh(f.coords,.035,lawn,'land');if(m)counts.land++;}
@@ -235,6 +237,24 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
  if(f.kind==='barrier'&&dist<540){
   const k=t.barrier||'wall', {height,width}=barrierDimensions(t);
   const stopWall=['way/530721241','way/998785438'].includes(f.id);
+  if(f.id==='way/1331424713')continue; // Same line as the clock-tower garden masonry.
+  if(clockTowerBoundaryWalls.has(f.id)){
+   for(let i=1;i<f.coords.length;i++){
+    const a=f.coords[i-1],b=f.coords[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    lineMesh(scene,a,b,width,.43,districtStone(c));
+    const bars=Math.ceil(len/.19);
+    for(let j=0;j<=bars;j++){
+     const t=j/bars;
+     const x=a[0]+(b[0]-a[0])*t,n=a[1]+(b[1]-a[1])*t;
+     const y=groundHeight(x,n)+.87;
+     const matrix=new THREE.Matrix4().makeScale(.035,1.10,.035);
+     matrix.setPosition(x,y,-n);
+     collect(terrainLines,tile(x,n)+':'+railMat.id,()=>({material:railMat,values:[]}),matrix);
+    }
+   }
+   counts.barrier++;
+   continue;
+  }
   const material=stopWall?arrivalsConcrete:k==='hedge'?hedgeMat:k==='fence'?railMat:k==='wall'?districtStone(c):oldStone;
   for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],width,stopWall?4.3:height,material);
   counts.barrier++;
@@ -244,6 +264,7 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
  if(source.startsWith('visual_estimate'))visualHeightAudit.push({id:f.id,name:f.name,height,source});
  const palette=buildingPalette(f),design=buildingDesign(f,palette,height);
  if(f.id==='way/281880562')polygonMesh(f.coords,4.17,arrivalsConcrete);
+ if(f.id===clockTowerId){counts.building++;continue;}
  const mesh=polygonMesh(f.coords,design.eaves,f.id==='way/810540713'?mat(0x77736d):shellMaterial(palette,f,height), 'building',f.id==='way/281880562'?4.15:0);
  if(mesh&&f.id!=='way/810540713'&&(dist<186||palette!=='context')&&dist<430)
   facadeBuildings.push({feature:f,height,base:mesh.base,palette,design});
@@ -1102,6 +1123,9 @@ addEntrancePaving(scene,missionDoorRegistry,groundHeight,(x,n,door)=>{
 const rathdownApproach=addRathdownApproach(scene,groundHeight,districtStone([12,-26]),(x,n)=>
  collision.query(x,n,0)?.kind==='building'||((x-.2)/5.2)**2+((n+31.7)/4.0)**2<1);
 const campusFacadeAudit=addCampusFacades(scene,facadeBuildings,groundHeight,missionDoorRegistry);
+const clockTower=zone.find(feature=>feature.id===clockTowerId);
+if(clockTower)campusFacadeAudit.push(addClockTower(scene,clockTower,groundHeight,
+ shellMaterial('heritage',clockTower,11)));
 const underpass=addUnderpass(scene,groundHeight);
 $('mapFrame').setAttribute('aria-describedby','mapNote');
 
