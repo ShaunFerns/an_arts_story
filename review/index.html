@@ -99,6 +99,6 @@ if(player.userData.bones)animateRig(player,time,!!player.userData.walk);for(let 
 for(let i=0;i<stops.length;i++){const s=stops[i];if(Math.hypot(player.position.x-s.x,player.position.z-s.z)<11&&activeStop!==i)setStop(i)}
 renderer.render(scene,camera)}const clock=new THREE.Clock();tick();
 $('status').textContent=rigAvailable?'Playable scene ready · rigged GLB characters loaded':'Playable scene ready · character asset fallback';
-window.__artsRouteReview={ready:true,rigged:rigAvailable,stops:stops.map(v=>v.name),get player(){return {x:player.position.x,y:player.position.y,z:player.position.z}},visit:i=>setStop(i,true),start};
+window.__artsRouteReview={ready:true,rigged:rigAvailable,diagnostics:()=>({characterHeight:playerModel?new THREE.Box3().setFromObject(playerModel).getSize(new THREE.Vector3()).y:null,characterBottom:playerModel?new THREE.Box3().setFromObject(playerModel).min.y:null,playerScale:playerModel?.scale.x,doorHeight:{east:2.5,lower:5,rathdown:4.5},cameraDistance:distance,lowerBuildingHeight:12,rathdownBuildingHeight:14}),stops:stops.map(v=>v.name),get player(){return {x:player.position.x,y:player.position.y,z:player.position.z}},visit:i=>setStop(i,true),start};
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)})
 </script></body></html>
