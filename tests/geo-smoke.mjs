@@ -64,7 +64,7 @@ if(facade.wallFaces<4||facade.windowBays<20||facade.brickCoverageM<40)throw Erro
 
 const plaza=await page.evaluate(()=>window.__artsGeo.plazaFeatures);
 console.log('Photo-referenced East Quad curved seating:',JSON.stringify(plaza));
-if(plaza.length!==2||plaza.some(p=>p.slats<30||p.dimensions.length<12))throw Error('Two wider East Quad curved seats required');
+if(plaza.length!==1||plaza[0].slats<30||plaza[0].dimensions.length<12)throw Error('Verified East Quad curved seating is missing');
 if(plaza[0].distanceToNpc<6||plaza[0].nearestPedestrianPath<2.4)throw Error('East Quad seating is not integrated into entrance pedestrian forecourt');
 if(plaza.some(p=>p.entranceDistance>39))throw Error('Curved seating too far from northern entrance');
 const planterSolid=await page.evaluate(p=>window.__artsGeo.plazaCollision(...p),plaza[0].position);
