@@ -185,6 +185,6 @@ export function addBuildingRoof(scene,feature,design,base,wallMaterial) {
  }
  const name=feature.name||'Academic Hub & Library';
  meshFromTriangles(scene,cap,design.roof==='terrace'?membrane:slate,'Roof · '+name);
- meshFromTriangles(scene,walls,wallMaterial,'Roof edges · '+name);
+ meshFromTriangles(scene,walls,design.roof==='hip'?slate:wallMaterial,'Roof edges · '+name);
  return {profile:design.roof,eaves:design.eaves,ridge:ridgeHeight,cupola:!!design.cupola};
 }

@@ -140,9 +140,7 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
       };
       const count=Math.max(1,Math.floor(len/(palette==='central'?3.65:palette==='library'?3.1:3.35)));
       const bay=len/count;
-      const high=roofLevel(design,point(.5,0));
       const libraryFront=palette==='library'&&on<-.48&&len>14;
-      const centralFront=palette==='central'&&len>14;
       for(let j=0;j<count;j++) {
         const t=(j+.5)/count;
         const [x,n]=point(t,0);
@@ -200,14 +198,12 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
           }
         }
       }
-      if(centralFront)part('precast',.5,.26,high-.18,len,.32,.5);
       if(palette==='library'){
         part('polishedStone',.5,.16,.72,len,1.40,.32);
         if(libraryFront){
           part('harling',.5,.34,5.0,len,.63,.69);
-          part('polishedStone',.5,.35,8.5,len,.25,.70);
-          part('harling',.5,.21,12.55,len,.29,.40);
-          part('harling',.5,.21,16.25,len,.26,.40);
+          part('polishedStone',.5,.35,9.66,len,.25,.70);
+          part('harling',.5,.21,14.55,len,.29,.40);
         }
       }
       if(historic){
