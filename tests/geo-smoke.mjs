@@ -9,6 +9,9 @@ const g=await page.evaluate(()=>window.__artsGeo&&({rigged:window.__artsGeo.rigg
 console.log('Sourced geographic world:',JSON.stringify(g));
 if(!g||g.anchor.id!=='way/310375422')throw Error('Rathdown must use verified OSM anchor');
 if(!g.rigged)throw Error('Geo player must use actual rigged GLB, not capsule fallback');
+const animationStates=await page.evaluate(()=>window.__artsGeo.animationStates);
+console.log('Rigged player animation states:',JSON.stringify(animationStates));
+if(!['idle','walk','run'].every(x=>animationStates.includes(x)))throw Error('Rigged player missing idle/walk/run AnimationMixer clips');
 const luas=g.missions.find(m=>m.name==='Broadstone–University');
 if(!luas?.found||!luas.source?.startsWith('node/'))throw Error('Broadstone must be pinned to a mapped tram stop node, not a bus garage');
 if(Math.hypot(luas.position[0]-382,luas.position[1]+100)>45)throw Error('Broadstone waypoint appears far from its OSM Luas stop');
