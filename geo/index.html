@@ -120,7 +120,18 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
  if(f.kind==='building'&&dist<510&&f.coords.length>3){
  const {height,source}=visualBuildingHeight(f);
  if(source.startsWith('visual_estimate'))visualHeightAudit.push({id:f.id,name:f.name,height,source});
- const mesh=polygonMesh(f.coords,height,(f.id==='way/810540713'?mat(0x77736d):/Quad/i.test(f.name)?newBrick:grey));if(mesh)counts.building++;
+ const mesh=polygonMesh(f.coords,height,(f.id==='way/810540713'?mat(0x77736d):/Quad/i.test(f.name)?newBrick:grey));
+ if(mesh){
+  if(f.id==='way/810540713'){
+   // Keep the OSM roof/cap but avoid double-rendered opaque wall planes.
+   // The photo-informed exterior below supplies the visible walls instead.
+   // Collision continues to use the untouched mapped OSM polygon.
+   mesh.material=[roofMat,new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false})];
+   mesh.castShadow=false;
+   mesh.raycast=()=>{};
+  }
+  counts.building++;
+ }
 }
 }
 // Core field remains an entirely local metre-based plane. The wider 1km ring is map context.
@@ -517,15 +528,25 @@ function buildEastQuadFacade(){
   if(ox*(cx-center[0])+on*(cn-center[1])<0){ox=-ox;on=-on}
   const ang=Math.atan2(ox,-on),base=groundHeight(cx,cn)+.02;
   const main=matchSegment(a,b,eastQuadEntrance),secondary=matchSegment(a,b,eastQuadSecondaryEntrance);
+  const corner=eastQuadEntrance.face[0];
+  const rightReturn=!main&&len<19&&
+   (Math.hypot(a[0]-corner[0],a[1]-corner[1])<.20||
+    Math.hypot(b[0]-corner[0],b[1]-corner[1])<.20);
+  // The OSM short return intersects the documented gold lettering.
+  // This particular simplified return is held above the sign bay height
+  // so the entrance's brick sign wall is actually visible from arrival.
+  const rightReturnBase=12.5;
   const wall=new THREE.Group();wall.position.set(cx+ox*.095,base,-cn-on*.095);wall.rotation.y=ang;
   // The photographed main atrium occupies the first ~21m of its wall.
   // Avoid covering it with a brick layer; the entrance geometry remains.
   if(!main){
    const map=bricks.clone();map.needsUpdate=true;
-   map.repeat.set(len/3.3,buildingHeight/3.3);
-   const brick=new THREE.Mesh(new THREE.PlaneGeometry(len,buildingHeight),
+   const faceHeight=rightReturn?buildingHeight-rightReturnBase:buildingHeight;
+   map.repeat.set(len/3.3,faceHeight/3.3);
+   const brick=new THREE.Mesh(new THREE.PlaneGeometry(len,faceHeight),
      new THREE.MeshStandardMaterial({map,roughness:.92,side:THREE.DoubleSide}));
-   brick.position.y=buildingHeight/2;brick.receiveShadow=true;wall.add(brick);
+   brick.position.y=(buildingHeight+(rightReturn?rightReturnBase:0))/2;
+   brick.receiveShadow=true;wall.add(brick);
    eastQuadFacadeAudit.brickCoverageM+=len;
   }else{
    const upper=new THREE.Mesh(new THREE.PlaneGeometry(len,buildingHeight-20.6),
@@ -547,6 +568,7 @@ function buildEastQuadFacade(){
     const y=2.15+floor*4.45;
     if(y+1.55>buildingHeight-.5)continue;
     if(main&&y<21.0)continue;
+    if(rightReturn&&y<rightReturnBase+1.5)continue;
     if(secondary&&floor===0&&Math.abs(offset)<4.6)continue;
     // World position derives from wall-local x basis and its outward normal.
     const px=wall.position.x+Math.cos(ang)*offset+ox*.19;
@@ -688,7 +710,7 @@ function createEastQuadCurvedSeating(){
  // Solid low oval concrete planter base with a recessed dark centre.
  const base=add(new THREE.CylinderGeometry(1,1,.54,72),concrete,0,.27,0);
  base.scale.set(rx,1,rz);
- const inset=add(new THREE.CylinderGeometry(1,1,.028,72),earth,0,.525,0);
+ const inset=add(new THREE.CylinderGeometry(1,1,.028,72),earth,0,.564,0);
  inset.scale.set(rx-.48,1,rz-.42);
  const edgeRing=new THREE.Mesh(
    new THREE.TorusGeometry(1,.085,8,96),concreteEdge);
