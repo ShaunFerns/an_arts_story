@@ -1071,7 +1071,8 @@
     function animateTram(dt){
       if(!arrivalFinished || arrivalRunning || (state.dialogueOpen&&state.mission==='induction'))return;
       tramElapsed+=dt;
-      tram.position.x=Math.max(-42,-Math.max(0,tramElapsed-6)*3.8);
+      // Preserve the campus-scale position; departure begins only after the arrival scene.
+      tram.position.x=42*(CAMPUS_SPREAD-1)-Math.min(64,Math.max(0,tramElapsed-5)*3.8);
     }
 
     // A short skippable camera scene inside the actual 3D world.
