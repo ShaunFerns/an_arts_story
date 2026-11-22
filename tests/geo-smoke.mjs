@@ -44,10 +44,16 @@ console.log('East Quad exterior entrance:',JSON.stringify(entries));
 if(entries.length!==2||!entries.some(e=>e.northFacing&&e.provisional&&e.interaction)||!entries.some(e=>!e.northFacing))throw Error('North main entrance and preserved secondary entry required');
 if(entries.some(e=>e.wallLength<7))throw Error('Entrances not grounded in the mapped East Quad perimeter');
 if(JSON.stringify(entries[0].face)===JSON.stringify(entries[1].face))throw Error('Photo-referenced northern entrance and retained secondary doors overlap');
+if(entries[0].sign?.side!=='right when facing main entrance'||!entries[0].sign.mountedOnBrick)throw Error('Photo-referenced wall lettering must be to the right of the northern door');
+const facade=await page.evaluate(()=>window.__artsGeo.eastQuadFacadeAudit);
+console.log('Full East Quad facade build:',JSON.stringify(facade));
+if(facade.wallFaces<4||facade.windowBays<20||facade.brickCoverageM<40)throw Error('East Quad still has untextured building sides');
+
 const plaza=await page.evaluate(()=>window.__artsGeo.plazaFeatures);
 console.log('Photo-referenced East Quad curved seating:',JSON.stringify(plaza));
 if(plaza.length!==1||plaza[0].slats<30||plaza[0].dimensions.length<8)throw Error('Curved East Quad seating not built');
-if(plaza[0].distanceToNpc<6||plaza[0].nearestPedestrianPath<2.4)throw Error('East Quad seating obstructs the doorway or pedestrian path');
+if(plaza[0].distanceToNpc<6||plaza[0].nearestPedestrianPath<2.4||plaza[0].nearestPedestrianPath>12)throw Error('East Quad seating is not integrated into entrance pedestrian forecourt');
+if(plaza[0].sideOfDoor!=='left when approaching northern entrance'||plaza[0].entranceDistance>23)throw Error('Curved seating still too far from northern entrance');
 const planterSolid=await page.evaluate(p=>window.__artsGeo.plazaCollision(...p),plaza[0].position);
 if(!planterSolid)throw Error('Player can walk through the seating planter');
 const heightAudit=await page.evaluate(()=>window.__artsGeo.visualHeightAudit);
@@ -75,6 +81,11 @@ if(Math.abs(afterYaw.yaw-afterKeyboardLook.yaw)<.07)throw Error('Space+D should 
 await page.keyboard.down('w');await page.waitForTimeout(350);await page.keyboard.up('w');
 const afterWalk=await page.evaluate(()=>window.__artsGeo.position);
 if(Math.hypot(afterWalk.x-afterYaw.position.x,afterWalk.north-afterYaw.position.north)<.01)throw Error('W without Space should walk');
+const playerFacing=await page.evaluate(()=>window.__artsGeo.facingYaw);
+const dx=afterWalk.x-afterYaw.position.x,dz=-(afterWalk.north-afterYaw.position.north);
+const dot=((-Math.sin(playerFacing))*dx+(-Math.cos(playerFacing))*dz)/Math.hypot(dx,dz);
+if(dot<.75)throw Error('Third-person student is facing backwards while walking');
+
 const perspective=await page.evaluate(()=>window.__artsGeo.perspective);
 const signCount=await page.evaluate(()=>window.__artsGeo.signCount);
 if(signCount<1)throw Error('At least one mapped campus wayfinding prototype missing');
