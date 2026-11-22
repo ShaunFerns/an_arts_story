@@ -253,6 +253,8 @@ const collision=makeCollisionWorld(zone,{playerRadius:.34,worldRadius:990,worldE
 // Entrance position is inferred from the nearest usable footprint face to the
 // OSM pedestrian approach. This is NOT a surveyed architectural door position.
 const entryPrototypes=[];
+const eastQuadOriginalApproach=[...(missions.find(m=>m.name==='East Quad')?.position||[])];
+let eastQuadNorthFaceKey=null;
 function nearestPointOnSegment2D(p,a,b){
  const dx=b[0]-a[0],dy=b[1]-a[1],len2=dx*dx+dy*dy;
  const f=len2>.0001?THREE.MathUtils.clamp(((p[0]-a[0])*dx+(p[1]-a[1])*dy)/len2,0,1):0;
@@ -267,12 +269,13 @@ function createEastQuadEntry(north=true){
  for(let i=1;i<pts.length;i++){
   const a=pts[i-1],b=pts[i],length=Math.hypot(b[0]-a[0],b[1]-a[1]);
   if(length<7.1)continue;
-  const candidate=nearestPointOnSegment2D(m.position,a,b);
+  const candidate=nearestPointOnSegment2D(north?m.position:eastQuadOriginalApproach,a,b);
   const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];
-  const distance=Math.hypot(candidate[0]-m.position[0],candidate[1]-m.position[1]);
-  const wallDistance=Math.hypot(mid[0]-m.position[0],mid[1]-m.position[1]);
+  const reference=north?m.position:eastQuadOriginalApproach;
+  const distance=Math.hypot(candidate[0]-reference[0],candidate[1]-reference[1]);
+  const wallDistance=Math.hypot(mid[0]-reference[0],mid[1]-reference[1]);
   // Use the approach-facing face with adequate length for three bays.
-  segments.push({a,b,mid,length,distance,wallDistance});
+  segments.push({a,b,mid,length,distance,wallDistance,key:[i-1,i].join('-')});
  }
  // The photographed main entrance is on the *north* frontage. Its face
  // must be selected by geographic orientation, never by nearest walkway.
@@ -291,7 +294,15 @@ function createEastQuadEntry(north=true){
   return a.distance-b.distance||a.wallDistance-b.wallDistance;
  });
  if(!segments.length)return null;
+ // Retain the previous photo-unverified entry on a *different wall face*.
+ // The earlier auto-selected face coincided with the north selection on this
+ // OSM footprint; duplicating door assemblies at the same coordinates is wrong.
+ if(!north&&eastQuadNorthFaceKey!==null){
+  const distinct=segments.find(seg=>seg.key!==eastQuadNorthFaceKey&&seg.distance<80);
+  if(distinct){segments.splice(segments.indexOf(distinct),1);segments.unshift(distinct)}
+ }
  const seg=segments[0],cx=seg.mid[0],cn=seg.mid[1];
+ if(north)eastQuadNorthFaceKey=seg.key;
  let outX=cn-centre[1],outN=centre[0]-cx;
  // Calculate a wall-perpendicular direction pointing away from footprint centre.
  const ddx=seg.b[0]-seg.a[0],ddn=seg.b[1]-seg.a[1];
