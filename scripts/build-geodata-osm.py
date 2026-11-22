@@ -48,7 +48,7 @@ lon0=sum(n[1] for n in anchor_nodes)/len(anchor_nodes)
 cos=math.cos(math.radians(lat0))
 def xy(n):return [round((n[1]-lon0)*111195*cos,1),round((n[0]-lat0)*111195,1)]
 interesting={'building','highway','barrier','railway','landuse','leisure','natural','name','name:en'}
-keys={'building','height','building:levels','highway','surface','barrier','railway','landuse','leisure','natural','access','foot','area','historic','name','name:en','entrance'}
+keys={'building','height','width','building:levels','highway','surface','barrier','railway','landuse','leisure','natural','access','foot','area','historic','name','name:en','entrance'}
 features=[]
 for way_id,e in ways.items():
     tags={t.get('k'):t.get('v') for t in e.findall('tag')}
