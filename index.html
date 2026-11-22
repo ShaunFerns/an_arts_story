@@ -180,7 +180,7 @@
   <div id="hud">
     <div class="topbar">
       <div class="badge"><div class="edition">FIRST SEMESTER · AN ARTS STORY</div><h1>Grangegorman</h1><p id="chapterSubtitle">Your first day on campus</p></div>
-      <div class="controls"><b>WASD</b> walk · <b>Drag</b> look · <b>E</b> talk · <b>P</b> phone<br><button class="hudButton" id="openDemo" type="button">Presentation mode</button></div>
+      <div class="controls"><b>WASD</b> move · <b>Drag mouse</b> look · <b>Scroll</b> zoom · <b>C</b> reset camera · <b>E</b> talk · <b>P</b> phone<br><button class="hudButton" id="openDemo" type="button">Presentation mode</button></div>
     </div>
     <div id="interactPrompt">Press E to talk</div>
     <div id="crosshair"></div>
@@ -230,7 +230,7 @@
       <h2 id="launchTitle">Your first semester begins here.</h2>
       <p>Arrive by Luas, find your way to East Quad and discover Grangegorman through the sustainability team's induction challenge. Along the way you'll meet people who help you make sense of Arts.</p>
       <div class="launch-actions"><button id="startFull" class="launch-primary" type="button">Explore the campus <span aria-hidden="true">→</span></button><button id="startContinue" class="launch-secondary" type="button" hidden>Continue my story ↗</button><button id="startDemo" class="launch-secondary" type="button">Guided tour ↗</button><button id="startReset" class="launch-secondary" type="button" hidden>Start again</button></div>
-      <div class="launch-foot">Walk freely or use the phone to travel between buildings. Progress stays on this device. <strong id="engineStatus" role="status" aria-live="polite">Preparing the 3D campus…</strong></div>
+      <div class="launch-foot">Use <strong>WASD</strong> to move, <strong>drag</strong> to look around, <strong>scroll</strong> to zoom and <strong>C</strong> to reset the camera. Walk freely or use the phone to travel between buildings. Progress stays on this device. <strong id="engineStatus" role="status" aria-live="polite">Preparing the 3D campus…</strong></div>
       <div id="threeHelp" hidden style="margin-top:14px;background:#193c46;color:#e5f0ef;border:1px solid #74959c;border-radius:12px;padding:14px;line-height:1.55">
         <strong>The 3D engine could not start in this browser.</strong>
         <p style="margin:7px 0">This website serves Three.js locally. If the 3D scene cannot start, the technical error will appear above. Please use a current Chrome, Edge, Firefox or Safari browser.</p>
@@ -920,18 +920,24 @@
 
     // Input and camera orbit
     const keys = {};
-    let yaw = 0.75, pitch = 0.62, pointerDown = false, prevPointer = null;
+    let yaw = 0.75, pitch = 0.62, cameraDistance = 10.5, pointerDown = false, prevPointer = null;
+    let lastTravelHeading = yaw + Math.PI;
     window.addEventListener('keydown', e => {
       keys[e.key.toLowerCase()] = true;
       if(demoActive || !document.getElementById('startScreen').hidden) return;
       if(e.key.toLowerCase()==='e' && nearestNpc && !state.dialogueOpen && !state.phoneOpen) interactWith(nearestNpc);
       if(e.key.toLowerCase()==='p' && !state.dialogueOpen) togglePhone();
+      if(e.key.toLowerCase()==='c' && !state.dialogueOpen && !state.phoneOpen){yaw=lastTravelHeading-Math.PI;pitch=.55;showToast('Camera behind character');}
+      if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase()))e.preventDefault();
       if(e.key==='Escape'){closeDialogue();closePhone();}
     });
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-    renderer.domElement.addEventListener('pointerdown',e=>{pointerDown=true;prevPointer={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};});
+    renderer.domElement.style.touchAction='none';
+    renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
+    renderer.domElement.addEventListener('pointerdown',e=>{if(state.dialogueOpen||state.phoneOpen||demoActive)return;pointerDown=true;prevPointer={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,button:e.button};renderer.domElement.setPointerCapture(e.pointerId);});
+    renderer.domElement.addEventListener('wheel',e=>{if(state.dialogueOpen||state.phoneOpen||demoActive)return;e.preventDefault();cameraDistance=THREE.MathUtils.clamp(cameraDistance+Math.sign(e.deltaY)*1.2,5,19);},{passive:false});
     window.addEventListener('pointerup',e=>{
-      if(pointerDown&&prevPointer&&!state.dialogueOpen&&!state.phoneOpen&&Math.hypot(e.clientX-prevPointer.startX,e.clientY-prevPointer.startY)<8){
+      if(pointerDown&&prevPointer&&prevPointer.button!==2&&!state.dialogueOpen&&!state.phoneOpen&&Math.hypot(e.clientX-prevPointer.startX,e.clientY-prevPointer.startY)<8){
         const k=getNearestNpc();if(k)interactWith(k);
       }
       pointerDown=false;prevPointer=null;
@@ -949,7 +955,7 @@
       if(!pointerDown || state.dialogueOpen || state.phoneOpen || !prevPointer) return;
       const dx = (e.clientX - prevPointer.x) * 0.008;
       const dy = (e.clientY - prevPointer.y) * 0.008;
-      yaw -= dx; pitch = Math.max(0.22, Math.min(1.05, pitch - dy));
+      yaw -= dx; pitch = Math.max(0.18, Math.min(1.2, pitch + dy));
       prevPointer = {...prevPointer,x:e.clientX,y:e.clientY};
     });
 
@@ -1298,8 +1304,8 @@ You look around and make a mental note that some people are here for the first t
       playerMoving=false;
       if(move.lengthSq()>0){
         move.normalize();
-        const forward = new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));
-        const right = new THREE.Vector3(forward.z,0,-forward.x);
+        const forward = new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+        const right = new THREE.Vector3(-forward.z,0,forward.x);
         const desired = new THREE.Vector3();
         desired.addScaledVector(forward,-move.z);
         desired.addScaledVector(right,move.x);
@@ -1308,6 +1314,7 @@ You look around and make a mental note that some people are here for the first t
         if(!blocked(nx,player.position.z))player.position.x=nx;
         if(!blocked(player.position.x,nz))player.position.z=nz;
         body.rotation.y = Math.atan2(desired.x, desired.z);
+        lastTravelHeading=body.rotation.y;
         playerMoving=true;playerStride += dt;
       }
       player.position.x = THREE.MathUtils.clamp(player.position.x, -48, 49);
@@ -1323,7 +1330,7 @@ You look around and make a mental note that some people are here for the first t
     }
 
     function updateCamera(){
-      const distance = 10.5;
+      const distance = cameraDistance;
       const target = player.position.clone(); target.y += 1.8;
       const camPos = new THREE.Vector3(
         target.x + Math.sin(yaw) * Math.cos(pitch) * distance,
