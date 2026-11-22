@@ -27,6 +27,17 @@ await page.evaluate(i=>window.__artsGeo.visit(i),eastIndex);
 const pos=await page.evaluate(()=>window.__artsGeo.position);
 console.log('Player location after east-quad waypoint:',JSON.stringify(pos));
 await page.screenshot({path:'/tmp/arts-geo-east-quad.png',fullPage:true});
+const numberOfNpcs=await page.evaluate(()=>window.__artsGeo.npcs);
+console.log('Authored campus NPCs:',numberOfNpcs);
+if(numberOfNpcs<3)throw Error('Expected multiple campus NPCs at mapped walkable destinations');
+await page.waitForTimeout(300);
+await page.keyboard.press('e');
+if(await page.locator('#npcDialog').getAttribute('hidden')!==null)throw Error('E-to-talk dialogue did not open near mapped campus NPC');
+const spoken=await page.locator('#npcText').innerText();
+if(!spoken.includes('Semester 1')&&!spoken.includes('preferences'))throw Error('East Quad student ambassador dialogue missing the programme-specific induction message');
+await page.locator('#npcClose').click();
+if(await page.locator('#npcDialog').getAttribute('hidden')===null)throw Error('Closing NPC dialogue failed');
+
 if(errors.length)throw Error('Browser errors: '+JSON.stringify(errors.slice(0,8)));
 console.log('Georeferenced 3D world, mission map and source-faithful map markers passed.');
 await browser.close();
