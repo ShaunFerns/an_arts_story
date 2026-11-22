@@ -45,4 +45,15 @@ console.log('After skipping arrival:', JSON.stringify(gameplay));
 if(!gameplay.arrivalHidden || gameplay.dialogueVisible!=='flex' || !gameplay.canvas) {
   throw new Error('Luas cinematic failed to transfer control to the interactive story');
 }
+// Before the Friday publication scene the student's own timetable must not be shown.
+await page.locator('#dialogueChoices .choiceBtn').first().click();
+await page.keyboard.press('p');
+await page.locator('#phoneTabs .tabBtn').filter({ hasText:'Timetable' }).click();
+const timetableText = await page.locator('#phoneContent').innerText();
+console.log('Timetable before publication:', timetableText.slice(0, 180));
+if (!timetableText.includes('Awaiting publication') || !timetableText.includes('Friday')) {
+  throw new Error('The induction timetable must remain unpublished until Friday before classes');
+}
+await page.locator('#phoneCloseBtn').click();
+console.log('3D arrival, skip, story, and timetable-timing smoke checks passed');
 await browser.close();
