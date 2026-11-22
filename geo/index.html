@@ -453,7 +453,8 @@ function createEastQuadEntry(north=true){
  const info={name:north?'East Quad northern main entrance (photo-referenced)':'East Quad secondary entry (provisional)',face:[seg.a,seg.b],width:6.65,
   mainWallMidpoint:[cx,cn],position:[group.position.x,-group.position.z],
   interaction:north?m.position:(target||m.position),northFacing:north,provisional:true,doorComposition:north?'northern glazed atrium, side doors and revolving entrance':'secondary glazed door / revolving door / glazed door',sourcePhoto:north?'https://www.ste.ie/east-quad-grangegorman-ahr-architects':null,
-  wallLength:seg.length,distanceFromOriginalApproach:seg.distance};
+  wallLength:seg.length,distanceFromOriginalApproach:seg.distance,
+  sign:north?{side:'right when facing main entrance',mountedOnBrick:true,localX:7.25}:null};
  entryPrototypes.push(info);
  return info;
 }
@@ -570,40 +571,43 @@ function createEastQuadCurvedSeating(){
  if(!entry)return null;
  // The entrance's local +Z faces the approach; keep the central arrival
  // corridor and interaction NPC clear. Put the island beside that corridor.
- const sign=[1,-1],rx=5.25,rz=2.12;
- let choice=null;
- for(const side of sign)for(const lateral of [11.5,13.5,15.5])for(const outward of [12.5,16,20]){
-  const localX=side*lateral,localZ=outward;
-  const faceDir=new THREE.Vector3(Math.sin(Math.atan2(
-   entry.face[1][1]-entry.face[0][1],entry.face[1][0]-entry.face[0][0])),
-   0,1); // only the entrance group rotation is used below
-  // Derive the global local-frame axes from the mapped entry wall and
-  // the recorded approach point (not guessed east/north coordinates).
-  const a=entry.face[0],b=entry.face[1],cx=entry.mainWallMidpoint[0],cn=entry.mainWallMidpoint[1];
-  const vx=b[0]-a[0],vn=b[1]-a[1],length=Math.hypot(vx,vn);
-  let outwardX=-vn/length,outwardN=vx/length;
-  const centroid=zone.find(f=>f.id==='way/810540713');
-  if(centroid){const center=midpoint(centroid.coords);
-   if(outwardX*(cx-center[0])+outwardN*(cn-center[1])<0){outwardX=-outwardX;outwardN=-outwardN}
-  }
-  const tangentX=outwardN,tangentN=-outwardX;
-  const x=cx+localX*tangentX+localZ*outwardX;
-  const n=cn+localX*tangentN+localZ*outwardN;
+ const rx=5.25,rz=2.12;
+ // Construct the northern forecourt layout relative to the photographed
+ // entrance, not the nearest random open area. On this face, +tangent
+ // lies to the viewer's left, opposite the gold sign to the right.
+ const [a,b]=entry.face,[cx,cn]=entry.mainWallMidpoint;
+ const vx=b[0]-a[0],vn=b[1]-a[1],length=Math.hypot(vx,vn);
+ let outwardX=-vn/length,outwardN=vx/length;
+ const center=midpoint(eastFeature.coords);
+ if(outwardX*(cx-center[0])+outwardN*(cn-center[1])<0){
+  outwardX=-outwardX;outwardN=-outwardN;
+ }
+ const tangentX=outwardN,tangentN=-outwardX;
+ const choices=[];
+ for(const side of [1,-1])
+ for(const lateral of [10,11.5,13,14.5,16])
+ for(const outward of [7,8.5,10,11.5,13,15]){
+  const x=cx+side*lateral*tangentX+outward*outwardX,
+        n=cn+side*lateral*tangentN+outward*outwardN;
   const interaction=entry.interaction;
   const clearance=Math.hypot(x-interaction[0],n-interaction[1]);
-  if(clearance<rx+4)continue;
-  const safe=Array.from({length:24},(_,i)=>{
-   const ang=2*Math.PI*i/24;
-   const sx=x+rx*Math.cos(ang)*tangentX+rz*Math.sin(ang)*outwardX,
-    sn=n+rx*Math.cos(ang)*tangentN+rz*Math.sin(ang)*outwardN;
+  if(clearance<rx+4||clearance>25)continue;
+  const clear=Array.from({length:30},(_,i)=>{
+   const ang=2*Math.PI*i/30;
+   const sx=x+(rx+.35)*Math.cos(ang)*tangentX+(rz+.35)*Math.sin(ang)*outwardX,
+    sn=n+(rx+.35)*Math.cos(ang)*tangentN+(rz+.35)*Math.sin(ang)*outwardN;
    return !collision.query(sx,sn);
   }).every(Boolean);
-  if(!safe||collision.query(x,n))continue;
+  if(!clear||collision.query(x,n))continue;
   const walkway=nearestWalkable([x,n],null);
   const pathDist=walkway?Math.hypot(x-walkway.point[0],n-walkway.point[1]):99;
-  if(pathDist<2.4)continue;
-  choice={x,n,localX,localZ,side,pathDist,tangentX,tangentN,outwardX,outwardN};break;
+  if(pathDist<2.4||pathDist>12)continue;
+  choices.push({x,n,localX:side*lateral,localZ:outward,side,pathDist,
+    tangentX,tangentN,outwardX,outwardN,
+    score:pathDist*.9+clearance*.22+Math.abs(outward-9)*.26+(side<0?4:0)});
  }
+ choices.sort((a,b)=>a.score-b.score);
+ const choice=choices[0]||null;
  if(!choice){console.warn('East Quad curved seating omitted: no collision-safe photo-inspired location');return null}
  const group=new THREE.Group();group.position.set(choice.x,groundHeight(choice.x,choice.n),-choice.n);
  // x-axis follows East Quad frontage; +z follows outward approach.
@@ -644,12 +648,24 @@ function createEastQuadCurvedSeating(){
   stone.rotation.y=Math.atan2(-(rz+.57)*Math.cos(ang),-(rx+.53)*Math.sin(ang));
  }
  scene.add(group);
+ // Low bollard lights and a stepped concrete curb complete the hardscape.
+ const steel=mat(0x555b5c,.52),light=mat(0xd9d5bb,.65);
+ for(const side of [-1,1]){
+  const bollard=add(new THREE.CylinderGeometry(.085,.11,.84,10),steel,side*(rx+.9),.42,rz+.78);
+  add(new THREE.CylinderGeometry(.088,.088,.11,10),light,side*(rx+.9),.89,rz+.78);
+ }
+ const outerCurb=add(new THREE.CylinderGeometry(1,1,.12,72),concreteEdge,0,.05,0);
+ outerCurb.scale.set(rx+.18,1,rz+.17);
+ // Keep the original upper planter and seating in front of the low curb.
+ outerCurb.renderOrder=-1;
  const info={kind:'curved_concrete_planter_with_timber_seating',
   location:'East Quad entrance forecourt',provisional:true,
   reference:'https://excellentstreetimages.com/blog-view/?permalink=east-quad-complex-university-campus-grangegorman',
   position:[choice.x,choice.n],dimensions:{length:rx*2,width:rz*2,height:.62},
   distanceToNpc:Math.hypot(choice.x-entry.interaction[0],choice.n-entry.interaction[1]),
-  nearestPedestrianPath:choice.pathDist,slats:planks};
+  nearestPedestrianPath:choice.pathDist,sideOfDoor:'left when approaching northern entrance',
+  entranceDistance:Math.hypot(choice.x-entry.mainWallMidpoint[0],choice.n-entry.mainWallMidpoint[1]),
+  slats:planks};
  eastQuadPlazaFeatures.push(info);
  // An inhabited planter is a solid obstacle, not a walkway.
  blockedPlazaAreas.push({x:choice.x,n:choice.n,rx:rx+.26,rz:rz+.26,
