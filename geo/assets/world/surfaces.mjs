@@ -6,6 +6,8 @@ const finishes={
  luas:{tones:['#b6b1a7','#aaa9a5','#a5a7a8','#b19882'],width:.32,length:.18},
  setts:{tones:['#aaa297','#b5ab9c','#b6afaa','#a59e91'],width:.30,length:.16},
  band:{tones:['#ad9083','#b69a89','#aa8e82','#ba9e8e'],width:.60,length:.32},
+ railSetts:{tones:['#545456','#626164','#59595a','#777476'],width:.17,length:.12},
+ platformTactile:{tones:['#a4a296','#a6a497','#a09d92','#a5a296'],width:.13,length:.13},
  grass:{tones:['#71865a','#7c9161','#768b5e','#829268'],width:1,length:1},
 };
 const surfaces=new Map();
@@ -25,6 +27,10 @@ export function groundFinish(type){
   if(type==='grass')continue;
   ctx.fillStyle=tones[(column*7+row*13+(row*column)%7)%tones.length];
   ctx.fillRect(x+1,y+1,w-2,h-2);
+  if(type==='platformTactile'){
+   ctx.fillStyle='#5f5f586b';
+   for(const position of [15,32,49])ctx.fillRect(x+position,y+3,4,26);
+  }
  }
  let seed=71264;
  const random=()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};

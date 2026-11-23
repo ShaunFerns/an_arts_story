@@ -17,6 +17,13 @@ try {
   assert.equal((await page.goto(base,{waitUntil:'domcontentloaded'})).status(),200);
   await page.waitForFunction(()=>window.__artsGeo?.ready);
   await button('Skip arrival').waitFor();
+  const stop=await model(()=>window.__artsGeo.luasStop);
+  assert.equal(stop.sections,9);
+  assert(Math.abs(stop.length-54.7)<.01);
+  assert.equal(stop.gauge,1.435);
+  assert.equal(stop.shelters,2);
+  assert.equal(stop.ticketMachines,4);
+  assert.equal(stop.platformStep,.28);
   const from=await model(()=>window.__artsGeo.tramPosition);
   await page.waitForFunction(initial=>window.__artsGeo.tramPosition[0]>initial+.35,from[0]);
   await page.screenshot({path:'/tmp/arts-geo-luas.png'});

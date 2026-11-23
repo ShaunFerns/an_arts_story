@@ -52,7 +52,7 @@ import {addEntrancePaving, groundFinish} from './assets/world/surfaces.mjs';
 import {addClockTower,clockTowerId} from './assets/world/clocktower.mjs';
 import {addRathdownApproach,rathdownFenceIds,rathdownRise,rathdownTreeObstacle} from './assets/world/rathdown.mjs';
 import {addSaintLaurence,chapelPorches,chapelPorchObstacles,saintLaurenceId} from './assets/world/saint-laurence.mjs';
-import {addLuasForecourt,createLuas} from './assets/world/arrival.mjs';
+import {addLuasForecourt,addLuasTracks,createLuas,isLuasPlatform,luasPlatformLayout} from './assets/world/arrival.mjs';
 const $=id=>document.getElementById(id),data=await fetch('./data.json').then(r=>{if(!r.ok)throw Error('No OSM snapshot (HTTP '+r.status+')');return r.json()}).catch(e=>{ $('error').hidden=false;$('errorText').textContent=e.message;throw e});
 if(!data.features?.length||!data.anchor||data.radius!==1000){$('error').hidden=false;$('errorText').textContent='Geographic snapshot is incomplete.';throw Error('Invalid OSM snapshot')}
 const zone=openLibraryApproach(data.features),origin=data.anchor,MAX=1000,$map=$('map'),mapCtx=$map.getContext('2d'),miniCtx=$('mini').getContext('2d');
@@ -61,7 +61,7 @@ const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,750),rende
 scene.add(new THREE.HemisphereLight(0xd4e4f0,0x6b7666,2.1));const sun=new THREE.DirectionalLight(0xffe6bb,2.2);sun.position.set(-70,125,80);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-270,right:270,top:270,bottom:-270});scene.add(sun);
 renderer.shadowMap.autoUpdate=false;
 renderer.shadowMap.needsUpdate=true;
-const mat=(color,roughness=.89)=>new THREE.MeshStandardMaterial({color,roughness});const oldStone=mat(0x9e9585),lawn=groundFinish('grass'),roadMat=mat(0x565f61),pathMat=mat(0xb0aa9d),hedgeMat=mat(0x486a43),railMat=mat(0x535b55),tramMat=mat(0x8f8293),railHead=mat(0x525851,.42);
+const mat=(color,roughness=.89)=>new THREE.MeshStandardMaterial({color,roughness});const oldStone=mat(0x9e9585),lawn=groundFinish('grass'),roadMat=mat(0x565f61),pathMat=mat(0xb0aa9d),hedgeMat=mat(0x486a43),railMat=mat(0x535b55);
 // Stage-1 provisional elevation model. These 21/25 m OD Malin tiers are
 // illustrative design assumptions, NOT surveyed levels. The world y origin
 // is at the assumed 25 m OD East Quad approach; Rathdown is an x/z anchor.
@@ -83,11 +83,14 @@ const gradeStart=[tramCoords[0][0],tramCoords[0][1]],gradeEnd=[
  eqCoords.reduce((sum,p)=>sum+p[0],0)/eqCoords.length,
  eqCoords.reduce((sum,p)=>sum+p[1],0)/eqCoords.length
 ];
+const tramWays=zone.filter(f=>f.tags?.railway==='tram');
+const tramTrack=tramWays.find(f=>f.coords.some(p=>Math.hypot(p[0]-gradeStart[0],p[1]-gradeStart[1])<.5));
+const broadstonePlatforms=luasPlatformLayout(gradeStart,tramTrack,zone);
 const routeDx=gradeEnd[0]-gradeStart[0],routeDn=gradeEnd[1]-gradeStart[1];
 const routeLength=Math.hypot(routeDx,routeDn);
 if(routeLength<40||routeLength>900)throw Error('Unreasonable Luas-to-East Quad terrain anchor distance');
 const smoothstep=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
-function groundHeight(x,n){
+function terrainHeight(x,n){
  const vx=x-gradeStart[0],vn=n-gradeStart[1];
  const t=Math.max(0,Math.min(1,(vx*routeDx+vn*routeDn)/(routeLength*routeLength)));
  const cx=gradeStart[0]+t*routeDx,cn=gradeStart[1]+t*routeDn;
@@ -97,12 +100,15 @@ function groundHeight(x,n){
  const influence=1-smoothstep((perpendicular-80)/90);
  return rathdownRise(x,n)-(terrainModel.difference)*(1-smoothstep(t))*influence;
 }
+function groundHeight(x,n){
+ return terrainHeight(x,n)+broadstonePlatforms.lift(x,n);
+}
 const groundGeometry=new THREE.PlaneGeometry(2200,2200,220,220);
 groundGeometry.rotateX(-Math.PI/2);
 const groundPositions=groundGeometry.attributes.position;
 for(let i=0;i<groundPositions.count;i++){
  const x=groundPositions.getX(i),n=-groundPositions.getZ(i);
- groundPositions.setY(i,groundHeight(x,n));
+ groundPositions.setY(i,terrainHeight(x,n));
 }
 groundGeometry.computeVertexNormals();
 const groundUV=groundGeometry.attributes.uv;
@@ -221,19 +227,8 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
    const luasPlaza=f.id==='way/1208522277';
    pavedArea(f.coords,groundFinish(luasPlaza?'luas':'granite'),luasPlaza?.097:.025);
   }
-  else for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],roadWidth(t.highway),.075,pedestrian?pathMat:roadMat);
+  else if(!isLuasPlatform(f.id))for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],roadWidth(t.highway),.075,pedestrian?pathMat:roadMat);
   counts.road++;
- }
- if(t.railway==='tram')for(let i=1;i<f.coords.length;i++){
-  const a=f.coords[i-1],b=f.coords[i];
-  if(Math.min(Math.hypot(a[0]-gradeStart[0],a[1]-gradeStart[1]),Math.hypot(b[0]-gradeStart[0],b[1]-gradeStart[1]))>175)continue;
-  const dx=b[0]-a[0],dn=b[1]-a[1],len=Math.hypot(dx,dn);
-  if(len<.15)continue;
-  lineMesh(scene,a,b,2.6,.08,tramMat);
-  for(const side of [-1,1]){
-   const offset=p=>[p[0]-dn/len*.72*side,p[1]+dx/len*.72*side];
-   lineMesh(scene,offset(a),offset(b),.075,.115,railHead);
-  }
  }
  if(f.kind==='barrier'&&dist<540){
   const k=t.barrier||'wall', {height,width}=barrierDimensions(t);
@@ -1903,9 +1898,9 @@ function controlAxes(){
 let dragging=false,mouseX=0,mouseY=0;renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;mouseX=e.clientX;mouseY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;yaw-=(e.clientX-mouseX)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-mouseY)*.005,-1.35,1.35);mouseX=e.clientX;mouseY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>dragging=false);renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();follow=THREE.MathUtils.clamp(follow+Math.sign(e.deltaY)*.55,3.8,8)},{passive:false});
 $('viewMode').onclick=()=>setPerspective(!firstPerson);setPerspective(true);
 let t=performance.now(),sceneRendered=false,arrivalElapsed=0,lastMini=0,lastPoseSave=0;
-const tramTrack=zone.find(f=>f.tags?.railway==='tram'&&f.coords.some(p=>Math.hypot(p[0]-gradeStart[0],p[1]-gradeStart[1])<.5));
-const luas=createLuas(scene,gradeStart,tramTrack,groundHeight);
-addLuasForecourt(scene,gradeStart,luas.direction,groundHeight);
+const luas=createLuas(scene,gradeStart,tramTrack,terrainHeight,tramWays);
+addLuasTracks(scene,gradeStart,tramWays,terrainHeight);
+const luasStopAudit=addLuasForecourt(scene,broadstonePlatforms,terrainHeight);
 function finishArrival(){
  if($('arrival').hidden)return;
  $('arrival').hidden=true;
@@ -1924,10 +1919,12 @@ function showArrival(){
 function arrivalFrame(dt){
  arrivalElapsed+=dt;
  const t=arrivalElapsed;
- const [x,n]=gradeStart,[dx,dn]=luas.direction;
+ const [x,n]=gradeStart;
  luas.pose(-30*(1-THREE.MathUtils.smoothstep(t,0,2.55)),THREE.MathUtils.smoothstep(t,2.65,3.65));
- camera.position.set(x+13*dn+5*dx,groundHeight(x,n)+3.5,-n+13*dx-5*dn);
- camera.lookAt(x-3*dx,groundHeight(x,n)+1.4,-n+3*dn);
+ const [camX,camN]=broadstonePlatforms.toWorld(36,12.8);
+ const [lookX,lookN]=broadstonePlatforms.toWorld(9,.65);
+ camera.position.set(camX,terrainHeight(x,n)+3.25,-camN);
+ camera.lookAt(lookX,terrainHeight(x,n)+1.78,-lookN);
  if(t>3.25&&$('arrivalLine').dataset.stage!=='doors'){
   $('arrivalLine').dataset.stage='doors';
   $('arrivalLine').textContent='The doors open. Follow the pedestrian approach towards Grangegorman.';
@@ -2030,7 +2027,7 @@ else if(!semester.state.started){
 }
 addEventListener('pagehide',()=>{if(orientation())story.persist();saveSemester();});
 $('status').textContent=review?`${zone.length} OSM features · ${counts.building} 3D building blocks`:'Campus routes follow the mapped site.';
-window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.id==='induction');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get missionDoorRegistry(){return missionDoorRegistry.map(({available,...d})=>d)},get semesterMeetingPlaces(){return Object.fromEntries([...semesterMeetings].map(([id,m])=>[id,{position:m.position,visible:m.body.visible}]))},get campusFacadeAudit(){return campusFacadeAudit},get entrancePaving(){return scene.children.filter(o=>o.name.startsWith('Entrance paving · ')).map(o=>({name:o.name,triangles:o.geometry.attributes.position.count/3}))},rathdownApproach,get underpass(){return underpass},get semester(){return structuredClone(semester.state)},get activeTask(){return semester.task()},get mapPlayer(){const p=mapProjection($map,1000/mapZoom,false);return {x:p.x(player.position.x),y:p.y(-player.position.z),centre:p.centre,scale:p.scale}},get arrivalElapsed(){return arrivalElapsed},get tramPosition(){return luas.car.position.toArray()},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get eastQuadPavingAudit(){return eastQuadPavingAudit},get eastQuadSignRelativeScreenPosition(){
+window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstPerson?'first-person':'third-person'},get lookPitch(){return pitch},get lookYaw(){return yaw},get controlMode(){return keys.Space?'look':'walk'},get cameraHeight(){return camera.position.y},get chaseCameraOffset(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get followDistance(){return follow},get signCount(){return campusSigns.length},get eyeHeightAboveGround(){return camera.position.y-groundHeight(player.position.x,-player.position.z)},get nearestNpcDistance(){return Math.min(...npcs.map(n=>n.body.position.distanceTo(player.position)))},get spawnLocation(){return reviewStartAtLuas?home.name:'East Quad review'},get startDistanceFromLuas(){return Math.hypot(player.position.x-home.position[0],-player.position.z-home.position[1])},get startDistanceFromEastQuad(){return Math.hypot(player.position.x-eastQuadEntrance.mainWallMidpoint[0],-player.position.z-eastQuadEntrance.mainWallMidpoint[1])},get mapZoom(){return mapZoom},get eastQuadHeight(){return existingQuadHeightEstimates.eastQuad.height},get visualHeightAudit(){return visualHeightAudit},terrain:{model:terrainModel,routeLength,luas:gradeStart,eastQuad:gradeEnd,heightAt:(x,n)=>groundHeight(x,n)},get terrainPlayerHeight(){return groundHeight(player.position.x,-player.position.z)},get dressedNpcs(){return npcs.length},get humanReferenceVisible(){return showHumanScaleReference},get npcVariant(){return originalNpcRig?'original-mannequin':'clothed-adult'},get playerVisualDiagnostics(){const visual=player.userData.studentVisual||(originalNpcRig?modelRig:null);if(!visual)return null;const bounds=new THREE.Box3().setFromObject(visual);return {type:originalNpcRig?'original-mannequin':'clothed-student',height:bounds.max.y-bounds.min.y,width:bounds.max.x-bounds.min.x,visible:visual.visible,firstPerson}},get npcPrototypeScale(){return originalNpcRig?1:npcPrototypeScale},get eastQuadNpcDimensions(){const npc=npcs.find(n=>n.id==='induction');if(!npc)return null;const figure=npc.body.userData.studentVisual||npc.body.children.find(c=>c.type==='Group');const b=new THREE.Box3().setFromObject(figure);return {height:b.max.y-b.min.y,width:b.max.x-b.min.x,groundY:groundHeight(npc.body.position.x,-npc.body.position.z),npcPosition:[npc.body.position.x,-npc.body.position.z]}},get entrancePrototypes(){return entryPrototypes},get missionDoorRegistry(){return missionDoorRegistry.map(({available,...d})=>d)},get semesterMeetingPlaces(){return Object.fromEntries([...semesterMeetings].map(([id,m])=>[id,{position:m.position,visible:m.body.visible}]))},get campusFacadeAudit(){return campusFacadeAudit},get entrancePaving(){return scene.children.filter(o=>o.name.startsWith('Entrance paving · ')).map(o=>({name:o.name,triangles:o.geometry.attributes.position.count/3}))},rathdownApproach,get underpass(){return underpass},get semester(){return structuredClone(semester.state)},get activeTask(){return semester.task()},get mapPlayer(){const p=mapProjection($map,1000/mapZoom,false);return {x:p.x(player.position.x),y:p.y(-player.position.z),centre:p.centre,scale:p.scale}},get arrivalElapsed(){return arrivalElapsed},get tramPosition(){return luas.car.position.toArray()},get luasStop(){return {...luasStopAudit,sections:luas.sections,length:luas.length,gauge:luas.gauge}},get eastQuadFacadeAudit(){return eastQuadFacadeAudit},get eastQuadPavingAudit(){return eastQuadPavingAudit},get eastQuadSignRelativeScreenPosition(){
  const sign=scene.getObjectByName('EastQuadGoldNorthEntranceWallSign');
  if(!sign||!eastQuadEntrance)return null;
  scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);
