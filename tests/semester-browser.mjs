@@ -59,6 +59,7 @@ try {
   const chapel=audit.facades.find(f=>f.id==='way/310375420');
   assert.deepEqual(chapel.roof.volumes,['nave','chancel','sacristy']);
   assert.equal(chapel.roof.bellcote,'north');
+  assert.deepEqual(chapel.northLancets,[3,2]);
   assert.equal(chapel.porches.length,2);
   assert.deepEqual(chapelDoor.door,chapel.porches[0]);
   const porchChecks=await page.evaluate(({porches,outward})=>porches.map(([x,n],i)=>{
@@ -76,6 +77,9 @@ try {
     assert.match(historic.wallMaterial,/Stone$/);
   }
 
+  assert.equal(audit.facades.find(f=>f.id==='way/516821745').roof.crossGables,3);
+  const hubDoor=audit.doors.find(d=>d.id==='library');
+  assert(hubDoor.door[0]<-222&&hubDoor.outward[1]<-.9);
   const clock=audit.facades.find(f=>f.id==='way/516824969');
   assert.deepEqual(clock.streetBays,[6,5,6]);
   assert.equal(clock.storeys,3);

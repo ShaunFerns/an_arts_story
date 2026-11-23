@@ -79,6 +79,23 @@ export function addSaintLaurence(scene,heightAt,stone) {
   box(parent,.033,h*.74,.022,x,y+h*.38,z+.027,iron);
   box(parent,w,.043,.033,x,y+h*.27,z+.032,iron);
  }
+ // The approach photograph faces the north ends of the chancel and sacristy.
+ const northEnd=new THREE.Group();
+ northEnd.name='St Laurence’s · north chancel and sacristy lancets';
+ northEnd.rotation.y=Math.PI;
+ group.add(northEnd);
+ for(const [x,h] of [[-.98,3.07],[0,4.56],[.98,3.07]]){
+  lancet(northEnd,.62+x,.87,24.535,.66,h);
+ }
+ const hood=profile(3.78,5.48,2.55);
+ hood.holes.push(profile(3.50,5.20,2.45,THREE.Path,.12));
+ mesh(northEnd,new THREE.ShapeGeometry(hood),limestone,.62,.69,24.528);
+ for(const x of [-5.85,-4.49])lancet(northEnd,x,.67,28.324,.83,3.32);
+ for(const side of [-1,1]){
+  const buttress=box(northEnd,.49,2.70,.32,.62+side*2.67,1.35,24.58,stone);
+  buttress.castShadow=true;
+  box(northEnd,.53,.14,.40,.62+side*2.67,2.70,24.59,limestone);
+ }
  for(const {side} of chapelPorches){
   const wall=new THREE.Group();
   wall.position.x=side*width/2;
@@ -144,6 +161,6 @@ export function addSaintLaurence(scene,heightAt,stone) {
  box(bellcote,.10,.57,.11,0,2.62,.25,limestone);
  box(bellcote,.37,.095,.11,0,2.67,.25,limestone);
  return {id:saintLaurenceId,name:'St Laurence’s',palette:'heritage',wallMaterial:'chapelStone',
-  windowCount:15,porches:chapelPorches.map(p=>p.door),
+  windowCount:20,northLancets:[3,2],porches:chapelPorches.map(p=>p.door),
   roof:{profile:'gable',eaves,ridge:eaves+rise,volumes:['nave','chancel','sacristy'],bellcote:'north'}};
 }

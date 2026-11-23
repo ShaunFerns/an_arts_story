@@ -1001,7 +1001,7 @@ function registerDoor(mission,door,interaction,outward,dimensions) {
 const entranceReferences={
  'Rathdown House':{point:[9,-20.8],facing:'East side of the projecting wing, into the south court recess',evidence:'TU Dublin and GDA reception photographs matched to the south court and canted pavilion'},
  'Central Quad':{point:[-124.0,130.8],facing:'Courtyard off the south approach',evidence:'FCB Studios site/floor plans and courtyard photography'},
- 'Academic Hub & Library':{point:[-216.6,115.9],facing:'Playing fields',evidence:'TU Dublin Library directions and Kilsaran forecourt photo'},
+ 'Academic Hub & Library':{point:[-223.8,116.9],facing:'Playing fields',evidence:'TU Dublin Library directions and completed frontage photographs showing the sign wall between the entrance and east corner'},
  'Lower House':{point:[85,-277.6],facing:'Broadstone Walk',evidence:'TU Dublin front entrance photo and Purcell restoration photos'},
 };
 function buildMissionBuildingDoors(){
@@ -1094,24 +1094,15 @@ function buildMissionBuildingDoors(){
    for(const side of [-1,1])panel(.20,height,.14,stone,side*(width/2+.13),height/2,.04);
   }
   add(new THREE.BoxGeometry(width+.85,.08,1.12),threshold,0,.027,.55);
-  const labelWidth=library?5.1:3.3;
+  const labelWidth=3.3;
   const signHeight=central?.31:.43;
-  if(!rathdown){
+  if(!rathdown&&!library){
    const sign=add(new THREE.PlaneGeometry(labelWidth,signHeight),
     new THREE.MeshBasicMaterial({map:doorSignTexture(mission.name,labelWidth/signHeight)}),
-    0,height+(library?.90:central?.80:.37),
-    library?1.728:central?1.20:.245);
+    0,height+(central?.80:.37),central?1.20:.245);
    sign.name='Entrance sign · '+mission.name;
   }
-  if(library){
-   const limestone=mat(0x8f918b,.86),harling=mat(0xbdbeb3,.93);
-   add(new THREE.BoxGeometry(width+4.2,.75,1.95),harling,0,height+.90,.74);
-   for(const side of [-1,1]){
-    add(new THREE.BoxGeometry(.79,height+.69,.67),limestone,side*(width/2+.87),(height+.69)/2,.31);
-    add(new THREE.BoxGeometry(1.15,2.68,.10),glazing,side*(width/2+1.89),1.46,.08);
-   }
-   add(new THREE.BoxGeometry(width+4.4,.09,2.57),threshold,0,.014,1.18);
-  }else if(central){
+  if(central){
    const precast=mat(0xd5d1c4,.85);
    add(new THREE.BoxGeometry(width+2.1,.42,1.35),precast,0,height+.80,.51);
    for(const side of [-1,1])add(new THREE.BoxGeometry(.35,height+.63,.48),precast,side*(width/2+.82),(height+.63)/2,.36);

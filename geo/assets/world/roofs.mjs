@@ -8,7 +8,7 @@ const heritage={
  'way/310375420':{stone:'chapelStone',levels:1,eaves:7.4,roof:'gable',rise:3.9},
  'way/310375422':{stone:'rathdownStone',levels:2,eaves:6.85,roof:'gable',rise:4.12,ranges:true},
  'way/516821746':{stone:'infirmaryStone',levels:2,eaves:7.8,roof:'hip',rise:3.0},
- 'way/516821745':{stone:'infirmaryStone',levels:2,eaves:7.8,roof:'gable',rise:3.15},
+ 'way/516821745':{stone:'infirmaryStone',levels:2,eaves:7.8,roof:'gable',rise:4.65,ranges:true},
  'way/396704720':{stone:'wardStone',levels:3,eaves:11.2,roof:'gable',rise:3.7},
  'way/307799384':{stone:'lowerStone',levels:3,eaves:11.0,roof:'hip',rise:3.0},
  'way/516824969':{stone:'clockStone',levels:3,eaves:11.3,roof:'hip',rise:3.5},
@@ -87,11 +87,19 @@ export function addBuildingRoof(scene,feature,design,base,wallMaterial) {
  let ridgeHeight=design.eaves;
  if(design.ranges){
   // Each wing gets its own ridge. All slopes are trimmed against the mapped outline.
-  const axis=[8.8,-3.6].map(v=>v/Math.hypot(8.8,3.6));
+  const bradogue=feature.id==='way/516821745';
+  const direction=bradogue?[14.9,-6.1]:[8.8,-3.6];
+  const axis=direction.map(v=>v/Math.hypot(...direction));
   const side=[-axis[1],axis[0]];
-  const offset=p=>[p[0]-2,p[1]+25.6];
+  const [x,n]=bradogue?[-1.6,-63.7]:[2,-25.6];
+  const offset=p=>[p[0]-x,p[1]-n];
   const u=p=>dot(offset(p),axis),d=p=>dot(offset(p),side);
-  const wings=[
+  const wings=bradogue?[
+   {width:[-.1,25.75],depth:[1.06,9.02],pitch:'cross',rise:4.25},
+   {width:[-.05,6.54],depth:[-.08,16.26],pitch:'long',rise:4.65},
+   {width:[10.07,15.25],depth:[7.75,16.05],pitch:'long',rise:3.76},
+   {width:[19.19,25.76],depth:[.04,16.27],pitch:'long',rise:4.62},
+  ]:[
    {width:[-63.4,-26.8],depth:[20.5,33.8],pitch:'cross',rise:4.02},
    {width:[-27.5,27.25],depth:[14.35,24.3],pitch:'cross',rise:3.23},
    {width:[-27.6,-15.0],depth:[9.5,24.1],pitch:'long',rise:4.00,hip:true},
@@ -207,5 +215,5 @@ export function addBuildingRoof(scene,feature,design,base,wallMaterial) {
  const name=feature.name||'Academic Hub & Library';
  meshFromTriangles(scene,cap,design.roof==='terrace'?membrane:slate,'Roof · '+name);
  meshFromTriangles(scene,walls,design.roof==='hip'?slate:wallMaterial,'Roof edges · '+name);
- return {profile:design.roof,eaves:design.eaves,ridge:ridgeHeight};
+ return {profile:design.roof,eaves:design.eaves,ridge:ridgeHeight,...(feature.id==='way/516821745'?{crossGables:3}:{})};
 }

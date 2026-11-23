@@ -1,3 +1,4 @@
+import {academicFrontId,addAcademicFront} from './academic-front.mjs';
 import * as THREE from 'three';
 import {addBuildingRoof,buildingDesign,roofLevel} from './roofs.mjs';
 export {buildingDesign} from './roofs.mjs';
@@ -22,6 +23,7 @@ const materials = {
   glassLight:new THREE.MeshStandardMaterial({color:0x69828b,metalness:.16,roughness:.33}),
   historic:new THREE.MeshStandardMaterial({color:0x9a8e7d,roughness:.95}),
   slate:new THREE.MeshStandardMaterial({color:0x50575a,roughness:.91}),
+  bradoguePaint:new THREE.MeshStandardMaterial({color:0xd6d6c9,roughness:.79}),
   brickTrim:new THREE.MeshStandardMaterial({color:0x8b7163,roughness:.87}),
   steel:new THREE.MeshStandardMaterial({color:0x454b4a,roughness:.57}),
 };
@@ -197,6 +199,7 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
     const door=entrances.find(e=>e.source===feature.id);
     const historic=palette==='heritage';
     const rathdown=feature.id==='way/310375422',glassmanogue=feature.id==='way/516821746';
+    const bradogue=feature.id==='way/516821745';
     const broadstone=feature.id==='way/281880562';
     const roof=addBuildingRoof(scene,feature,design,base,shellMaterial(palette,feature,height));
     const levels=design.levels||Math.max(1,Math.min(5,Math.floor(height/3.1)));
@@ -216,6 +219,57 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
        const [x,n]=point(s,offset);
        panel(key,x,base+y,n,w,h,d,yaw);
       };
+      if(feature.id===academicFrontId&&ox>.90&&len>30&&door){
+       const groundLength=Math.min(len*.36,12.5);
+       const centre=a[1]<b[1]?groundLength/(2*len):1-groundLength/(2*len);
+       part('shade',centre,.19,2.06,groundLength,4.11,.23);
+       part('glass',centre,.325,2.06,groundLength-.16,4.03,.055);
+       const mullions=Math.floor(groundLength/.86);
+       for(let j=0;j<=mullions;j++){
+        part('steel',centre+((j/mullions)-.5)*groundLength/len,.42,2.15,.085,4.26,.20);
+       }
+      }
+      if(feature.id===academicFrontId&&on<-.90&&len>45&&door){
+       windowCount+=addAcademicFront(scene,a,b,[ox,on],base,door);
+       continue;
+      }
+      const gableEntry=bradogue&&i===1;
+      const historicPorch=bradogue&&i===13;
+      if(gableEntry||historicPorch){
+       const t=.5;
+       const paint=gableEntry?'bradoguePaint':'historic';
+       const height=gableEntry?2.78:2.45;
+       part('brickTrim',t,.108,height/2,2.22,height+.39,.19);
+       part(paint,t,.225,height/2,1.79,height,.15);
+       part('glass',t,.315,height-.86,1.57,1.42,.045);
+       for(const x of [-.57,-.36,-.16,0,.16,.36,.57]){
+        part(paint,t+x/len,.348,height-.86,.037,1.44,.067);
+       }
+       for(const y of [height-.20,height-.47,height-.73,height-1.03,height-1.43]){
+        part(paint,t,.350,y,1.59,.05,.073);
+       }
+       part(paint,t,.349,height/2,.061,height,.065);
+       part('steel',t+.115/len,.388,1.03,.041,.18,.045);
+       part('historic',t,.23,.053,2.17,.105,.50);
+       if(gableEntry){
+        part('brickTrim',t,.14,5.24,1.99,1.89,.21);
+        part('bradoguePaint',t,.25,5.24,1.71,1.65,.12);
+        part('glassLight',t,.32,5.24,1.58,1.50,.04);
+        for(const x of [-.53,-.27,0,.27,.53])part(paint,t+x/len,.349,5.24,.038,1.51,.055);
+        for(const y of [4.70,4.97,5.24,5.51,5.78])part(paint,t,.349,y,1.60,.036,.055);
+        windowCount++;
+        continue;
+       }
+       const porchX=point(t,.30), hood=new THREE.Group();
+       hood.position.set(porchX[0],base,-porchX[1]);hood.rotation.y=yaw;
+       hood.name='Bradogue · historic south porch roof';
+       for(const side of [-1,1]){
+        const slope=new THREE.Mesh(new THREE.BoxGeometry(1.55,.13,.88),materials.slate);
+        slope.position.set(-side*.56,2.93,.32);
+        slope.rotation.z=side*.70;hood.add(slope);
+       }
+       scene.add(hood);
+      }
       const count=Math.max(1,Math.floor(len/(palette==='central'?3.65:palette==='library'?3.1:3.35)));
       const bay=len/count;
       const libraryFront=palette==='library'&&on<-.48&&len>14;
@@ -228,7 +282,7 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
         const auxiliaryDoor=rathdown&&on<-.80&&Math.hypot(x-secondaryRathdownDoor[0],n-secondaryRathdownDoor[1])<1.62;
         const top=roofLevel(design,point(t,0));
         for(let k=0;k<levels;k++){
-          if(k===0&&(nearDoor||auxiliaryDoor))continue;
+          if(k===0&&(nearDoor||auxiliaryDoor||(feature.id===academicFrontId&&ox>.90&&len>30&&n<130)||(historicPorch&&Math.abs(t-.5)*len<2.03)))continue;
           const y=floor*(k+.55);
           if(y+floor*.40>top+.05)continue;
           if(palette==='central'){

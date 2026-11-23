@@ -127,6 +127,12 @@ export function addClockTower(scene,feature,heightAt,masonry) {
    if(middle||endBay)block((segments[i]+segments[i+1])/2,d-.105,3.64,segments[i+1]-segments[i],.28,.16,granite);
   }
  }
+ // The street elevation is drawn in three strips; close the two side
+ // returns where the centre projects in front of the flanking wings.
+ for(const {edge,depth} of [{edge:-centreHalf,depth:wings[0].depth},
+                           {edge:centreHalf,depth:wings[2].depth}]){
+  quad([edge,0,0],[edge,depth,0],[edge,depth,frontEaves],[edge,0,frontEaves],masonry);
+ }
  // Projecting three-bay porch with stone arch and a rail to the balcony.
  block(0,-.94,.135,6.7,2.40,.27,granite);
  block(0,-1.36,.075,6.98,2.10,.15,granite);
@@ -138,6 +144,10 @@ export function addClockTower(scene,feature,heightAt,masonry) {
   const a=Math.PI*.13+i*Math.PI*.74/15,b=a+Math.PI*.74/15;
   const vertex=(angle,r)=>[Math.cos(angle)*r,-1.40,1.45+Math.sin(angle)*r*.62];
   quad(vertex(a,2.04),vertex(b,2.04),vertex(b,2.43),vertex(a,2.43),granite);
+ }
+ // Close the porch cheeks under the balcony, leaving the arched opening.
+ for(const edge of [-3.03,3.03]){
+  quad([edge,-1.40,.15],[edge,0,.15],[edge,0,3.12],[edge,-1.40,3.12],masonry);
  }
  block(0,-.81,3.24,6.06,1.57,.26,granite);
  for(let u=-2.90;u<=2.91;u+=.16)block(u,-1.57,3.86,.035,.039,.91,iron);
@@ -287,6 +297,7 @@ export function addClockTower(scene,feature,heightAt,masonry) {
  const depthBreaks=[10.72,22.66,31.48,43.45];
  for(const [i,a] of outline.entries()){
   const b=outline[(i+1)%outline.length];
+  // The long west-facing strips and their short returns are defined above.
   if(a[1]<2.75&&b[1]<2.75)continue;
   const cuts=[0,1,...depthBreaks.map(d=>(d-a[1])/(b[1]-a[1])).filter(t=>t>0&&t<1)].sort((a,b)=>a-b);
   for(let j=1;j<cuts.length;j++){
