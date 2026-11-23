@@ -94,6 +94,15 @@ export function addHistoricBoundary(scene,feature,width,height,heightAt){
  return true;
 }
 
+let streetAsphalt;
+export function grangegormanAsphalt(){
+ if(!streetAsphalt){
+  streetAsphalt=groundFinish('asphalt').clone();
+  streetAsphalt.color.setHex(0xa9adb1);
+ }
+ return streetAsphalt;
+}
+
 export const campusStreetWays=new Set(['way/64270039','way/1099938546']);
 const parkingWays=new Set(['way/1129967347','way/1129967324','way/1129967325']);
 const parkingGates=new Set(['way/1308293962','way/1308293963']);
@@ -126,8 +135,9 @@ export function addMappedSurface(scene,feature,width,heightAt,centre){
  if(parkingWays.has(feature.id))return true; // Covered by the aerial-traced road and lot below.
  const finish={asphalt:'asphalt',paving_stones:'setts',compacted:'compacted'}[surface];
  if(!finish||feature.tags.highway==='steps')return false;
+ const material=feature.name==='Grangegorman Lower'&&finish==='asphalt'?grangegormanAsphalt():groundFinish(finish);
  ribbon(scene,feature.coords,[[width/2,.075],[-width/2,.075]],
-  groundFinish(finish),heightAt,'Mapped '+finish+' · '+feature.id);
+  material,heightAt,'Mapped '+finish+' · '+feature.id);
  return true;
 }
 

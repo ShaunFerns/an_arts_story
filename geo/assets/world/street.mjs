@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {alignment,campusStreetWays,ribbon} from './exterior.mjs';
+import {alignment,campusStreetWays,grangegormanAsphalt,ribbon} from './exterior.mjs';
 import {groundFinish} from './surfaces.mjs';
 
 const finish=(color)=>new THREE.MeshStandardMaterial({color,roughness:.91});
@@ -53,14 +53,15 @@ function sign(scene,heightAt,point,right,boards,name) {
  const stem=new THREE.Mesh(new THREE.BoxGeometry(.078,boards[0].y+.32,.078),post);
  stem.position.y=(boards[0].y+.32)/2;holder.add(stem);
  for(const {width,height,x=0,y,draw,bothSides=false} of boards){
-  const backing=new THREE.Mesh(new THREE.BoxGeometry(width,height,.035),post);
+  const depth=bothSides?.09:.035;
+  const backing=new THREE.Mesh(new THREE.BoxGeometry(width,height,depth),post);
   backing.position.set(x,y,0);holder.add(backing);
   const label=new THREE.Mesh(new THREE.PlaneGeometry(width,height),symbolTexture(draw,512,Math.round(512*height/width)));
-  label.position.set(x,y,.020);holder.add(label);
+  label.position.set(x,y,depth/2+.0025);holder.add(label);
   if(bothSides){
    const rear=label.clone();
    rear.rotation.y=Math.PI;
-   rear.position.z=-.020;holder.add(rear);
+   rear.position.z=-label.position.z;holder.add(rear);
   }
  }
  scene.add(holder);
@@ -77,8 +78,7 @@ function wayfindingLabel(irish,english,arrow='') {
 }
 
 export function addCampusStreet(scene,features,heightAt) {
- const surface=groundFinish('asphalt').clone(),paving=groundFinish('granite');
- surface.color.setHex(0xa9adb1);
+ const surface=grangegormanAsphalt(),paving=groundFinish('granite');
  const coords=[...campusStreetWays].flatMap((id,i)=>features.find(f=>f.id===id).coords.slice(i?1:0));
  const stations=alignment(coords);
  const at=(north,off=0)=>{
