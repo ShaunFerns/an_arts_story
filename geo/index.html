@@ -108,27 +108,53 @@ function terrainHeight(x,n){
 function groundHeight(x,n){
  return terrainHeight(x,n)+broadstonePlatforms.lift(x,n);
 }
-const groundGeometry=new THREE.PlaneGeometry(2200,2200,220,220);
-groundGeometry.rotateX(-Math.PI/2);
-const groundPositions=groundGeometry.attributes.position;
-for(let i=0;i<groundPositions.count;i++){
- const x=groundPositions.getX(i),n=-groundPositions.getZ(i);
- groundPositions.setY(i,terrainHeight(x,n));
-}
-groundGeometry.computeVertexNormals();
-const groundUV=groundGeometry.attributes.uv;
-const groundColours=new Float32Array(groundUV.count*3);
-for(let i=0;i<groundUV.count;i++){
- const east=groundPositions.getX(i),north=-groundPositions.getZ(i);
- groundUV.setXY(i,east*.65,north*.65);
- const tone=.94+.025*Math.sin(east*.16+north*.12)+.029*Math.cos(east*.31-north*.23);
- groundColours.set([tone,tone,Math.min(1,tone+.015)],i*3);
-}
-groundGeometry.setAttribute('color',new THREE.BufferAttribute(groundColours,3));
 const turfMaterial=lawn.clone();
 turfMaterial.vertexColors=true;
-const ground=new THREE.Mesh(groundGeometry,turfMaterial);
-ground.receiveShadow=true;scene.add(ground);
+function addGround(geometry,heightAt){
+ const positions=geometry.attributes.position,uv=geometry.attributes.uv;
+ const colours=new Float32Array(uv.count*3);
+ for(let i=0;i<positions.count;i++){
+  const east=positions.getX(i),north=-positions.getZ(i);
+  positions.setY(i,heightAt(east,north));
+  uv.setXY(i,east*.65,north*.65);
+  const tone=.94+.025*Math.sin(east*.16+north*.12)+.029*Math.cos(east*.31-north*.23);
+  colours.set([tone,tone,Math.min(1,tone+.015)],i*3);
+ }
+ geometry.computeVertexNormals();
+ geometry.setAttribute('color',new THREE.BufferAttribute(colours,3));
+ const mesh=new THREE.Mesh(geometry,turfMaterial);
+ mesh.receiveShadow=true;scene.add(mesh);
+}
+const groundGeometry=new THREE.PlaneGeometry(2200,2200,220,220);
+groundGeometry.rotateX(-Math.PI/2);
+// The coarse ground can cut through the paving near the Rathdown ramp.
+// Sample the existing terrain more finely here and match the old mesh at
+// the perimeter, so the ground and the player use the same rise.
+const west=-60,east=60,south=-80,north=10,coarseStep=10;
+const indices=groundGeometry.index.array,groundCells=[];
+const position=groundGeometry.attributes.position;
+for(let i=0;i<indices.length;i+=6){
+ const x=position.getX(indices[i]),n=-position.getZ(indices[i]);
+ if(x>=west&&x<east&&n>south+.01&&n<north+.01)continue;
+ groundCells.push(...indices.slice(i,i+6));
+}
+groundGeometry.setIndex(groundCells);
+addGround(groundGeometry,terrainHeight);
+const courtGround=new THREE.PlaneGeometry(east-west,north-south,east-west,north-south);
+courtGround.rotateX(-Math.PI/2);
+courtGround.translate((east+west)/2,0,-(south+north)/2);
+function courtGroundHeight(x,n){
+ const horizontalEdge=Math.abs(n-south)<.01||Math.abs(n-north)<.01;
+ const verticalEdge=Math.abs(x-west)<.01||Math.abs(x-east)<.01;
+ if(!horizontalEdge&&!verticalEdge)return terrainHeight(x,n);
+ const value=horizontalEdge?x:n;
+ const floor=Math.floor(value/coarseStep)*coarseStep;
+ const t=(value-floor)/coarseStep;
+ const a=horizontalEdge?terrainHeight(floor,n):terrainHeight(x,floor);
+ const b=horizontalEdge?terrainHeight(floor+coarseStep,n):terrainHeight(x,floor+coarseStep);
+ return THREE.MathUtils.lerp(a,b,t);
+}
+addGround(courtGround,courtGroundHeight);
 const world=(p)=>new THREE.Vector3(p[0],groundHeight(p[0],p[1]),-p[1]);const midpoint=p=>p.reduce((a,q)=>[a[0]+q[0]/p.length,a[1]+q[1]/p.length],[0,0]);
 // Batch the static OSM tiles by material. Only nearby tiles are drawn.
 const terrainLines=new Map(), terrainPolygons=new Map(), roadBox=new THREE.BoxGeometry(1,1,1);
