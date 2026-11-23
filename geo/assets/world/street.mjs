@@ -137,14 +137,14 @@ export function addCampusStreet(scene,features,heightAt) {
  }
  // The aerial shows both marked bays together on the west kerb,
  // immediately south of the campus crossing and beside the cycle lane.
- strip(between(-79.7,-92.9),5.8,3.67,.091,surface,'Grangegorman Lower · inset parking strip');
- strip(between(-79.7,-92.9),7.0,5.85,.096,paving,'Grangegorman Lower · footway behind bays');
- ribbon(scene,between(-79.7,-92.9,5.82),[[.075,.09],[.075,.136],[-.075,.136],[-.075,.09]],
+ strip(between(-79.7,-92.9),6.66,3.67,.091,surface,'Grangegorman Lower · inset parking strip');
+ strip(between(-79.7,-92.9),7.84,6.68,.096,paving,'Grangegorman Lower · footway behind bays');
+ ribbon(scene,between(-79.7,-92.9,6.62),[[.075,.09],[.075,.136],[-.075,.136],[-.075,.09]],
   kerb,heightAt,'Grangegorman Lower · inset parking kerb');
  for(const position of [[39.9,-83.2],[37.7,-88.3]]){
   const north=position[1],forward=direction(north);
   parkingBay(position,forward,true);
-  const pin=at(north+1.9,5.98);
+  const pin=at(north+1.9,6.87);
   sign(scene,heightAt,pin,[forward[1],-forward[0]],[{width:.39,height:.45,y:1.68,bothSides:true,draw(ctx,w,h){
    ctx.fillStyle='#1f4875';ctx.fillRect(0,0,w,h);
    ctx.save();ctx.translate(w*.24,h*.14);ctx.scale(w/235,w/235);wheelchair(ctx);ctx.restore();
