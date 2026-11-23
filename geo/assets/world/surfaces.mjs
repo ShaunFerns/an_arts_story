@@ -8,6 +8,8 @@ const finishes={
  band:{tones:['#ad9083','#b69a89','#aa8e82','#ba9e8e'],width:.60,length:.32},
  railSetts:{tones:['#545456','#626164','#59595a','#777476'],width:.17,length:.12},
  platformTactile:{tones:['#a4a296','#a6a497','#a09d92','#a5a296'],width:.13,length:.13},
+ asphalt:{tones:['#666663','#666663','#686865','#646563'],width:.20,length:.20},
+ compacted:{tones:['#a29d88','#a49d8b','#a39e8c','#a09b89'],width:.19,length:.19},
  grass:{tones:['#71865a','#7c9161','#768b5e','#829268'],width:1,length:1},
 };
 const surfaces=new Map();
@@ -19,12 +21,13 @@ export function groundFinish(type){
  canvas.width=512;canvas.height=256;
  const ctx=canvas.getContext('2d');
  const w=64,h=32;
- ctx.fillStyle=type==='grass'?'#788c60':'#8e8a81';
+ const granular=['grass','asphalt','compacted'].includes(type);
+ ctx.fillStyle=type==='grass'?'#788c60':granular?tones[0]:'#8e8a81';
  ctx.fillRect(0,0,512,256);
  for(let row=0;row<8;row++)for(let col=-1;col<8;col++){
   const column=(col+8)%8;
   const x=col*w+(['setts','luas'].includes(type)&&row%2?w/2:0),y=row*h;
-  if(type==='grass')continue;
+  if(granular)continue;
   ctx.fillStyle=tones[(column*7+row*13+(row*column)%7)%tones.length];
   ctx.fillRect(x+1,y+1,w-2,h-2);
   if(type==='platformTactile'){
@@ -35,7 +38,7 @@ export function groundFinish(type){
  let seed=71264;
  const random=()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};
  for(let i=0;i<14500;i++){
-  ctx.fillStyle=i%2?'#ffffff14':'#35372918';
+  ctx.fillStyle=type==='asphalt'?(i%2?'#c2bcb02a':'#25272630'):i%2?'#ffffff14':'#35372918';
   ctx.fillRect(random()*512,random()*256,1+random()*2,1+random()*2);
  }
  const map=new THREE.CanvasTexture(canvas);

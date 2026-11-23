@@ -49,6 +49,7 @@ import {locationNames} from './assets/semester/locations.mjs';
 import {phoneLabels, presentScene, phoneEntries, resourceMarkup} from './assets/semester/presentation.mjs';
 import {addCampusFacades, addUnderpass, bridgeSupports, buildingDesign, buildingPalette, shellMaterial, outsideNormal, winding, openLibraryApproach} from './assets/world/campus.mjs';
 import {addEntrancePaving, groundFinish} from './assets/world/surfaces.mjs';
+import {addHistoricBoundary,addLowerHouseParking,addMappedSurface,addParkingGate,parkingFurnitureObstacle} from './assets/world/exterior.mjs';
 import {addClockTower,clockTowerId} from './assets/world/clocktower.mjs';
 import {addRathdownApproach,rathdownFenceIds,rathdownRise,rathdownTreeObstacle} from './assets/world/rathdown.mjs';
 import {addSaintLaurence,chapelPorches,chapelPorchObstacles,saintLaurenceId} from './assets/world/saint-laurence.mjs';
@@ -173,7 +174,7 @@ function polygonMesh(points,height,material,kind='building',lift=0){
  }
  return {base};
 }
-function pavedArea(points,material,offset=.025){
+function pavedArea(points,material,offset=.025,name=''){
  if(points.length<4)return;
  const shape=new THREE.Shape(points.map(p=>new THREE.Vector2(...p)));
  const geometry=new THREE.ShapeGeometry(shape);
@@ -183,7 +184,7 @@ function pavedArea(points,material,offset=.025){
  geometry.computeVertexNormals();
  const uv=geometry.attributes.uv;
  for(let i=0;i<uv.count;i++)uv.setXY(i,positions.getX(i),-positions.getZ(i));
- const mesh=new THREE.Mesh(geometry,material);mesh.receiveShadow=true;scene.add(mesh);
+ const mesh=new THREE.Mesh(geometry,material);mesh.name=name;mesh.receiveShadow=true;scene.add(mesh);
 }
 function roadWidth(t){if(['motorway','trunk','primary','secondary'].includes(t))return 12;if(['tertiary','residential','living_street'].includes(t))return 7.5;if(['service','unclassified'].includes(t))return 4.6;return 2.6}
 // Visual-only height assumptions for existing campus buildings. These numbers are
@@ -227,12 +228,17 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
    const luasPlaza=f.id==='way/1208522277';
    pavedArea(f.coords,groundFinish(luasPlaza?'luas':'granite'),luasPlaza?.097:.025);
   }
-  else if(!isLuasPlatform(f.id))for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],roadWidth(t.highway),.075,pedestrian?pathMat:roadMat);
+  else if(!isLuasPlatform(f.id)){
+   const width=roadWidth(t.highway);
+   if(!addMappedSurface(scene,f,width,groundHeight,c))
+    for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],width,.075,pedestrian?pathMat:roadMat);
+  }
   counts.road++;
  }
  if(f.kind==='barrier'&&dist<540){
   const k=t.barrier||'wall', {height,width}=barrierDimensions(t);
   const stopWall=['way/530721241','way/998785438'].includes(f.id);
+  if(addParkingGate(scene,f,groundHeight)){counts.barrier++;continue;}
   if(rathdownFenceIds.has(f.id)){counts.barrier++;continue;}
   if(f.id==='way/1331424713')continue; // Same line as the clock-tower garden masonry.
   if(f.id==='way/1342953792'){
@@ -272,6 +278,7 @@ for(const f of zone){const c=midpoint(f.coords),dist=Math.hypot(...c);if(dist>MA
    counts.barrier++;
    continue;
   }
+  if(addHistoricBoundary(scene,f,width,height,groundHeight)){counts.barrier++;continue;}
   const material=stopWall?arrivalsConcrete:k==='hedge'?hedgeMat:k==='fence'?railMat:k==='wall'?districtStone(c):oldStone;
   for(let i=1;i<f.coords.length;i++)lineMesh(scene,f.coords[i-1],f.coords[i],width,stopWall?4.3:height,material);
   counts.barrier++;
@@ -433,7 +440,8 @@ const missions=landmarkMatches.map(([name,re,description,fallback])=>{
 // The player is represented by a 1.74-metre upright capsule; its ground
 // contact is a circular 0.34m radius. Building footprints and *thick* wall,
  // railing and hedge volumes share the same metre-based coordinates as the map.
-const collision=makeCollisionWorld([...zone,...bridgeSupports,rathdownTreeObstacle,...chapelPorchObstacles],{playerRadius:.34,worldRadius:990,worldExtent:550,cellSize:18});
+addLowerHouseParking(scene,groundHeight,pavedArea);
+const collision=makeCollisionWorld([...zone,...bridgeSupports,rathdownTreeObstacle,...chapelPorchObstacles,parkingFurnitureObstacle],{playerRadius:.34,worldRadius:990,worldExtent:550,cellSize:18});
 
 // East Quad exterior entry prototype: source-faithful footprint, provisional
 // door composition informed by the user's observation (door / revolving / door).
@@ -2039,11 +2047,12 @@ window.__artsGeo={ready:true,rigged:riggedPlayer,get perspective(){return firstP
    delta:a.x-b.x,signInView:a.x>-1&&a.x<1&&a.y>-1&&a.y<1};
 },get eastQuadSignSightline(){const sign=scene.getObjectByName('EastQuadGoldNorthEntranceWallSign');if(!sign)return null;sign.updateWorldMatrix(true,false);const target=sign.getWorldPosition(new THREE.Vector3()),eye=player.position.clone().add(new THREE.Vector3(0,1.65,0)),v=target.clone().sub(eye),d=v.length();const ray=new THREE.Raycaster(eye,v.normalize(),0,d+.4);const hits=ray.intersectObjects(scene.children,true);return {distance:d,hits:hits.filter(h=>h.distance>.1).slice(0,6).map(h=>({name:h.object.name||h.object.type,distance:h.distance,sign:h.object===sign}))};},get eastQuadSignGeometry(){let sign=null,panel=null;scene.traverse(o=>{if(o.name==='EastQuadGoldNorthEntranceWallSign')sign=o;if(o.name==='EastQuadRightSignBrickWall')panel=o});if(!sign||!panel)return null;sign.updateWorldMatrix(true,false);panel.updateWorldMatrix(true,false);const p=sign.getWorldPosition(new THREE.Vector3()),q=panel.getWorldPosition(new THREE.Vector3());return {position:[p.x,p.y,-p.z],wallPosition:[q.x,q.y,-q.z],frontOffset:sign.position.z,width:sign.geometry.parameters.width,height:sign.geometry.parameters.height,visible:sign.visible,wallVisible:panel.visible}},get story(){return story.snapshot},get encounterPoints(){return {
  characters:Object.fromEntries(npcs.map(n=>[n.id,n.position])),stops:Object.fromEntries(huntMarkers.map(m=>[m.id,m.position])),
- }},reviewPose:(x,n,tx,tn,height=0)=>{
+ }},reviewPose:(x,n,tx,tn,height=0,eyeLift=0)=>{
  if(!(params.has('review')||params.has('test'))||collision.query(x,n)||intersectsPlanter(x,n))return false;
- player.position.set(x,groundHeight(x,n)+.05,-n);
+ player.position.set(x,groundHeight(x,n)+.05+eyeLift,-n);
  yaw=Math.atan2(x-tx,tn-n);
- pitch=-Math.atan2(height-1.65,Math.hypot(tx-x,tn-n));
+ pitch=-Math.atan2(height-1.65-eyeLift,Math.hypot(tx-x,tn-n));
+ sceneRendered=false;
  return true;
  },testWalk:(x,n)=>{
   if(!params.has('test')||!gameplayActive())return null;

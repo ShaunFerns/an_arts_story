@@ -12,6 +12,7 @@ const materials = {
   infirmaryStone:new THREE.MeshStandardMaterial({color:0x959698,roughness:.96}),
   chapelStone:new THREE.MeshStandardMaterial({color:0x817f7a,roughness:.96}),
   clockStone:new THREE.MeshStandardMaterial({color:0xa9a593,roughness:.96}),
+  boundaryStone:new THREE.MeshStandardMaterial({color:0x8f8e85,roughness:1}),
   sash:new THREE.MeshStandardMaterial({color:0x70716d,roughness:.75}),
   terracotta:new THREE.MeshStandardMaterial({color:0x9d7850,roughness:.85}),
   polishedStone:new THREE.MeshStandardMaterial({color:0x858a86,roughness:.73}),
@@ -42,6 +43,7 @@ const masonryTypes={
  centralBrick:[32,8,5,2], harling:[100,62,20,1],
  lowerStone:[19,11,14,4], rathdownStone:[15,9,29,3], wardStone:[18,9,18,4],
  infirmaryStone:[20,10,22,4], chapelStone:[18,11,20,4], clockStone:[16,9,20,4],
+ boundaryStone:[12,10,26,2.5],
 };
 function setMasonryMap(key,material){
  if(material.map||!masonryTypes[key])return;
@@ -51,7 +53,7 @@ function setMasonryMap(key,material){
  ctx.fillStyle='#98938c';ctx.fillRect(0,0,512,256);
  let seed=7301;
  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
- const rubble=['wardStone','rathdownStone','infirmaryStone','chapelStone'].includes(key);
+ const rubble=['wardStone','rathdownStone','infirmaryStone','chapelStone','boundaryStone'].includes(key);
  const rows=Array.from({length:courses},()=>rubble?.70+random()*.60:1);
  const height=256/rows.reduce((sum,h)=>sum+h,0),width=512/bays;
  let y=0;
@@ -89,6 +91,13 @@ export function shellMaterial(palette,feature,height) {
  const key=design.stone||{heritage:'historic',contemporary:'steel',context:'precast'}[palette];
  const material=materials[key];
  setMasonryMap(key,material);
+ return material;
+}
+
+export function boundaryStoneMaterial(){
+ const material=materials.boundaryStone;
+ setMasonryMap('boundaryStone',material);
+ material.map.repeat.set(.23,.39);
  return material;
 }
 
@@ -233,12 +242,42 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
        windowCount+=addAcademicFront(scene,a,b,[ox,on],base,door);
        continue;
       }
+      // The photographed St Brendan's Way entrance is in the north-facing
+      // west cross-gable beside St Laurence's, opposite the original south porch.
       const gableEntry=bradogue&&i===1;
       const historicPorch=bradogue&&i===13;
-      if(gableEntry||historicPorch){
+      if(gableEntry){
        const t=.5;
-       const paint=gableEntry?'bradoguePaint':'historic';
-       const height=gableEntry?2.78:2.45;
+       const threshold=groundHeight(...point(t,.27))+.075-base;
+       const h=2.76,w=1.73;
+       const doorPart=(key,side,offset,y,width,height,depth)=>part(key,t+side/len,offset,threshold+y,width,height,depth);
+       doorPart('shade',0,.065,h*.5,w+.11,h+.08,.14);
+       for(const side of [-1,1]){
+        doorPart('brickTrim',side*.985,.120,1.47,.25,2.94,.16);
+        doorPart('bradoguePaint',side*.80,.157,h*.50,.087,h,.082);
+        doorPart('bradoguePaint',side*.40,.155,.50,.725,1.0,.10);
+        doorPart('steel',side*.089,.214,.965,.036,.145,.060);
+       }
+       doorPart('brickTrim',0,.125,2.91,2.21,.27,.17);
+       doorPart('glassLight',0,.137,1.87,1.55,1.69,.034);
+       for(const side of [-.59,-.39,-.19,0,.19,.39,.59])
+        doorPart('bradoguePaint',side,.171,1.87,side===0?.066:.031,1.69,.044);
+       for(const y of [1.01,1.47,1.91,2.16,2.38,2.57,2.73])
+        doorPart('bradoguePaint',0,.175,y,1.63,y===2.16?.092:.045,.052);
+       doorPart('historic',0,.162,-.027,2.07,.092,.41);
+       part('brickTrim',t,.113,5.24,2.10,1.78,.17);
+       part('bradoguePaint',t,.214,5.24,1.73,1.48,.072);
+       part('glassLight',t,.262,5.24,1.56,1.36,.031);
+       for(const x of [-.54,-.27,0,.27,.54])part('bradoguePaint',t+x/len,.287,5.24,x===0?.061:.033,1.37,.036);
+       for(const y of [4.76,5.01,5.24,5.47,5.72])part('bradoguePaint',t,.287,y,1.57,.033,.037);
+       part('historic',t,.165,4.46,1.99,.129,.30);
+       windowCount++;
+       continue;
+      }
+      if(historicPorch){
+       const t=.5;
+       const paint='historic';
+       const height=2.45;
        part('brickTrim',t,.108,height/2,2.22,height+.39,.19);
        part(paint,t,.225,height/2,1.79,height,.15);
        part('glass',t,.315,height-.86,1.57,1.42,.045);
@@ -251,15 +290,6 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
        part(paint,t,.349,height/2,.061,height,.065);
        part('steel',t+.115/len,.388,1.03,.041,.18,.045);
        part('historic',t,.23,.053,2.17,.105,.50);
-       if(gableEntry){
-        part('brickTrim',t,.14,5.24,1.99,1.89,.21);
-        part('bradoguePaint',t,.25,5.24,1.71,1.65,.12);
-        part('glassLight',t,.32,5.24,1.58,1.50,.04);
-        for(const x of [-.53,-.27,0,.27,.53])part(paint,t+x/len,.349,5.24,.038,1.51,.055);
-        for(const y of [4.70,4.97,5.24,5.51,5.78])part(paint,t,.349,y,1.60,.036,.055);
-        windowCount++;
-        continue;
-       }
        const porchX=point(t,.30), hood=new THREE.Group();
        hood.position.set(porchX[0],base,-porchX[1]);hood.rotation.y=yaw;
        hood.name='Bradogue · historic south porch roof';

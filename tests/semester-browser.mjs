@@ -85,6 +85,7 @@ try {
   }
 
   assert.equal(audit.facades.find(f=>f.id==='way/516821745').roof.crossGables,3);
+  assert.equal(audit.facades.find(f=>f.id==='way/516821746').roof.crossGables,3);
   const hubDoor=audit.doors.find(d=>d.id==='library');
   assert(hubDoor.door[0]<-222&&hubDoor.outward[1]<-.9);
   const clock=audit.facades.find(f=>f.id==='way/516824969');
@@ -178,6 +179,23 @@ try {
   const central=audit.doors.find(d=>d.id==='central');
   const [east,eastSouth]=audit.doors.filter(d=>d.id==='east');
   const library=audit.doors.find(d=>d.id==='library');
+  const lower=audit.doors.find(d=>d.id==='lower');
+  const parkingChecks=await model(()=>{
+    const g=window.__artsGeo;
+    const access=[[17.5,-145.2],[25.6,-148.3],[46.6,-156.3],[50.7,-172.7],[55,-185],[53,-215]];
+    const drive=g.collisionMove(17.5,-145.2,8.1,-3.1);
+    return {access:access.map(p=>g.collisionProbe(...p).blocked),drive,
+      wall:g.collisionProbe(28,-134).id,racks:g.collisionProbe(64,-250).id,
+      bradogue:g.collisionProbe(7.5,-50).id,bradogueApproach:g.collisionProbe(10.7,-42).blocked};
+  });
+  assert(parkingChecks.access.every(blocked=>!blocked));
+  assert.equal(parkingChecks.drive.collisions,0);
+  assert.equal(parkingChecks.wall,'way/1308293956');
+  assert.equal(parkingChecks.racks,'lower-house-cycle-racks');
+  assert.equal(parkingChecks.bradogue,'way/516821745');
+  assert.equal(parkingChecks.bradogueApproach,false);
+  for(const point of [eastSouth.exit,[81,-178.6],[82.6,-186.6],[87.9,-257.1],lower.exit])
+    segments+=await walk(point);
   async function walkToDoor(door){
     segments+=await walk(door.exit);
     segments+=await walk(door.interaction);

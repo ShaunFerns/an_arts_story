@@ -315,6 +315,11 @@ for (const [view,pose] of [
  ['luas-approach',[116,-74,95,-99,5]],
  ['north-entrance',[94,-88,91,-103,4.2]],
  ['doors-and-sign',[98,-94,89,-101,3]],
+ ['bradogue-entrance',[14,-34,7.5,-50,4.3]],
+ ['glassmanogue-roof',[-44,-68,-32,-43,7.0]],
+ ['historic-boundary-walls',[23,-135,18,-153,1.85]],
+ ['lower-house-parking',[78,-246,53,-199,0,12]],
+ ['lower-house-parking-entrance',[16.5,-146.0,49.8,-166.0,1.15]],
 ]){
  if(!await eqReview.evaluate(pose=>window.__artsGeo.reviewPose(...pose),pose))throw Error('Blocked photo review position: '+view);
  await eqReview.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));

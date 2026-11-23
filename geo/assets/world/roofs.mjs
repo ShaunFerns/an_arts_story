@@ -7,7 +7,7 @@ const heritage={
  'way/281880562':{stone:'lowerStone',levels:2,eaves:9.5,roof:'hip',rise:1.65},
  'way/310375420':{stone:'chapelStone',levels:1,eaves:7.4,roof:'gable',rise:3.9},
  'way/310375422':{stone:'rathdownStone',levels:2,eaves:6.85,roof:'gable',rise:4.12,ranges:true},
- 'way/516821746':{stone:'infirmaryStone',levels:2,eaves:7.8,roof:'hip',rise:3.0},
+ 'way/516821746':{stone:'infirmaryStone',levels:2,eaves:7.8,roof:'gable',rise:4.45,ranges:true},
  'way/516821745':{stone:'infirmaryStone',levels:2,eaves:7.8,roof:'gable',rise:4.65,ranges:true},
  'way/396704720':{stone:'wardStone',levels:3,eaves:11.2,roof:'gable',rise:3.7},
  'way/307799384':{stone:'lowerStone',levels:3,eaves:11.0,roof:'hip',rise:3.0},
@@ -88,10 +88,11 @@ export function addBuildingRoof(scene,feature,design,base,wallMaterial) {
  if(design.ranges){
   // Each wing gets its own ridge. All slopes are trimmed against the mapped outline.
   const bradogue=feature.id==='way/516821745';
-  const direction=bradogue?[14.9,-6.1]:[8.8,-3.6];
+  const glassmanogue=feature.id==='way/516821746';
+  const direction=bradogue?[14.9,-6.1]:glassmanogue?[6,-2.4]:[8.8,-3.6];
   const axis=direction.map(v=>v/Math.hypot(...direction));
   const side=[-axis[1],axis[0]];
-  const [x,n]=bradogue?[-1.6,-63.7]:[2,-25.6];
+  const [x,n]=bradogue?[-1.6,-63.7]:glassmanogue?[-42.4,-37.1]:[2,-25.6];
   const offset=p=>[p[0]-x,p[1]-n];
   const u=p=>dot(offset(p),axis),d=p=>dot(offset(p),side);
   const wings=bradogue?[
@@ -99,6 +100,14 @@ export function addBuildingRoof(scene,feature,design,base,wallMaterial) {
    {width:[-.05,6.54],depth:[-.08,16.26],pitch:'long',rise:4.65},
    {width:[10.07,15.25],depth:[7.75,16.05],pitch:'long',rise:3.76},
    {width:[19.19,25.76],depth:[.04,16.27],pitch:'long',rise:4.62},
+  ]:glassmanogue?[
+   // Appendix 2a.4, surveyed plan and north/south photos. The long roof
+   // over the joining range intersects three north-south gabled ranges.
+   {width:[-.10,25.25],depth:[-8.47,-1.06],pitch:'cross',rise:3.88},
+   {width:[-.08,6.29],depth:[-9.32,.04],pitch:'long',rise:4.45},
+   {width:[10.03,15.14],depth:[-2.4,6.41],pitch:'long',rise:3.38},
+   {width:[18.97,25.20],depth:[-9.62,.39],pitch:'long',rise:4.45},
+   {width:[10.86,14.74],depth:[-8.47,-5.26],pitch:'long',rise:1.9},
   ]:[
    {width:[-63.4,-26.8],depth:[20.5,33.8],pitch:'cross',rise:4.02},
    {width:[-27.5,27.25],depth:[14.35,24.3],pitch:'cross',rise:3.23},
@@ -131,12 +140,15 @@ export function addBuildingRoof(scene,feature,design,base,wallMaterial) {
     const bounds=clip(clip(clip(clip(tri,u,w0,true),u,w1,false),d,d0,true),d,d1,false);
     for(const plane of planes){
      const face=planes.filter(next=>next!==plane).reduce((poly,next)=>clip(poly,p=>next(p)-plane(p),0,true),bounds);
+     // At an intersection only the uppermost of the two roof planes is visible.
+     // Lower planes can remain under the junction, but internal gable walls
+     // would interrupt the valleys and are omitted for Glassmanogue.
      horizontal(face,p=>design.eaves+Math.max(0,plane(p)));
      for(let j=0;j<face.length;j++){
       const a=face[j],b=face[(j+1)%face.length];
       const va=[u(a),d(a)],vb=[u(b),d(b)];
       const atEdge=[w0,w1,d0,d1].some((edge,k)=>Math.abs(va[k>>1]-edge)<.001&&Math.abs(vb[k>>1]-edge)<.001);
-      if(atEdge||onPerimeter(a,b))upright(a,b,design.eaves,design.eaves,design.eaves+Math.max(0,plane(a)),design.eaves+Math.max(0,plane(b)));
+      if(onPerimeter(a,b)||(atEdge&&!glassmanogue))upright(a,b,design.eaves,design.eaves,design.eaves+Math.max(0,plane(a)),design.eaves+Math.max(0,plane(b)));
      }
     }
    }
@@ -215,5 +227,6 @@ export function addBuildingRoof(scene,feature,design,base,wallMaterial) {
  const name=feature.name||'Academic Hub & Library';
  meshFromTriangles(scene,cap,design.roof==='terrace'?membrane:slate,'Roof · '+name);
  meshFromTriangles(scene,walls,design.roof==='hip'?slate:wallMaterial,'Roof edges · '+name);
- return {profile:design.roof,eaves:design.eaves,ridge:ridgeHeight,...(feature.id==='way/516821745'?{crossGables:3}:{})};
+ return {profile:design.roof,eaves:design.eaves,ridge:ridgeHeight,
+  ...(['way/516821745','way/516821746'].includes(feature.id)?{crossGables:3}:{})};
 }
