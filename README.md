@@ -10,7 +10,7 @@ The game was developed to bring the early student experience to life. It introdu
 
 **[Play First Semester: An Arts Story](https://shaunferns.github.io/an_arts_story/geo/)**
 
-Start at the Broadstone–University Luas stop and make your way around Grangegorman. Follow the story, speak to people and use your in-game phone to check **What’s next**, messages and the campus map. Your progress is saved in your browser.
+Start at the Broadstone–University Luas stop and make your way around Grangegorman. Follow the story, speak to people and use your in-game phone to check **What’s next**, messages and the campus map. Your progress is saved in your browser. Turn on **Sound** to hear the surroundings change as you walk from the Luas to East Quad.
 
 | Control | Action |
 | --- | --- |

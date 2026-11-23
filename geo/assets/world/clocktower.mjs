@@ -28,11 +28,15 @@ const wings=[
  {from:-centreHalf,to:centreHalf,depth:0,bays:[-9.45,-4.72,0,4.72,9.45]},
  {from:centreHalf,to:44.65,depth:2.63,bays:[15.8,20.5,24.9,31.4,36.7,41.7]},
 ];
+// Fig. A2a:4 locates the ranges. The GDA's aerial (December 2021 update,
+// p. 8) shows the roof running east over the link, into the north gabled
+// range. Farther east the roofs step down into lower, flatter service roofs.
 const rearSections=[
- {name:'Canted spine and former chapel',bounds:[-14,14,10.72,22.66],eaves:10.08,rise:2.28,axis:0},
- {name:'Connecting corridor',bounds:[-12,13,22.66,31.48],eaves:7.18,rise:1.43,axis:0},
- {name:'North return',bounds:[2.47,30,31.48,43.45],eaves:9.32,rise:2.22,axis:1},
- {name:'East range',bounds:[-13,16,31.48,78],eaves:8.61,rise:2.45,axis:0},
+ {name:'Canted spine and former chapel',bounds:[-15,16,10.85,22.66],eaves:10.08,rise:1.96,axis:1,ridge:[.15,5.25]},
+ {name:'Connecting corridor',bounds:[-12,4,22.66,31.20],eaves:9.48,rise:1.43,axis:1,ridge:[-3.55,5.95],gable:true},
+ {name:'North return',bounds:[-12,31,31.20,43.45],eaves:9.65,rise:2.85,axis:0,ridge:[37.2,6.28],gable:true},
+ {name:'East range',bounds:[-13,17,43.45,54.55],eaves:8.46,rise:1.25,axis:1,ridge:[-.20,10.1]},
+ {name:'Low east service roofs',bounds:[-13,17,54.55,79],eaves:4.64,rise:.23,axis:0,ridge:[63,13.2],gable:true},
 ];
 const split=(polygon,plane)=>{
  const part=[];
@@ -153,56 +157,67 @@ export function addClockTower(scene,feature,heightAt,masonry) {
  for(let u=-2.90;u<=2.91;u+=.16)block(u,-1.57,3.86,.035,.039,.91,iron);
  block(0,-1.57,4.32,5.92,.056,.057,iron);
 
- // Roofs are clipped to the same coordinates as the collision footprint.
+ // Fill the two end returns between the idealised front and surveyed outline.
  const outline=feature.coords.slice(0,-1).map(planPoint);
+ for(const [wing,index] of [[wings[0],36],[wings[2],30]]){
+  const u=index===36?wing.from:wing.to,d=wing.depth-.39;
+  const [ou,od]=outline[index];
+  quad([u,d,0],[ou,od,0],[ou,od,frontEaves],[u,d,frontEaves],masonry);
+ }
+
  const planTriangles=THREE.ShapeUtils.triangulateShape(outline.map(p=>new THREE.Vector2(...p)),[])
   .map(piece=>piece.map(i=>outline[i]));
  const roofRegions=[
   ...wings.map(({from,to,depth},i)=>({
    name:i===1?'Pedimented breakfront':'Hipped west wing',
-   bounds:[from,to,-.05,10.72],eaves:frontEaves,rise:i===1?2.56:2.65,axis:i===1?1:0,
+   bounds:[from,to,-.60,10.85],eaves:frontEaves,rise:i===1?2.56:2.65,axis:i===1?1:0,
    openWest:i===1,westDepth:depth,
   })),
   ...rearSections,
  ];
- function planesFor({bounds:[lo,hi,near,far],rise,axis,openWest,westDepth}){
-  const width=axis===0?far-(westDepth??near):hi-lo;
-  const slope=rise/(width/2);
-  return axis===0?[
-   p=>rise,p=>slope*(p[1]-(westDepth??near)),p=>slope*(far-p[1]),
-   p=>slope*(p[0]-lo),p=>slope*(hi-p[0]),
-  ]:[p=>rise,p=>slope*(p[0]-lo),p=>slope*(hi-p[0]),
-     ...(openWest?[]:[p=>slope*(p[1]-near)]),p=>slope*(far-p[1])*1.5];
+ // Use the same roof height function at the walls and the ends of each
+ // section. At a step in roof height this closes the taller range down
+ // to the adjoining roof, including the seams shared by the rear ranges.
+ function planesFor({bounds:[lo,hi,near,far],rise,axis,openWest,westDepth,ridge,gable}){
+  const [centre,half]=ridge??(axis===0?
+   [(far+(westDepth??near))/2,(far-(westDepth??near))/2]:[(lo+hi)/2,(hi-lo)/2]);
+  const cross=1-axis;
+  const slope=rise/half;
+  const ends=axis===0?[lo,hi]:[near,far];
+  return [p=>rise,p=>slope*(half+p[cross]-centre),p=>slope*(half-p[cross]+centre),
+   ...(gable||openWest?[]:[p=>slope*(p[axis]-ends[0])]),
+   ...(gable?[]:[p=>slope*(ends[1]-p[axis])])];
  }
  for(const region of roofRegions){
   const [lo,hi,near,far]=region.bounds;
   const bounds=[p=>p[0]-lo,p=>hi-p[0],p=>p[1]-near,p=>far-p[1]];
   const planes=planesFor(region);
-  const outerSection=region.name==='East range';
   for(const tri of planTriangles){
-   // The north return is cut out of the east range, giving each its own roof.
-   const clipped=bounds.reduce(split,tri);
-   const pieces=outerSection?[
-    split(clipped,p=>2.47-p[0]),
-    split(split(clipped,p=>p[0]-2.47),p=>p[1]-43.45),
-   ]:[clipped];
-   for(const piece of pieces){
-    if(piece.length<3)continue;
-    for(const plane of planes){
-     const face=planes.filter(p=>p!==plane).reduce((poly,test)=>split(poly,p=>test(p)-plane(p)),piece);
-     const v=([u,d])=>[u,d,region.eaves+Math.max(0,plane([u,d]))];
-     for(let i=1;i<face.length-1;i++){
-      const [a,b,c]=[face[0],face[i],face[i+1]];
-      const sign=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
-      if(Math.abs(sign)>1e-7)triangle(v(a),v(sign>0?c:b),v(sign>0?b:c),slate);
-     }
-     for(let i=0;i<face.length;i++){
-      const a=face[i],b=face[(i+1)%face.length];
-      if(!bounds.some(f=>Math.abs(f(a))<1e-6&&Math.abs(f(b))<1e-6))continue;
-      // Wall at each change of roof height, above the adjacent lower roof only.
-       if(region.openWest&&Math.abs(a[1])<.1&&Math.abs(b[1])<.1)continue;
-      quad([a[0],a[1],region.eaves-.03],[b[0],b[1],region.eaves-.03],v(b),v(a),masonry);
-     }
+   const piece=bounds.reduce(split,tri);
+   if(piece.length<3)continue;
+   for(const plane of planes){
+    const face=planes.filter(p=>p!==plane).reduce((poly,test)=>split(poly,p=>test(p)-plane(p)),piece);
+    const v=([u,d])=>[u,d,region.eaves+Math.max(0,plane([u,d]))];
+    for(let i=1;i<face.length-1;i++){
+     const [a,b,c]=[face[0],face[i],face[i+1]];
+     const sign=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+     if(Math.abs(sign)>1e-7)triangle(v(a),v(sign>0?c:b),v(sign>0?b:c),slate);
+    }
+    for(let i=0;i<face.length;i++){
+     const a=face[i],b=face[(i+1)%face.length];
+     const sameLine=f=>Math.abs(f(a))<1e-5&&Math.abs(f(b))<1e-5;
+     const perimeter=outline.some(([u,d],j)=>{
+      const [x,n]=outline[(j+1)%outline.length];
+      return sameLine(p=>(p[0]-u)*(n-d)-(p[1]-d)*(x-u));
+     });
+     if(!perimeter&&!bounds.some(sameLine))continue;
+     if(region.openWest&&sameLine(p=>p[1]))continue;
+     const atCut=[near,far].find(cut=>sameLine(p=>p[1]-cut));
+     const adjacent=atCut===undefined?null:roofRegions.find(other=>other!==region&&
+      Math.abs(other.bounds[atCut===near?3:2]-atCut)<1e-5&&
+      (a[0]+b[0])/2>other.bounds[0]&&(a[0]+b[0])/2<other.bounds[1]);
+     const bottom=adjacent?Math.min(region.eaves,adjacent.eaves)-.025:region.eaves-.025;
+     quad([a[0],a[1],bottom],[b[0],b[1],bottom],v(b),v(a),masonry);
     }
    }
   }
@@ -248,8 +263,8 @@ export function addClockTower(scene,feature,heightAt,masonry) {
    hand.rotation.z=angle;hand.position.set(-Math.sin(angle)*len/2,Math.cos(angle)*len/2,.022);face.add(hand);
   }
  }
- for(const [u,d] of [[-33,7],[-18,7],[-8.2,8.9],[9.7,7.8],[19,7.2],[34,7.5],[-5,17],[6,14]]){
-   const roof=roofRegions.find(({bounds:[a,b,c,e]})=>u>=a&&u<=b&&d>=c&&d<=e);
+ for(const [u,d] of [[-33,7],[-18,7],[-8.2,8.9],[9.7,7.8],[19,7.2],[34,7.5],[-5,17],[6,14],[-3.5,27.9],[9.9,37.3],[19.8,37.5]]){
+  const roof=roofRegions.find(({bounds:[a,b,c,e]})=>u>=a&&u<=b&&d>=c&&d<=e);
   const eaves=roof.eaves+Math.max(0,Math.min(...planesFor(roof).map(f=>f([u,d]))))-.12;
   block(u,d,eaves+.61,1.24,.89,1.61,granite);
   block(u,d,eaves+1.40,1.39,.99,.15,granite);
@@ -266,13 +281,14 @@ export function addClockTower(scene,feature,heightAt,masonry) {
   const [u,d]=[(a[0]+b[0])/2,(a[1]+b[1])/2];
   const section=courtyardRoof(u,d);
   const h=section?.eaves??frontEaves;
-  quad([a[0],a[1],0],[b[0],b[1],0],[b[0],b[1],h],[a[0],a[1],h],masonry);
+  const floor=Math.min(-.12,...[a,b].map(p=>heightAt(...worldPoint(...p))-group.position.y-.08));
+  quad([a[0],a[1],floor],[b[0],b[1],floor],[b[0],b[1],h],[a[0],a[1],h],masonry);
   const bays=Math.round(len/4.4);
   const n1=-dd/len,n2=du/len;
   const angle=Math.atan2(-dd,du);
   for(let j=0;j<bays;j++){
    const t=(j+.5)/bays,x=a[0]+t*du+n1*.08,z=a[1]+t*dd+n2*.08;
-   for(const y of h>8?[1.67,4.5,7.36]:[1.62,4.42]){
+   for(const y of h>8?[1.67,4.5,7.36]:h>6?[1.62,4.42]:[1.72]){
     if(section===rearSections[0]&&y===7.36&&d>13){
      const pointed=new THREE.Shape();
      pointed.moveTo(-.51,-.86);pointed.lineTo(.51,-.86);pointed.lineTo(.51,.23);
@@ -294,7 +310,7 @@ export function addClockTower(scene,feature,heightAt,masonry) {
    }
   }
  }
- const depthBreaks=[10.72,22.66,31.48,43.45];
+ const depthBreaks=[10.85,22.66,31.20,43.45,54.55];
  for(const [i,a] of outline.entries()){
   const b=outline[(i+1)%outline.length];
   // The long west-facing strips and their short returns are defined above.

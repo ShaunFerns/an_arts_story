@@ -53,3 +53,15 @@ The initial game placed the Luas and East Quad as though they shared an open, le
 
 The procedural v0.9 figures are placeholders, even after proportion, face, wardrobe and walk-cycle improvements. Do not describe them as realistic commercial-grade avatars. The target for the next significant visual release is licensed **rigged glTF/GLB humans with compatible skeletons and animations**: varied student-age clothing, natural walking/standing/seated motion, facial detail, plausible shadows and good browser performance. Record the model creators, redistribution rights, licence obligations and source URLs. Do not import commercial game assets or copyrighted character models without permission.
 
+
+## Grangegorman Lower and planting
+
+The Grangegorman Lower reconstruction follows the existing road centreline. The GDA aerial and Dublin City Council photos show the crossings, cycle markings and edge treatment. The bilingual directional signs use the photographed fingerpost as a reference. TU Dublin confirms two Blue Badge spaces outside Rathdown House and two on Grangegorman Lower. The campus review locates the first pair within the Rathdown House forecourt and the second pair on opposite sides of the street level with East Quad. The positions and dimensions in the game are approximate.
+
+- [GDA December 2021 aerial, page 8](https://ggda.ie/media/zqqnimjf/cg-update-dec.pdf#page=8)
+- [Dublin City Council mobility works, pp. 22–24](https://www.dublincity.ie/sites/default/files/2021-12/2021-covid-mobility-measures-end-of-year-report.pdf)
+- [TU Dublin campus parking information](https://www.itb.ie/connect/campus-estates/parking/)
+- [Grangegorman Lower street photographs](https://excellentstreetimages.com/urban-photography/areas-of-dublin/grangegorman-including-the-university-campus/grangegorman-lower-is-a-road-that-bisects-the-university-campus/)
+- [East Quad walkway and planting photographs](https://excellentstreetimages.com/blog-view/?permalink=east-quad-complex-university-campus-grangegorman)
+
+The East Quad planting uses the mapped bed outlines and the mix of mature tree canopy, young trees and low planting seen in the aerial and street photographs. The species and planting heights are visual estimates. Campus ambience is synthesized in the browser and uses a synthesized performance of the opening of Bach’s C major Prelude, BWV 846, at the East Quad entrance.

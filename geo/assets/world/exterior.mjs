@@ -15,7 +15,7 @@ const normal=(a,b)=>{
  return [(b[1]-a[1])/d,(a[0]-b[0])/d];
 };
 
-function alignment(coords){
+export function alignment(coords){
  const points=coords.filter((p,i)=>i===0||length(coords[i-1],p)>.025);
  const stations=[];
  let distance=0;
@@ -33,7 +33,7 @@ function alignment(coords){
  return stations;
 }
 
-function ribbon(scene,coords,profile,material,heightAt,name){
+export function ribbon(scene,coords,profile,material,heightAt,name){
  const stations=alignment(coords);
  const vertices=[],uv=[];
  const shape=stations.map(({p,out,distance})=>profile.map(([width,lift])=>{
@@ -94,6 +94,7 @@ export function addHistoricBoundary(scene,feature,width,height,heightAt){
  return true;
 }
 
+export const campusStreetWays=new Set(['way/64270039','way/1099938546']);
 const parkingWays=new Set(['way/1129967347','way/1129967324','way/1129967325']);
 const parkingGates=new Set(['way/1308293962','way/1308293963']);
 
@@ -118,6 +119,7 @@ export function addParkingGate(scene,feature,heightAt){
 }
 
 export function addMappedSurface(scene,feature,width,heightAt,centre){
+ if(campusStreetWays.has(feature.id))return true;
  const [x,n]=centre;
  const {surface}=feature.tags;
  if(x<-110||x>170||n<-280||n>5)return false;

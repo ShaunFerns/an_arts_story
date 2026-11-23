@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {groundFinish} from './surfaces.mjs';
+import {addPlanting} from './landscape.mjs';
 
 export const rathdownFenceIds=new Set(['way/1355378351','way/1355378352','way/1355378353']);
 const foot=[44.55,-55.4],head=[33.85,-51.0];
@@ -108,25 +109,13 @@ export function addRathdownApproach(scene,heightAt,stone,features,blocked) {
  const tree=new THREE.Group();
  tree.name='Rathdown House · forecourt tree and planted island';
  tree.position.copy(at(island,.07));
- const bark=new THREE.MeshStandardMaterial({color:0x65584a,roughness:1});
- const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.19,.35,6.1,9),bark);
- trunk.position.y=3;trunk.castShadow=true;tree.add(trunk);
- for(const [x,y,z] of [[-1.6,5.8,.3],[1.58,6.8,-.75],[.15,7.2,1.64],[-.27,8.5,-.55]]){
-  const end=new THREE.Vector3(x,y,z),start=new THREE.Vector3(0,2.98,0),delta=end.clone().sub(start);
-  const branch=new THREE.Mesh(new THREE.CylinderGeometry(.054,.12,delta.length(),7),bark);
-  branch.position.copy(start.lerp(end,.5));
-  branch.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
-  tree.add(branch);
- }
- const crown=new THREE.IcosahedronGeometry(1,2);
- const leaves=[0x536039,0x667046,0x586a3c,0x4b603b].map(color=>new THREE.MeshStandardMaterial({color,roughness:1}));
- for(let i=0;i<29;i++){
-  const a=i*2.39996,r=.55+2.65*(i%7)/6;
-  const mesh=new THREE.Mesh(crown,leaves[i%4]);
-  mesh.position.set(Math.cos(a)*r,7.05+1.9*Math.cos(r*.51)+(i%3)*.48,Math.sin(a)*r);
-  mesh.scale.set(1.55+(i%3)*.26,1.15+(i%4)*.15,1.59);
-  mesh.castShadow=true;tree.add(mesh);
- }
+ addPlanting(tree,[
+  {x:0,y:.18,z:0,height:10.2,width:9.8,seed:38},
+  ...Array.from({length:16},(_,i)=>({
+   x:2.7*Math.cos(i*2.39996),y:.19,z:2.1*Math.sin(i*2.39996),
+   height:.31+(i%4)*.11,width:.71,shrub:true,seed:41+i,
+  })),
+ ],'Rathdown House · forecourt tree and underplanting');
  const kerb=new THREE.Mesh(new THREE.CylinderGeometry(3.98,4.02,.18,32),stone);
  kerb.position.y=.07;kerb.scale.z=.84;kerb.receiveShadow=true;tree.add(kerb);
  const planting=new THREE.Mesh(new THREE.CylinderGeometry(3.80,3.81,.045,32),groundFinish('grass'));
