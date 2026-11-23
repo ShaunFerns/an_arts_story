@@ -1,9 +1,9 @@
 {
   "source": "First_Semester_An_Arts_Story_Playable_v1_3.html",
-  "count": 153,
+  "count": 156,
   "canonicalRoots": [
     "ch0a",
-    "ch1a",
+    "welcomePaul",
     "ch2a",
     "ch3a",
     "ch4a",
@@ -32,7 +32,7 @@
   ],
   "integratedRoots": [
     "ch0a",
-    "ch1a",
+    "welcomePaul",
     "ch2a",
     "ch3a",
     "ch4a",
@@ -104,13 +104,13 @@
     {
       "id": "fa1",
       "title": "A conversation, not a form to fill alone",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Julie · academic adviser",
       "text": {
-        "expression": "s=>`You meet Dr Byrne in a quiet area of Central Quad. She has an advising form open, but she turns the screen so you can both see it. “This is our first advising conversation,” she says. “I want to hear what brought you to Arts, what you'd like to investigate, and anything that might make studying difficult. I can record directions and follow-up actions. The form won't automatically enrol you on modules.”\\n\\n“Let's start with you. When you think about your first year, what are you curious about?”`",
-        "defaultValue": "You meet Dr Byrne in a quiet area of Central Quad. She has an advising form open, but she turns the screen so you can both see it. “This is our first advising conversation,” she says. “I want to hear what brought you to Arts, what you'd like to investigate, and anything that might make studying difficult. I can record directions and follow-up actions. The form won't automatically enrol you on modules.”\n\n“Let's start with you. When you think about your first year, what are you curious about?”"
+        "expression": "s=>`After the welcome, Julie finds a quieter spot outside East Quad and turns her screen so you can both see the advising form. “This is our first advising conversation,” she says. “I want to hear what brought you to Arts, what you'd like to investigate, and anything that might make studying difficult. I can record directions and follow-up actions. The form won't automatically enrol you on modules.”\\n\\n“Let's start with you. When you think about your first year, what are you curious about?”`",
+        "defaultValue": "After the welcome, Julie finds a quieter spot outside East Quad and turns her screen so you can both see the advising form. “This is our first advising conversation,” she says. “I want to hear what brought you to Arts, what you'd like to investigate, and anything that might make studying difficult. I can record directions and follow-up actions. The form won't automatically enrol you on modules.”\n\n“Let's start with you. When you think about your first year, what are you curious about?”"
       },
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -125,7 +125,7 @@
               "confidence": "exploring"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -138,7 +138,7 @@
               "confidence": "exploring"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -151,7 +151,7 @@
               "confidence": "exploring"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -164,7 +164,7 @@
               "confidence": "exploring"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         }
       ],
@@ -174,19 +174,19 @@
       "comparableLegacyNode": "inductionAdviser",
       "after": "implemented",
       "reachable": true,
-      "navigation": "central",
+      "navigation": "east",
       "phone": false
     },
     {
       "id": "fa2",
       "title": "Your second interest might surprise you",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Julie · academic adviser",
       "text": {
-        "expression": "s=>`“You've mentioned ${MODULES[s.formA.interests[0]]?.title||'a subject'},” Dr Byrne says, jotting it down. “You do not have to commit to a Major today. Sometimes the second or third area you explore turns out to matter just as much.”\\n\\nShe asks what else you would like to sample. Outside the window, students cross the square towards East Quad. You realise the first semester could introduce you to a subject you haven't studied before.`",
-        "defaultValue": "“You've mentioned a subject,” Dr Byrne says, jotting it down. “You do not have to commit to a Major today. Sometimes the second or third area you explore turns out to matter just as much.”\n\nShe asks what else you would like to sample. Outside the window, students cross the square towards East Quad. You realise the first semester could introduce you to a subject you haven't studied before."
+        "expression": "s=>`“You've mentioned ${MODULES[s.formA.interests[0]]?.title||'a subject'},” Julie says, jotting it down. “You do not have to commit to a Major today. Sometimes the second or third area you explore turns out to matter just as much.”\\n\\nShe asks what else you would like to sample. Someone calls to a friend across the forecourt. You realise the first semester could introduce you to a subject you haven't studied before.`",
+        "defaultValue": "“You've mentioned a subject,” Julie says, jotting it down. “You do not have to commit to a Major today. Sometimes the second or third area you explore turns out to matter just as much.”\n\nShe asks what else you would like to sample. Someone calls to a friend across the forecourt. You realise the first semester could introduce you to a subject you haven't studied before."
       },
       "stateReads": [
         "formA.interests"
@@ -202,7 +202,7 @@
               "interest": "history"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -214,7 +214,7 @@
               "interest": "language"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -226,7 +226,7 @@
               "interest": "music"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -238,7 +238,7 @@
               "interest": "computing"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         }
       ],
@@ -248,19 +248,19 @@
       "comparableLegacyNode": null,
       "after": "implemented",
       "reachable": true,
-      "navigation": "central",
+      "navigation": "east",
       "phone": false
     },
     {
       "id": "fa3",
       "title": "How certain are you?",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Julie · academic adviser",
       "text": {
-        "expression": "s=>`Dr Byrne reads back your interests: ${(s.formA.interests||[]).map(k=>MODULES[k]?.title).join(' and ')}. “That gives us a starting point. But the form has another question: how confident are you about a future Major or perhaps a Minor? Being unsure is a perfectly useful answer.”\\n\\nShe opens the programme pathway diagram. “Some options need early modules; others can remain open longer. We can explore a potential Minor too, but only if its complete 40-ECTS structure is viable later.”`",
-        "defaultValue": "Dr Byrne reads back your interests: . “That gives us a starting point. But the form has another question: how confident are you about a future Major or perhaps a Minor? Being unsure is a perfectly useful answer.”\n\nShe opens the programme pathway diagram. “Some options need early modules; others can remain open longer. We can explore a potential Minor too, but only if its complete 40-ECTS structure is viable later.”"
+        "expression": "s=>`Julie reads back your interests: ${(s.formA.interests||[]).map(k=>MODULES[k]?.title).join(' and ')}. “That gives us a starting point. But the form has another question: how confident are you about a future Major or perhaps a Minor? Being unsure is a perfectly useful answer.”\\n\\nShe opens the programme pathway diagram. “Some options need early modules; others can remain open longer. We can explore a potential Minor too, but only if its complete 40-ECTS structure is viable later.”`",
+        "defaultValue": "Julie reads back your interests: . “That gives us a starting point. But the form has another question: how confident are you about a future Major or perhaps a Minor? Being unsure is a perfectly useful answer.”\n\nShe opens the programme pathway diagram. “Some options need early modules; others can remain open longer. We can explore a potential Minor too, but only if its complete 40-ECTS structure is viable later.”"
       },
       "stateReads": [
         "formA.interests"
@@ -277,7 +277,7 @@
               "minor": "undecided"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -290,7 +290,7 @@
               "minor": "undecided"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -303,7 +303,7 @@
               "minor": "interested"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         }
       ],
@@ -313,17 +313,17 @@
       "comparableLegacyNode": null,
       "after": "implemented",
       "reachable": true,
-      "navigation": "central",
+      "navigation": "east",
       "phone": false
     },
     {
       "id": "fa4",
       "title": "The practical side of choice",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
-      "text": "“Now, is there anything about the timetable or your circumstances we should think about?” Dr Byrne asks. “You don't need to explain anything private. But if there are travel, work or caring commitments, it helps to know which aspects of a proposed schedule might be difficult.”\n\nYou remember the timetable screenshot you saw at induction. Six modules might look straightforward on paper, but classes could be spread across the week.",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Julie · academic adviser",
+      "text": "“Now, is there anything about the timetable or your circumstances we should think about?” Julie asks. “You don't need to explain anything private. But if there are travel, work or caring commitments, it helps to know which aspects of a proposed schedule might be difficult.”\n\nYou remember the timetable screenshot you saw at induction. Six modules might look straightforward on paper, but classes could be spread across the week.",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
       "choices": [
@@ -336,7 +336,7 @@
               "constraint": "commuting"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -348,7 +348,7 @@
               "constraint": "time commitments"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -360,7 +360,7 @@
               "constraint": "workload questions"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         }
       ],
@@ -370,17 +370,17 @@
       "comparableLegacyNode": null,
       "after": "implemented",
       "reachable": true,
-      "navigation": "central",
+      "navigation": "east",
       "phone": false
     },
     {
       "id": "faBreadth",
       "title": "Breadth is part of your degree too",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
-      "text": "“One more thing before we finish,” says Dr Byrne. “Arts is not built solely around the Major. The Spine is shared learning, and SARs introduce you to other areas. You might discover something you never thought you would study.”\n\n“What would you be interested in exploring outside your main subjects?”",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Julie · academic adviser",
+      "text": "“One more thing before we finish,” says Julie. “Arts is not built solely around the Major. The Spine is shared learning, and SARs introduce you to other areas. You might discover something you never thought you would study.”\n\n“What would you be interested in exploring outside your main subjects?”",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
       "choices": [
@@ -393,7 +393,7 @@
               "sar": "Sustainability and society"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -405,7 +405,7 @@
               "sar": "Culture and languages"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -417,7 +417,7 @@
               "sar": "Open to different SAR areas"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         }
       ],
@@ -427,19 +427,19 @@
       "comparableLegacyNode": null,
       "after": "implemented",
       "reachable": true,
-      "navigation": "central",
+      "navigation": "east",
       "phone": false
     },
     {
       "id": "fa5",
       "title": "What would you like clarified?",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Julie · academic adviser",
       "text": {
-        "expression": "s=>`Dr Byrne summarises what she has recorded so far. “I have your interests, where you are in your thinking and the practical issue you raised. What do you want us to check first?”\\n\\nThis is where a good question makes a difference. There is no prize for appearing to know the answers already.`",
-        "defaultValue": "Dr Byrne summarises what she has recorded so far. “I have your interests, where you are in your thinking and the practical issue you raised. What do you want us to check first?”\n\nThis is where a good question makes a difference. There is no prize for appearing to know the answers already."
+        "expression": "s=>`Julie summarises what she has recorded so far. “I have your interests, where you are in your thinking and the practical issue you raised. What do you want us to check first?”\\n\\nThis is where a good question makes a difference. There is no prize for appearing to know the answers already.`",
+        "defaultValue": "Julie summarises what she has recorded so far. “I have your interests, where you are in your thinking and the practical issue you raised. What do you want us to check first?”\n\nThis is where a good question makes a difference. There is no prize for appearing to know the answers already."
       },
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -453,7 +453,7 @@
               "question": "Which early modules could protect my preferred Major?"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -465,7 +465,7 @@
               "question": "How can I distinguish preferences, allocations and registration?"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -477,7 +477,7 @@
               "question": "Could a compatible Minor be viable later?"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -489,7 +489,7 @@
               "question": "What does 30 ECTS mean for time and workload?"
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         }
       ],
@@ -499,19 +499,19 @@
       "comparableLegacyNode": null,
       "after": "implemented",
       "reachable": true,
-      "navigation": "central",
+      "navigation": "east",
       "phone": false
     },
     {
       "id": "fa6",
       "title": "A useful next step",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Julie · academic adviser",
       "text": {
-        "expression": "s=>`“That's worth checking,” says Dr Byrne. She explains that advising can record possible Major and Minor directions, pathway watch points and next steps. She cannot guarantee that a requested module has a place or timetable slot. Any proposed module combination must be checked against the current programme information, availability and registration processes.\\n\\nShe asks you to choose what to do after this meeting.`",
-        "defaultValue": "“That's worth checking,” says Dr Byrne. She explains that advising can record possible Major and Minor directions, pathway watch points and next steps. She cannot guarantee that a requested module has a place or timetable slot. Any proposed module combination must be checked against the current programme information, availability and registration processes.\n\nShe asks you to choose what to do after this meeting."
+        "expression": "s=>`“That's worth checking,” says Julie. She explains that advising can record possible Major and Minor directions, pathway watch points and next steps. She cannot guarantee that a requested module has a place or timetable slot. Any proposed module combination must be checked against the current programme information, availability and registration processes.\\n\\nShe asks you to choose what to do after this meeting.`",
+        "defaultValue": "“That's worth checking,” says Julie. She explains that advising can record possible Major and Minor directions, pathway watch points and next steps. She cannot guarantee that a requested module has a place or timetable slot. Any proposed module combination must be checked against the current programme information, availability and registration processes.\n\nShe asks you to choose what to do after this meeting."
       },
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -526,7 +526,7 @@
               "followup": "Check possible Major requirements and the real Curriculum Planner with my adviser."
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -539,7 +539,7 @@
               "followup": "Check the example timetable and ask the programme team about any actual allocation problems."
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         }
       ],
@@ -549,19 +549,19 @@
       "comparableLegacyNode": null,
       "after": "implemented",
       "reachable": true,
-      "navigation": "central",
+      "navigation": "east",
       "phone": false
     },
     {
       "id": "faDone",
       "title": "Your advising record and practice timetable",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
       "speaker": "Narrator",
       "text": {
-        "expression": "s=>`The meeting ends with a short summary: your current interests, your uncertainty or confidence, a practical watch point and an agreed action. Dr Byrne calls it your first advising record.\\n\\nWhen you open the in-game phone, you find a fictional practice timetable built from the interests you discussed. The programme has not registered you for anything. The made-up timetable is there so you can learn to compare classes, study hours and pathway options without affecting a university record.\\n\\nTry the timetable on your phone. Notice where the classes are, what isn't shown and why an adviser would need to check real capacity and sequencing before confirming a plan.`",
-        "defaultValue": "The meeting ends with a short summary: your current interests, your uncertainty or confidence, a practical watch point and an agreed action. Dr Byrne calls it your first advising record.\n\nWhen you open the in-game phone, you find a fictional practice timetable built from the interests you discussed. The programme has not registered you for anything. The made-up timetable is there so you can learn to compare classes, study hours and pathway options without affecting a university record.\n\nTry the timetable on your phone. Notice where the classes are, what isn't shown and why an adviser would need to check real capacity and sequencing before confirming a plan."
+        "expression": "s=>`The meeting ends with a short summary: your current interests, your uncertainty or confidence, a practical watch point and an agreed action. Julie calls it your first advising record.\\n\\nWhen you open the in-game phone, you find a fictional practice timetable built from the interests you discussed. The programme has not registered you for anything. The made-up timetable is there so you can learn to compare classes, study hours and pathway options without affecting a university record.\\n\\nTry the timetable on your phone. Notice where the classes are, what isn't shown and why an adviser would need to check real capacity and sequencing before confirming a plan.`",
+        "defaultValue": "The meeting ends with a short summary: your current interests, your uncertainty or confidence, a practical watch point and an agreed action. Julie calls it your first advising record.\n\nWhen you open the in-game phone, you find a fictional practice timetable built from the interests you discussed. The programme has not registered you for anything. The made-up timetable is there so you can learn to compare classes, study hours and pathway options without affecting a university record.\n\nTry the timetable on your phone. Notice where the classes are, what isn't shown and why an adviser would need to check real capacity and sequencing before confirming a plan."
       },
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -594,7 +594,7 @@
       "comparableLegacyNode": "inductionPreferenceRecorded",
       "after": "implemented",
       "reachable": true,
-      "navigation": "central",
+      "navigation": "east",
       "phone": true
     },
     {
@@ -797,7 +797,7 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": "“Let’s check whether the missing module is simply an interest, or whether it helps keep an intended Major viable. We can discuss alternatives, but I can’t allocate a place or override a capacity restriction.”",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -834,7 +834,7 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": "“That’s expected in Stage 1. We can identify several possibilities and look for an introductory mix that preserves options where possible.”",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -863,7 +863,7 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": "“Some pathways depend on an early module sequence or eligibility check. We should find out if this one does, then raise any registration problem through the appropriate route.”",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -1019,7 +1019,7 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": "“You do not have to formally commit to a Major in your first weeks. However, certain possible pathways need early attention. Computer Science and Food & Nutrition are examples where Stage 1 activity can matter. We should check the approved requirements rather than assume.”",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -1048,7 +1048,7 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": "“Often yes, subject to prerequisites, capacity and timetable fit. We can map what you are interested in and flag any early conditions. A pathway preference later in Stage 1 is still indicative; formal Major confirmation comes later.”",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -2136,7 +2136,7 @@
       "sourcePlace": "east",
       "physicalPlace": "east",
       "location": "East Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": "“A timetable change may affect a particular class without altering the module you are registered on. The curriculum profile helps you understand your current build; the latest timetable tells you when activities are scheduled. If something is still inconsistent, raise it through the appropriate programme process.”",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -2435,7 +2435,7 @@
       "entryCondition": "Choice, optional campus case or active referral",
       "choices": [
         {
-          "label": "Book the practice appointment and meet Dr Aoife Byrne",
+          "label": "Book the practice appointment and meet Julie",
           "to": "exploreMeeting",
           "condition": null,
           "effects": {
@@ -2522,10 +2522,10 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": {
-        "expression": "s=>`Dr Aoife Byrne listens to Cian’s idea and asks what has prompted the change. “That’s exactly the kind of curiosity we hope Stage 1 encourages,” she says. “But we need to separate three things: exploring an interest, planning a possible Major, and altering a registered module.”\\n\\nYou show the example current build and explain the new subject. “We can look at future opportunities, prerequisites and which options need protection. If a module change is being requested now, we need to check the appropriate formal route, availability and consequences. Neither an adviser conversation nor attending an extra lecture changes a registration on its own.”\\n\\n${s.flags.plannerConsulted?'You can refer to the six modules you checked in the planner, which makes the discussion more precise.':'You realise that looking at the curriculum profile before the meeting would have helped you describe your current position.'} Cian puts the phone away. “So I can change my mind about where I’m heading without quietly changing what I’m already enrolled on.”`",
-        "defaultValue": "Dr Aoife Byrne listens to Cian’s idea and asks what has prompted the change. “That’s exactly the kind of curiosity we hope Stage 1 encourages,” she says. “But we need to separate three things: exploring an interest, planning a possible Major, and altering a registered module.”\n\nYou show the example current build and explain the new subject. “We can look at future opportunities, prerequisites and which options need protection. If a module change is being requested now, we need to check the appropriate formal route, availability and consequences. Neither an adviser conversation nor attending an extra lecture changes a registration on its own.”\n\nYou realise that looking at the curriculum profile before the meeting would have helped you describe your current position. Cian puts the phone away. “So I can change my mind about where I’m heading without quietly changing what I’m already enrolled on.”"
+        "expression": "s=>`Julie listens to Cian’s idea and asks what has prompted the change. “That’s exactly the kind of curiosity we hope Stage 1 encourages,” she says. “But we need to separate three things: exploring an interest, planning a possible Major, and altering a registered module.”\\n\\nYou show the example current build and explain the new subject. “We can look at future opportunities, prerequisites and which options need protection. If a module change is being requested now, we need to check the appropriate formal route, availability and consequences. Neither an adviser conversation nor attending an extra lecture changes a registration on its own.”\\n\\n${s.flags.plannerConsulted?'You can refer to the six modules you checked in the planner, which makes the discussion more precise.':'You realise that looking at the curriculum profile before the meeting would have helped you describe your current position.'} Cian puts the phone away. “So I can change my mind about where I’m heading without quietly changing what I’m already enrolled on.”`",
+        "defaultValue": "Julie listens to Cian’s idea and asks what has prompted the change. “That’s exactly the kind of curiosity we hope Stage 1 encourages,” she says. “But we need to separate three things: exploring an interest, planning a possible Major, and altering a registered module.”\n\nYou show the example current build and explain the new subject. “We can look at future opportunities, prerequisites and which options need protection. If a module change is being requested now, we need to check the appropriate formal route, availability and consequences. Neither an adviser conversation nor attending an extra lecture changes a registration on its own.”\n\nYou realise that looking at the curriculum profile before the meeting would have helped you describe your current position. Cian puts the phone away. “So I can change my mind about where I’m heading without quietly changing what I’m already enrolled on.”"
       },
       "stateReads": [
         "flags.plannerConsulted"
@@ -2574,7 +2574,7 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": "“Some Major options need an early module sequence, eligibility check or specialist approval. That is why keeping future options open sometimes means taking action now. We need to check the actual approved pathway and current availability, rather than promise you can start any subject at any time.”",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -2642,7 +2642,7 @@
       "location": "Lower House",
       "speaker": "Cian · fellow student",
       "text": {
-        "expression": "s=>`A few days later another student says: “I love a module my friend takes. I might just drop my registered class and start theirs on Monday. It’s exploration year, after all.” Cian looks at you.\\n\\n${s.flags.explorationAction==='advice'?'You remember Dr Aoife Byrne distinguishing future possibilities from registered modules.':s.flags.plannerConsulted?'You remember the six-module build you checked in your practice planner.':'You recognise this is the same dilemma you encountered earlier.'}\\n\\nThe new student is enthusiastic, and you do not want to put them off trying something different. What advice would you give?`",
+        "expression": "s=>`A few days later another student says: “I love a module my friend takes. I might just drop my registered class and start theirs on Monday. It’s exploration year, after all.” Cian looks at you.\\n\\n${s.flags.explorationAction==='advice'?'You remember Julie distinguishing future possibilities from registered modules.':s.flags.plannerConsulted?'You remember the six-module build you checked in your practice planner.':'You recognise this is the same dilemma you encountered earlier.'}\\n\\nThe new student is enthusiastic, and you do not want to put them off trying something different. What advice would you give?`",
         "defaultValue": "A few days later another student says: “I love a module my friend takes. I might just drop my registered class and start theirs on Monday. It’s exploration year, after all.” Cian looks at you.\n\nYou recognise this is the same dilemma you encountered earlier.\n\nThe new student is enthusiastic, and you do not want to put them off trying something different. What advice would you give?"
       },
       "stateReads": [
@@ -2904,10 +2904,10 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": {
-        "expression": "s=>`Dr Aoife Byrne welcomes you and asks how the first weeks are going. There isn't a test or a requirement to announce your future Major. This is a conversation about where you are now and what needs checking.\\n\\n${s.flags.prepRecord?'You open your practice timetable and can point to the modules currently listed. Dr Aoife Byrne is able to distinguish a possible registration issue from a question about your academic direction.':'You mention a module you think is missing, but cannot remember the code or whether you were actually registered. Dr Aoife Byrne suggests checking the current timetable and planner together before treating it as a confirmed problem.'}\\n\\n${s.flags.prepInterests?'You can explain the subjects you enjoyed, what surprised you, and the two directions you might want to preserve. Dr Aoife Byrne asks about prerequisites and what you might need to investigate before the next advising point.':'When asked about your interests, you struggle to put them into words. Dr Aoife Byrne gives you space to think and suggests making a short list after the meeting. You have not missed your chance to explore.'}\\n\\n${s.flags.prepQuestion==='change'?'You ask whether you can swap modules now. Dr Aoife Byrne explains that an interest or an advising discussion does not change formal registration; any request has to be checked through the approved programme process.':s.flags.prepQuestion==='pathways'?'You ask how to keep two routes viable. Dr Aoife Byrne suggests checking the relevant early modules, gateways and conditions, rather than promising either route will remain available.':s.flags.prepQuestion==='role'?'You ask which questions belong to an adviser. Dr Aoife Byrne describes academic pathway guidance and explains where registration and administrative questions need to go.':'Dr Aoife Byrne asks which issue feels most urgent and helps you turn a general worry into questions to investigate.'}\\n\\nBefore you leave, Dr Aoife Byrne asks what you will do next.`",
-        "defaultValue": "Dr Aoife Byrne welcomes you and asks how the first weeks are going. There isn't a test or a requirement to announce your future Major. This is a conversation about where you are now and what needs checking.\n\nYou mention a module you think is missing, but cannot remember the code or whether you were actually registered. Dr Aoife Byrne suggests checking the current timetable and planner together before treating it as a confirmed problem.\n\nWhen asked about your interests, you struggle to put them into words. Dr Aoife Byrne gives you space to think and suggests making a short list after the meeting. You have not missed your chance to explore.\n\nDr Aoife Byrne asks which issue feels most urgent and helps you turn a general worry into questions to investigate.\n\nBefore you leave, Dr Aoife Byrne asks what you will do next."
+        "expression": "s=>`Julie welcomes you and asks how the first weeks are going. There isn't a test or a requirement to announce your future Major. This is a conversation about where you are now and what needs checking.\\n\\n${s.flags.prepRecord?'You open your practice timetable and can point to the modules currently listed. Julie is able to distinguish a possible registration issue from a question about your academic direction.':'You mention a module you think is missing, but cannot remember the code or whether you were actually registered. Julie suggests checking the current timetable and planner together before treating it as a confirmed problem.'}\\n\\n${s.flags.prepInterests?'You can explain the subjects you enjoyed, what surprised you, and the two directions you might want to preserve. Julie asks about prerequisites and what you might need to investigate before the next advising point.':'When asked about your interests, you struggle to put them into words. Julie gives you space to think and suggests making a short list after the meeting. You have not missed your chance to explore.'}\\n\\n${s.flags.prepQuestion==='change'?'You ask whether you can swap modules now. Julie explains that an interest or an advising discussion does not change formal registration; any request has to be checked through the approved programme process.':s.flags.prepQuestion==='pathways'?'You ask how to keep two routes viable. Julie suggests checking the relevant early modules, gateways and conditions, rather than promising either route will remain available.':s.flags.prepQuestion==='role'?'You ask which questions belong to an adviser. Julie describes academic pathway guidance and explains where registration and administrative questions need to go.':'Julie asks which issue feels most urgent and helps you turn a general worry into questions to investigate.'}\\n\\nBefore you leave, Julie asks what you will do next.`",
+        "defaultValue": "Julie welcomes you and asks how the first weeks are going. There isn't a test or a requirement to announce your future Major. This is a conversation about where you are now and what needs checking.\n\nYou mention a module you think is missing, but cannot remember the code or whether you were actually registered. Julie suggests checking the current timetable and planner together before treating it as a confirmed problem.\n\nWhen asked about your interests, you struggle to put them into words. Julie gives you space to think and suggests making a short list after the meeting. You have not missed your chance to explore.\n\nJulie asks which issue feels most urgent and helps you turn a general worry into questions to investigate.\n\nBefore you leave, Julie asks what you will do next."
       },
       "stateReads": [
         "flags.prepRecord",
@@ -3222,22 +3222,106 @@
       "phone": false
     },
     {
-      "id": "ch1a",
-      "title": "What have I joined?",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
-      "text": "Welcome to Grangegorman. Students gather outside Central Quad, comparing timetables and talking about subjects they hope to try. During the welcome session, Dr Aoife Byrne describes a degree that can develop differently for different people. You will study across a programme structure rather than simply follow the same list of modules as everyone else.\n\nBA Arts is a four-year, 240 ECTS honours degree. Students normally complete 60 ECTS each year, usually 30 each semester. Everyone completes an approved Major, 30 ECTS of common Spine modules and 50 ECTS of Subject Area Requirements (SARs). A 40 ECTS Minor is optional, and remaining credits may be completed through Free Electives.\n\nDr Aoife Byrne stops. “It is easier to see than to remember. Let's build an example degree.”",
+      "id": "welcomePaul",
+      "title": "Welcome to BA Arts",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Paul · Programme Operations Lead",
+      "text": "Paul has a campus map folded down to about the size of his hand. He is giving someone directions when he notices you waiting.\n\n“Hi. Are you here for Arts? I’m Paul. I’ve sent two people round the wrong side of this building already, so if you’ve done a lap, you’re in good company.”\n\nHe makes room beside him. “How are you getting on?”",
       "stateReads": [],
       "entryCondition": "Previous guided chapters completed",
+      "choices": [
+        {
+          "label": "“I thought I’d missed the start.”",
+          "to": "welcomePaulReply",
+          "condition": null,
+          "effects": {
+            "flag": {
+              "welcomeConcern": "arrival"
+            }
+          },
+          "destination": "east",
+          "app": null
+        },
+        {
+          "label": "“I’m trying to work out if I’ve picked the right subjects.”",
+          "to": "welcomePaulReply",
+          "condition": null,
+          "effects": {
+            "flag": {
+              "welcomeConcern": "subjects"
+            }
+          },
+          "destination": "east",
+          "app": null
+        }
+      ],
+      "chapterEnd": null,
+      "ending": false,
+      "before": "missing",
+      "comparableLegacyNode": null,
+      "after": "implemented",
+      "reachable": true,
+      "navigation": "east",
+      "phone": false
+    },
+    {
+      "id": "welcomePaulReply",
+      "title": "A question to bring to Julie",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Paul · Programme Operations Lead",
+      "text": {
+        "expression": "s=>welcomeReply(s.flags.welcomeConcern)",
+        "defaultValue": "“You’re fine. People are still coming up from the Luas,” Paul says. “A few of us are going in together in a minute. Where did you come in?”\n\n“Broadstone. I walked past the entrance first time.”\n\nSomeone beside you says they took the long way round too. Paul glances at the map. “Right. That might have been my fault.”\n\nYou ask when you’ll know where you’re supposed to go on Monday. “The first timetable is due out on Friday. If something’s missing or you can’t make sense of a room or time, come back to Programme Operations.”\n\nHe points a little farther along the East Quad forecourt. “Julie will meet you here after the welcome. You can tell her what you’re interested in, even if you’re still figuring it out.”"
+      },
+      "stateReads": [
+        "flags.welcomeConcern"
+      ],
+      "entryCondition": "Choice, optional campus case or active referral",
+      "choices": [
+        {
+          "label": "Find Julie outside East Quad",
+          "to": "ch1a",
+          "condition": null,
+          "effects": null,
+          "destination": "east",
+          "app": null
+        }
+      ],
+      "chapterEnd": null,
+      "ending": false,
+      "before": "missing",
+      "comparableLegacyNode": null,
+      "after": "implemented",
+      "reachable": true,
+      "navigation": "east",
+      "phone": false
+    },
+    {
+      "id": "ch1a",
+      "title": "What have I joined?",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Julie · Academic Adviser",
+      "text": {
+        "expression": "s=>`${s.flags.welcomeConcern==='subjects'?'“Paul said you had a question about Music,” Julie says. “What drew you to it in the first place?” You tell her you wanted to try a subject you’d never had a chance to study. She asks what else you’d like to keep open.':'Julie waves you over. “Before we get into modules, what were you hoping Arts would give you a chance to try?” You name one subject, then add another that seems quite different. “Can I do both?”'}\n\n“You can explore more than one area in Stage 1. Let’s look at what has to fit into a four-year, 240 ECTS degree. There’s an approved Major, 30 credits of common Spine modules and 50 credits of Subject Area Requirements. A Minor takes 40 credits if you choose to take one. Any room for Free Electives depends on the rest of the degree you build.”\n\nShe pulls up an example. “We can move the pieces around first. Then we can talk about what you’d actually like me to record.”`",
+        "defaultValue": "Julie waves you over. “Before we get into modules, what were you hoping Arts would give you a chance to try?” You name one subject, then add another that seems quite different. “Can I do both?”\n\n“You can explore more than one area in Stage 1. Let’s look at what has to fit into a four-year, 240 ECTS degree. There’s an approved Major, 30 credits of common Spine modules and 50 credits of Subject Area Requirements. A Minor takes 40 credits if you choose to take one. Any room for Free Electives depends on the rest of the degree you build.”\n\nShe pulls up an example. “We can move the pieces around first. Then we can talk about what you’d actually like me to record.”"
+      },
+      "stateReads": [
+        "flags.welcomeConcern"
+      ],
+      "entryCondition": "Choice, optional campus case or active referral",
       "choices": [
         {
           "label": "Open the degree builder",
           "to": "ch1b",
           "condition": null,
           "effects": null,
-          "destination": "central",
+          "destination": "east",
           "app": null
         }
       ],
@@ -3247,16 +3331,16 @@
       "comparableLegacyNode": "induction1",
       "after": "implemented",
       "reachable": true,
-      "navigation": "central",
+      "navigation": "east",
       "phone": true
     },
     {
       "id": "ch1b",
       "title": "Build a possible degree",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Julie · academic adviser",
       "text": {
         "expression": "s=>`Your example currently has a ${s.flags.degreeMajor||80} ECTS Major and ${s.flags.degreeMinor?'a 40 ECTS Minor':'no Minor'}. The Spine is mandatory at 30 ECTS and SARs account for 50 ECTS of breadth across eight areas.\\n\\nA bigger Major can leave less room for other choices. But a calculation alone cannot tell you whether the combination is approved, whether prerequisites are met or whether the timetable works. Your adviser and current programme information remain important.\\n\\nChoose a different example to see how the balance changes.`",
         "defaultValue": "Your example currently has a 80 ECTS Major and no Minor. The Spine is mandatory at 30 ECTS and SARs account for 50 ECTS of breadth across eight areas.\n\nA bigger Major can leave less room for other choices. But a calculation alone cannot tell you whether the combination is approved, whether prerequisites are met or whether the timetable works. Your adviser and current programme information remain important.\n\nChoose a different example to see how the balance changes."
@@ -3277,7 +3361,7 @@
               "degreeMinor": false
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -3290,7 +3374,7 @@
               "degreeMinor": true
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         },
         {
@@ -3303,7 +3387,7 @@
               "degreeMinor": true
             }
           },
-          "destination": "central",
+          "destination": "east",
           "app": null
         }
       ],
@@ -3313,19 +3397,19 @@
       "comparableLegacyNode": null,
       "after": "implemented",
       "reachable": true,
-      "navigation": "central",
+      "navigation": "east",
       "phone": true
     },
     {
       "id": "ch1c",
       "title": "What can you choose?",
-      "sourcePlace": "central",
-      "physicalPlace": "central",
-      "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "sourcePlace": "east",
+      "physicalPlace": "east",
+      "location": "East Quad",
+      "speaker": "Julie · academic adviser",
       "text": {
-        "expression": "s=>`You have explored the arithmetic of an example degree. ${s.flags.degreeMajor===120?'A 120 ECTS Major plus a 40 ECTS Minor would use all 240 credits alongside the required General Education components. There would be no separate Free Elective space. Viability would still require formal checking.':'There may be credit space for further modules, depending on your approved Major, any Minor and the General Education requirements.'}\\n\\nYou ask whether you have to declare a Major now. “Not now,” Dr Aoife Byrne says. “Stage 1 is exploratory, but some paths have early prerequisites, eligibility checks or capacity constraints. You will submit an indicative pathway preference during Stage 1, while formal Major confirmation comes later in Stage 2.”\\n\\nYou leave knowing that exploration is about discovering academic directions, within an organised degree.`",
-        "defaultValue": "You have explored the arithmetic of an example degree. There may be credit space for further modules, depending on your approved Major, any Minor and the General Education requirements.\n\nYou ask whether you have to declare a Major now. “Not now,” Dr Aoife Byrne says. “Stage 1 is exploratory, but some paths have early prerequisites, eligibility checks or capacity constraints. You will submit an indicative pathway preference during Stage 1, while formal Major confirmation comes later in Stage 2.”\n\nYou leave knowing that exploration is about discovering academic directions, within an organised degree."
+        "expression": "s=>`You have explored the arithmetic of an example degree. ${s.flags.degreeMajor===120?'A 120 ECTS Major plus a 40 ECTS Minor would use all 240 credits alongside the required General Education components. There would be no separate Free Elective space. Viability would still require formal checking.':'There may be credit space for further modules, depending on your approved Major, any Minor and the General Education requirements.'}\\n\\nYou ask whether you have to declare a Major now. “Not now,” Julie says. “Stage 1 is exploratory, but some paths have early prerequisites, eligibility checks or capacity constraints. You will submit an indicative pathway preference during Stage 1, while formal Major confirmation comes later in Stage 2.”\\n\\nYou leave knowing that exploration is about discovering academic directions, within an organised degree.`",
+        "defaultValue": "You have explored the arithmetic of an example degree. There may be credit space for further modules, depending on your approved Major, any Minor and the General Education requirements.\n\nYou ask whether you have to declare a Major now. “Not now,” Julie says. “Stage 1 is exploratory, but some paths have early prerequisites, eligibility checks or capacity constraints. You will submit an indicative pathway preference during Stage 1, while formal Major confirmation comes later in Stage 2.”\n\nYou leave knowing that exploration is about discovering academic directions, within an organised degree."
       },
       "stateReads": [
         "flags.degreeMajor"
@@ -3342,64 +3426,7 @@
               "degreeLearned": true
             }
           },
-          "destination": "central",
-          "app": null
-        }
-      ],
-      "chapterEnd": null,
-      "ending": false,
-      "before": "missing",
-      "comparableLegacyNode": null,
-      "after": "implemented",
-      "reachable": true,
-      "navigation": "central",
-      "phone": true
-    },
-    {
-      "id": "ch2a",
-      "title": "Your first module",
-      "sourcePlace": "east",
-      "physicalPlace": "east",
-      "location": "East Quad",
-      "speaker": "Ms Ní Chonaill · module lecturer",
-      "text": "The lecturer opens the module page and asks what everyone expects from a university class. One student says lectures and tutorials. Another mentions assignments. A third asks whether a free day on the timetable means a day off.\n\n“A module is a defined unit of learning,” Ms Ní Chonaill explains. “It has learning outcomes, a credit value, scheduled teaching and other learning activities, and an assessment approach. A module descriptor tells you what you should be able to demonstrate by the end.”\n\nOn your practice timetable, you see six fictional 5 ECTS modules in Semester 1. You are surprised that the class hours do not add up to a full school timetable. What would you check first?",
-      "stateReads": [],
-      "entryCondition": "Previous guided chapters completed",
-      "choices": [
-        {
-          "label": "Read the module descriptor and assessment information",
-          "to": "ch2b",
-          "condition": null,
-          "effects": {
-            "flag": {
-              "moduleChecked": true
-            }
-          },
-          "destination": "library",
-          "app": null
-        },
-        {
-          "label": "Assume only the scheduled classes count as work",
-          "to": "ch2b",
-          "condition": null,
-          "effects": {
-            "flag": {
-              "moduleAssumption": "contact"
-            }
-          },
-          "destination": "library",
-          "app": null
-        },
-        {
-          "label": "Ask a classmate what an ECTS credit means",
-          "to": "ch2b",
-          "condition": null,
-          "effects": {
-            "flag": {
-              "moduleAssumption": "ask"
-            }
-          },
-          "destination": "library",
+          "destination": "east",
           "app": null
         }
       ],
@@ -3410,6 +3437,110 @@
       "after": "implemented",
       "reachable": true,
       "navigation": "east",
+      "phone": true
+    },
+    {
+      "id": "ch2a",
+      "title": "Your first module",
+      "sourcePlace": "central",
+      "physicalPlace": "central",
+      "location": "Central Quad",
+      "speaker": "Róisín · subject lecturer",
+      "text": "You find Róisín outside Central Quad. She’s stopped to talk to a student who’s holding a notebook full of questions. When it’s your turn, you ask how you’d know whether a subject is for you.\n\n“What are you picturing you’d be doing in the first class?” she asks.\n\n“I’m not sure. Listening? Maybe everyone else will already know how to do it.”\n\n“That’s worth asking about. I’d start with what students actually do in the first few weeks and what they’re expected to bring. The module descriptor will tell you what you’ll learn and how you’ll be assessed. If something’s unclear, ask the lecturer a specific question.”\n\nShe glances toward the square. “If you have time before you go, the campus trail starts at Bradogue. The first sign is out by the building. You can do it on your own.”\n\nBefore you go, she shows you a sample module page. It sets out what you should learn, how the work is assessed, the credits and the classes and study the module involves. What would you check first?",
+      "stateReads": [],
+      "entryCondition": "Previous guided chapters completed",
+      "choices": [
+        {
+          "label": "Read the module descriptor and assessment information",
+          "to": "trailStart",
+          "condition": null,
+          "effects": {
+            "flag": {
+              "moduleChecked": true
+            }
+          },
+          "destination": "bradogue",
+          "app": null
+        },
+        {
+          "label": "Assume only the scheduled classes count as work",
+          "to": "trailStart",
+          "condition": null,
+          "effects": {
+            "flag": {
+              "moduleAssumption": "contact"
+            }
+          },
+          "destination": "bradogue",
+          "app": null
+        },
+        {
+          "label": "Ask how much work I should expect between classes",
+          "to": "trailStart",
+          "condition": null,
+          "effects": {
+            "flag": {
+              "moduleAssumption": "ask"
+            }
+          },
+          "destination": "bradogue",
+          "app": null
+        }
+      ],
+      "chapterEnd": null,
+      "ending": false,
+      "before": "missing",
+      "comparableLegacyNode": null,
+      "after": "implemented",
+      "reachable": true,
+      "navigation": "central",
+      "phone": false
+    },
+    {
+      "id": "trailStart",
+      "title": "Two former infirmaries",
+      "sourcePlace": "bradogue",
+      "physicalPlace": "bradogue",
+      "location": "Bradogue",
+      "speaker": "Campus trail",
+      "text": "Bradogue and Glassmanogue both served as infirmaries in the Richmond Asylum complex. After restoration, the two buildings took on different university uses. Glassmanogue became a gym.\n\nLook across the square towards Glassmanogue. What do the two buildings still have in common?",
+      "stateReads": [],
+      "entryCondition": "Choice, optional campus case or active referral",
+      "choices": [
+        {
+          "label": "The projecting gables still give both fronts a similar shape.",
+          "to": "ch2b",
+          "condition": null,
+          "effects": {
+            "trail": {
+              "id": "bradogue",
+              "note": "Bradogue and Glassmanogue retain a similar arrangement of projecting gables even though their uses have changed."
+            }
+          },
+          "destination": "library",
+          "app": null
+        },
+        {
+          "label": "I can compare the stonework and the rhythm of the windows.",
+          "to": "ch2b",
+          "condition": null,
+          "effects": {
+            "trail": {
+              "id": "bradogue",
+              "note": "The stonework and window arrangement help me read Bradogue and Glassmanogue as a pair."
+            }
+          },
+          "destination": "library",
+          "app": null
+        }
+      ],
+      "chapterEnd": null,
+      "ending": false,
+      "before": "missing",
+      "comparableLegacyNode": null,
+      "after": "implemented",
+      "reachable": true,
+      "navigation": "bradogue",
       "phone": false
     },
     {
@@ -3856,10 +3987,10 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": {
-        "expression": "s=>`${s.flags.meetingPrepared?'You show Dr Aoife Byrne your current modules, your ranked interests and two specific questions. The conversation quickly turns to the requirements of possible pathways.':'Dr Aoife Byrne helps you work through your interests and suggests opening the current planner together. You can still have a productive meeting without having everything organised in advance.'}\\n\\nYou talk about a possible Major and an optional Minor. Dr Aoife Byrne distinguishes an indicative Stage 1 preference from formal Major confirmation later in Stage 2. She explains why certain pathways need earlier preparation and why availability and timetable constraints still apply.\\n\\nAt the end, she asks what you will do after the meeting.`",
-        "defaultValue": "Dr Aoife Byrne helps you work through your interests and suggests opening the current planner together. You can still have a productive meeting without having everything organised in advance.\n\nYou talk about a possible Major and an optional Minor. Dr Aoife Byrne distinguishes an indicative Stage 1 preference from formal Major confirmation later in Stage 2. She explains why certain pathways need earlier preparation and why availability and timetable constraints still apply.\n\nAt the end, she asks what you will do after the meeting."
+        "expression": "s=>`${s.flags.meetingPrepared?'You show Julie your current modules, your ranked interests and two specific questions. The conversation quickly turns to the requirements of possible pathways.':'Julie helps you work through your interests and suggests opening the current planner together. You can still have a productive meeting without having everything organised in advance.'}\\n\\nYou talk about a possible Major and an optional Minor. Julie distinguishes an indicative Stage 1 preference from formal Major confirmation later in Stage 2. She explains why certain pathways need earlier preparation and why availability and timetable constraints still apply.\\n\\nAt the end, she asks what you will do after the meeting.`",
+        "defaultValue": "Julie helps you work through your interests and suggests opening the current planner together. You can still have a productive meeting without having everything organised in advance.\n\nYou talk about a possible Major and an optional Minor. Julie distinguishes an indicative Stage 1 preference from formal Major confirmation later in Stage 2. She explains why certain pathways need earlier preparation and why availability and timetable constraints still apply.\n\nAt the end, she asks what you will do after the meeting."
       },
       "stateReads": [
         "flags.meetingPrepared"
@@ -4375,10 +4506,10 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": {
-        "expression": "s=>`“Tell me what you enjoy about both areas,” Aoife says. ${s.flags.pathEvidence?'You arrive with a comparison of the introductory requirements.':'You describe the workshop and the direction you are considering.'} She asks which aspect matters most: developing disciplinary depth, exploring a secondary interest or taking a module for breadth.`",
-        "defaultValue": "“Tell me what you enjoy about both areas,” Aoife says. You describe the workshop and the direction you are considering. She asks which aspect matters most: developing disciplinary depth, exploring a secondary interest or taking a module for breadth."
+        "expression": "s=>`“Tell me what you enjoy about both areas,” Julie says. ${s.flags.pathEvidence?'You arrive with a comparison of the introductory requirements.':'You describe the workshop and the direction you are considering.'} She asks which aspect matters most: developing disciplinary depth, exploring a secondary interest or taking a module for breadth.`",
+        "defaultValue": "“Tell me what you enjoy about both areas,” Julie says. You describe the workshop and the direction you are considering. She asks which aspect matters most: developing disciplinary depth, exploring a secondary interest or taking a module for breadth."
       },
       "stateReads": [
         "flags.pathEvidence"
@@ -5282,7 +5413,7 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
+      "speaker": "Julie · academic adviser",
       "text": "“A new interest can sometimes be explored through later module choices, SARs, electives or a possible pathway,” Aoife says. “Whether this particular option is viable depends on the approved structure, sequencing, availability and timing. We should check rather than promise.”",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
@@ -5395,8 +5526,8 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
-      "text": "You open the notes from your advising meeting. You had several useful questions and agreed to check an introductory Major requirement. The module information has been published, but the question about capacity still needs an answer.\n\nAoife sends a message: “How did you get on with the actions we agreed?” An advising meeting is useful only if someone knows what happens next.",
+      "speaker": "Julie · academic adviser",
+      "text": "You open the notes from your advising meeting. You had several useful questions and agreed to check an introductory Major requirement. The module information has been published, but the question about capacity still needs an answer.\n\nJulie sends a message: “How did you get on with the actions we agreed?” An advising meeting is useful only if someone knows what happens next.",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
       "choices": [
@@ -5440,8 +5571,8 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
-      "text": "You can now distinguish what you learned in the meeting from what still requires confirmation. Aoife can help with the academic implications; a capacity or registration decision requires the appropriate formal process. She asks whether you can describe the unresolved question precisely.",
+      "speaker": "Julie · academic adviser",
+      "text": "You can now distinguish what you learned in the meeting from what still requires confirmation. Julie can help with the academic implications; a capacity or registration decision requires the appropriate formal process. She asks whether you can describe the unresolved question precisely.",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
       "choices": [
@@ -5473,8 +5604,8 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · academic adviser",
-      "text": "“I made a note of what we discussed,” Aoife explains, “but we agreed that we still needed to confirm an availability detail. Let us check the owner of that question.” You have not failed the meeting. You just need to make the follow-up explicit.",
+      "speaker": "Julie · academic adviser",
+      "text": "“I made a note of what we discussed,” Julie explains, “but we agreed that we still needed to confirm an availability detail. Let us check the owner of that question.” You have not failed the meeting. You just need to make the follow-up explicit.",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
       "choices": [
@@ -5817,8 +5948,8 @@
       "location": "Lower House",
       "speaker": "Cian · fellow student",
       "text": {
-        "expression": "s=>`${s.flags.routeMissingChoice==='assume'?'Cian points out that they could attend for weeks without appearing on the module list. “That would be awful at assessment time.”':'Together you work out that the question is about both a possible academic pathway and a missing formal allocation.'}\\n\\nCian has a copy of their timetable but is unsure what their preferred Major might require. You agree to speak to Dr Aoife Byrne at Central Quad before assuming anything about changing modules.`",
-        "defaultValue": "Together you work out that the question is about both a possible academic pathway and a missing formal allocation.\n\nCian has a copy of their timetable but is unsure what their preferred Major might require. You agree to speak to Dr Aoife Byrne at Central Quad before assuming anything about changing modules."
+        "expression": "s=>`${s.flags.routeMissingChoice==='assume'?'Cian points out that they could attend for weeks without appearing on the module list. “That would be awful at assessment time.”':'Together you work out that the question is about both a possible academic pathway and a missing formal allocation.'}\\n\\nCian has a copy of their timetable but is unsure what their preferred Major might require. You agree to speak to Julie at Central Quad before assuming anything about changing modules.`",
+        "defaultValue": "Together you work out that the question is about both a possible academic pathway and a missing formal allocation.\n\nCian has a copy of their timetable but is unsure what their preferred Major might require. You agree to speak to Julie at Central Quad before assuming anything about changing modules."
       },
       "stateReads": [
         "flags.routeMissingChoice"
@@ -5826,7 +5957,7 @@
       "entryCondition": "Choice, optional campus case or active referral",
       "choices": [
         {
-          "label": "Add Dr Byrne to the phone, then travel to Central Quad",
+          "label": "Add Julie to the phone, then travel to Central Quad",
           "to": "hub",
           "condition": null,
           "effects": {
@@ -5835,7 +5966,7 @@
               "place": "central",
               "placeName": "Central Quad",
               "scene": "routeMissingAdviser",
-              "contact": "Dr Aoife Byrne · Academic Adviser",
+              "contact": "Julie · Academic Adviser",
               "why": "Discuss the pathway interest and identify which registration question needs formal checking."
             }
           },
@@ -5858,8 +5989,8 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · Academic Adviser",
-      "text": "You find Dr Byrne at Central Quad and show her the introductory invitation and the fictional student profile.\n\n“It’s good that you’re exploring,” she says. “But being invited into a room doesn’t mean someone has registered you for a module. I can help work out whether it matters for a future Major. I can’t promise a place or alter the official build through this conversation.”\n\nShe asks you to decide what information the programme team needs.",
+      "speaker": "Julie · Academic Adviser",
+      "text": "You find Julie at Central Quad and show her the introductory invitation and the fictional student profile.\n\n“It’s good that you’re exploring,” she says. “But being invited into a room doesn’t mean someone has registered you for a module. I can help work out whether it matters for a future Major. I can’t promise a place or alter the official build through this conversation.”\n\nShe asks you to decide what information the programme team needs.",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
       "choices": [
@@ -5903,9 +6034,9 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · Academic Adviser",
+      "speaker": "Julie · Academic Adviser",
       "text": {
-        "expression": "s=>`${s.flags.routeMissingEvidence==='vague'?'Aoife asks for the actual module and timetable details first; otherwise the programme team would have to guess which record to investigate.':'Aoife helps you set out the actual question rather than sending an open-ended complaint.'}\\n\\n“Take this to the programme support contact at Rathdown House. They can check the administrative status and explain where a registration query goes. Afterwards, come back to me if there are pathway implications.”`",
+        "expression": "s=>`${s.flags.routeMissingEvidence==='vague'?'Julie asks for the actual module and timetable details first; otherwise the programme team would have to guess which record to investigate.':'Aoife helps you set out the actual question rather than sending an open-ended complaint.'}\\n\\n“Take this to the programme support contact at Rathdown House. They can check the administrative status and explain where a registration query goes. Afterwards, come back to me if there are pathway implications.”`",
         "defaultValue": "Aoife helps you set out the actual question rather than sending an open-ended complaint.\n\n“Take this to the programme support contact at Rathdown House. They can check the administrative status and explain where a registration query goes. Afterwards, come back to me if there are pathway implications.”"
       },
       "stateReads": [
@@ -5964,7 +6095,7 @@
               "place": "central",
               "placeName": "Central Quad",
               "scene": "routeMissingFinal",
-              "contact": "Dr Aoife Byrne · Academic Adviser",
+              "contact": "Julie · Academic Adviser",
               "why": "Discuss what the administrative answer means for future pathways."
             }
           },
@@ -5984,7 +6115,7 @@
               "place": "central",
               "placeName": "Central Quad",
               "scene": "routeMissingFinal",
-              "contact": "Dr Aoife Byrne · Academic Adviser",
+              "contact": "Julie · Academic Adviser",
               "why": "Clarify why a support conversation does not itself update the registered build."
             }
           },
@@ -6007,10 +6138,10 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · Academic Adviser",
+      "speaker": "Julie · Academic Adviser",
       "text": {
-        "expression": "s=>`${s.flags.routeMissingResolved==='assumed'?'Dr Byrne checks the latest build with you. It has not changed. The visit was an enquiry, not confirmation.':'Dr Byrne reviews the information that the programme support team explained.'}\\n\\n“You now have two useful things,” she says. “An honest answer about the current record and a question we can investigate about future study. Sometimes university problems need more than one person. The useful outcome is knowing what is confirmed, what is being checked and who will come back to you.”`",
-        "defaultValue": "Dr Byrne reviews the information that the programme support team explained.\n\n“You now have two useful things,” she says. “An honest answer about the current record and a question we can investigate about future study. Sometimes university problems need more than one person. The useful outcome is knowing what is confirmed, what is being checked and who will come back to you.”"
+        "expression": "s=>`${s.flags.routeMissingResolved==='assumed'?'Julie checks the latest build with you. It has not changed. The visit was an enquiry, not confirmation.':'Julie reviews the information that the programme support team explained.'}\\n\\n“You now have two useful things,” she says. “An honest answer about the current record and a question we can investigate about future study. Sometimes university problems need more than one person. The useful outcome is knowing what is confirmed, what is being checked and who will come back to you.”`",
+        "defaultValue": "Julie reviews the information that the programme support team explained.\n\n“You now have two useful things,” she says. “An honest answer about the current record and a question we can investigate about future study. Sometimes university problems need more than one person. The useful outcome is knowing what is confirmed, what is being checked and who will come back to you.”"
       },
       "stateReads": [
         "flags.routeMissingResolved"
@@ -6406,7 +6537,7 @@
               "place": "central",
               "placeName": "Central Quad",
               "scene": "routeExplorationAdviser",
-              "contact": "Dr Aoife Byrne · Academic Adviser",
+              "contact": "Julie · Academic Adviser",
               "why": "Explore the new interest and check what needs planning now."
             }
           },
@@ -6426,7 +6557,7 @@
               "place": "central",
               "placeName": "Central Quad",
               "scene": "routeExplorationAdviser",
-              "contact": "Dr Aoife Byrne · Academic Adviser",
+              "contact": "Julie · Academic Adviser",
               "why": "Check whether a new interest can inform later choices."
             }
           },
@@ -6449,10 +6580,10 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · Academic Adviser",
+      "speaker": "Julie · Academic Adviser",
       "text": {
-        "expression": "s=>`${s.flags.exploreClosed?'“We shouldn’t close down a possible interest without checking,” Aoife says.':'Aoife encourages Saoirse to keep investigating the interest.'}\\n\\nThe adviser helps identify possible Major, Minor or breadth routes, but says the subject-owning team is better placed to explain its module sequence and any prerequisites. “You don’t need to commit today. You do need reliable information about the possibilities.”`",
-        "defaultValue": "Aoife encourages Saoirse to keep investigating the interest.\n\nThe adviser helps identify possible Major, Minor or breadth routes, but says the subject-owning team is better placed to explain its module sequence and any prerequisites. “You don’t need to commit today. You do need reliable information about the possibilities.”"
+        "expression": "s=>`${s.flags.exploreClosed?'“We shouldn’t close down a possible interest without checking,” Julie says.':'Julie encourages Saoirse to keep investigating the interest.'}\\n\\nThe adviser helps identify possible Major, Minor or breadth routes, but says the subject-owning team is better placed to explain its module sequence and any prerequisites. “You don’t need to commit today. You do need reliable information about the possibilities.”`",
+        "defaultValue": "Julie encourages Saoirse to keep investigating the interest.\n\nThe adviser helps identify possible Major, Minor or breadth routes, but says the subject-owning team is better placed to explain its module sequence and any prerequisites. “You don’t need to commit today. You do need reliable information about the possibilities.”"
       },
       "stateReads": [
         "flags.exploreClosed"
@@ -6498,7 +6629,7 @@
       "entryCondition": "Choice, optional campus case or active referral",
       "choices": [
         {
-          "label": "Return to Dr Byrne to compare it with the broader degree structure",
+          "label": "Return to Julie to compare it with the broader degree structure",
           "to": "hub",
           "condition": null,
           "effects": {
@@ -6507,7 +6638,7 @@
               "place": "central",
               "placeName": "Central Quad",
               "scene": "routeExplorationFinal",
-              "contact": "Dr Aoife Byrne · Academic Adviser",
+              "contact": "Julie · Academic Adviser",
               "why": "Compare the subject information with the overall BA Arts pathway."
             }
           },
@@ -6530,8 +6661,8 @@
       "sourcePlace": "central",
       "physicalPlace": "central",
       "location": "Central Quad",
-      "speaker": "Dr Aoife Byrne · Academic Adviser",
-      "text": "At Central Quad, you compare the subject information with the practice pathway profile. Dr Byrne explains why overall degree requirements and the subject-specific sequence both matter.\n\nSaoirse has discovered something worth following up. Her registered modules have not changed. She knows which people and resources can help her make a future decision.",
+      "speaker": "Julie · Academic Adviser",
+      "text": "At Central Quad, you compare the subject information with the practice pathway profile. Julie explains why overall degree requirements and the subject-specific sequence both matter.\n\nSaoirse has discovered something worth following up. Her registered modules have not changed. She knows which people and resources can help her make a future decision.",
       "stateReads": [],
       "entryCondition": "Choice, optional campus case or active referral",
       "choices": [

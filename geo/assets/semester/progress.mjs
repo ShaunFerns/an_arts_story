@@ -1,4 +1,5 @@
 import { nodes, chapters, places, leads, base, makeModules, missionInfo } from './source.mjs';
+import {campusTrail} from '../story/opening.mjs';
 import { locationNames, scenePlace } from './locations.mjs';
 
 const chapterWeeks = [0, 1, 2, 4, 6, 9, 12];
@@ -10,7 +11,7 @@ export const encounters = [
   {id:'week3',title:'Earlier choices return',start:'week3',week:4},
 ];
 const announcements = {
-  ch1a: ['BA Arts', 'The welcome and first advising conversation are at Central Quad.'],
+  welcomePaul: ['Paul · Programme Operations', 'The welcome is at East Quad. Julie will meet you here afterwards.'],
   ch2c: ['Timetable update · practice', 'Check the latest published timetable. A Tuesday seminar has moved and a Friday workshop has been added.'],
   ch5a: ['Academic Advising', 'Bring your timetable, the interests you want to explore and any questions you have.'],
 };
@@ -20,11 +21,19 @@ const unique = (arr,item) => { if (!arr.includes(item)) arr.push(item); };
 export function newSemester() {
   return {...structuredClone(base), current:null, pending:null, started:false, mode:'semester',
     arrivalSeen:false, visitedScenes:[], received:[], readMessages:0, activeChapter:null,
-    completion:null, within:null, selectedEncounter:null};
+    completion:null, within:null, selectedEncounter:null, trailNotes:{}};
 }
 
 export function createProgress(saved, onChange = () => {}) {
   const state = {...newSemester(), ...saved};
+  if (state.current && state.within && nodes[state.current] &&
+      state.within!==scenePlace(state.current,nodes[state.current],state)) {
+    state.pending=state.current;
+    state.current=null;
+    state.within=null;
+  }
+  const oldAnnouncement=state.messages.find(m=>m.id==='scene:ch1a');
+  if(oldAnnouncement) oldAnnouncement.body='The welcome and first advising conversation are at East Quad.';
   function deliver(id, from, body, scene = null) {
     if (state.received.includes(id)) return;
     state.received.push(id);
@@ -40,8 +49,9 @@ export function createProgress(saved, onChange = () => {}) {
     if (effect.appointment) {
       state.appointmentBooked = true;
       deliver('appointment', 'Academic advising · practice appointment',
-        'Meet Dr Aoife Byrne at Central Quad.', 'exploreMeeting');
+        'Meet Julie at Central Quad.', 'exploreMeeting');
     }
+    if (effect.trail) state.trailNotes[effect.trail.id] = effect.trail.note;
     if (effect.flag) Object.assign(state.flags, effect.flag);
     if (effect.form) {
       Object.assign(state.formA, effect.form);
@@ -59,7 +69,7 @@ export function createProgress(saved, onChange = () => {}) {
     const place = placeFor(id);
     const rawSpeaker = nodes[id]?.speaker;
     const speaker = typeof rawSpeaker==='function' ? rawSpeaker(state) : rawSpeaker;
-    return place ? {id,place,title:sceneTitle(id),speaker,detail:state.referral?.why} : null;
+    return place ? {id,place,title:sceneTitle(id),speaker,meeting:nodes[id].meeting,sign:nodes[id].sign,detail:state.referral?.why} : null;
   };
   function at(id,place) {
     state.current = id;
@@ -124,7 +134,7 @@ export function createProgress(saved, onChange = () => {}) {
       unique(state.chapterDone,node.chapterEnd);
       state.week = Math.max(state.week,chapterWeeks[Math.min(node.chapterEnd+1,6)]);
     }
-    if (nodes[option.to]) travel(option.to,state.within);
+    if (nodes[option.to]) travel(option.to,node.meeting===nodes[option.to].meeting?state.within:null);
     else if (option.to==='hub' && state.referral) travel(state.referral.scene);
     else if (option.to==='ending') {
       state.within = null;
@@ -174,6 +184,14 @@ export function createProgress(saved, onChange = () => {}) {
       state.pathwayInterest=value;
       unique(state.notes,'You explored an interest in the practice planner. Your adviser can help you check a viable route.');
       onChange();
+    },
+    recordTrail(id,index){
+      const stop=campusTrail.find(stop=>stop.id===id);
+      const observation=stop?.observations[index];
+      if ((!state.trailNotes.bradogue&&!(id==='bradogue'&&state.chapterDone.includes(2)))||state.trailNotes[id]||!observation) return false;
+      state.trailNotes[id]=observation.note;
+      onChange();
+      return true;
     },
     arrivalSeen(){state.arrivalSeen=true;onChange();},
     get current(){return nodes[state.current];},

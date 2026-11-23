@@ -179,36 +179,35 @@ await talk('induction','Welcome to BA Arts');
 const npcHeightDifference=await page.evaluate(()=>window.__artsGeo.closestNpcVerticalDifference);
 if(npcHeightDifference===null||Math.abs(npcHeightDifference)>.35)throw Error('East Quad character elevation differs from the player');
 if(Math.abs(await page.evaluate(()=>window.__artsGeo.terrainPlayerHeight))>.7)throw Error('East Quad player floor did not track terrain');
-await choose('Meet my academic adviser');
+await choose('I thought I’d missed the start');
+await choose('Meet Julie outside East Quad');
 const outdoorLocations=await page.evaluate(()=>{
  const geo=window.__artsGeo;
  const people=geo.encounterPoints.characters;
  const doors=geo.missionDoorRegistry;
  return ['adviser','cian','support'].map(id=>{
   const [x,n]=people[id];
-  return doors.filter(d=>d.id!=='east').sort((a,b)=>
+  return doors.sort((a,b)=>
    Math.hypot(a.door[0]-x,a.door[1]-n)-Math.hypot(b.door[0]-x,b.door[1]-n))[0].id;
  });
 });
-if(outdoorLocations.join()!=='central,lower,rathdown')throw Error('Archived outdoor conversations are not distributed around campus');
+if(outdoorLocations.join()!=='east,lower,rathdown')throw Error('Archived outdoor conversations are not distributed around campus');
 await talk('adviser','Which directions interest you?');
 await choose('I want to explore people, society and history');
 await page.locator('#constraintNote').fill('Travel to campus');
 await choose('Save and continue');
 if(!await page.getByText('Society and culture and History',{exact:false}).isVisible())throw Error('Induction preference did not affect adviser response');
-await choose('Join the sustainability team');
-await talk('sustainability','The campus is your first challenge');
-await choose('Start exploring');
-await talk('induction','Keep exploring');
-await choose('Back to the hunt');
-const order=['library','laurence','lower','glass','rathdown'];
+await choose('Find Róisín outside Central Quad');
+await talk('lecturer','What happens in class?');
+await choose('Find the first trail sign at Bradogue');
+const order=['bradogue','laurence','lower','printmaking','broadstoneTrail'];
 for(const id of order){
  await place('stops',id);
  await page.keyboard.press('e');
  const observe=page.getByRole('button',{name:'Record an observation',exact:true});
  if(await observe.isVisible())await observe.click();
  if(await page.locator('#npcTitle').innerText()!=='What do you notice?')throw Error('Hunt stop not playable: '+id);
- if(id==='library'){
+ if(id==='bradogue'){
   await choose('Take another look first');
   await choose('Choose an observation');
  }
@@ -217,7 +216,7 @@ for(const id of order){
  if(id==='laurence'){
   await page.reload();
   await page.waitForFunction(()=>window.__artsGeo?.ready);
-  await checkStory(()=>window.__artsGeo.story.huntDone.join() === 'library,laurence','Reload lost hunt notes or allowed the wrong order');
+  await checkStory(()=>window.__artsGeo.story.huntDone.join() === 'bradogue,laurence','Reload lost hunt notes or allowed the wrong order');
  }
 }
 await checkStory(()=>!window.__artsGeo.story.timetablePublished,'Timetable published before the debrief');
@@ -235,14 +234,14 @@ await choose('Look at Cian’s preference and timetable before deciding');
 await choose('Compare the details and save a note');
 await closePhone();
 await choose('maybe you can just pick something else now');
-await choose('Go and find Dr Byrne');
+await choose('Go and find Julie');
 await talk('adviser','What do you actually know?');
 if(!await page.getByText('You can tell her what Cian ranked',{exact:false}).isVisible())throw Error('Case evidence did not affect the advising discussion');
 await choose('Couldn’t you just tell him what to take?');
 await choose('Go to Rathdown House');
 await talk('support','Finding the right route');
 await choose('programme operations about the record');
-await choose('Go back to Dr Byrne');
+await choose('Go back to Julie');
 await talk('adviser','Your advising record and timetable');
 await choose('Finish the mission');
 if(!await page.getByText('Your first instinct was to assume a swap would be easy',{exact:false}).isVisible())throw Error('Cian choice missing from reflection');
@@ -254,10 +253,10 @@ await talk('gym','Looking after yourself');
 await choose('Save the location');
 await talk('saoirse','Something unexpected');
 await choose('surely you can change your timetable now');
-await choose('Go to East Quad');
+await choose('Go to Central Quad');
 await talk('lecturer','A possible pathway');
 await choose('Ask whether an enjoyable taster guarantees a place next semester');
-await choose('Go to Central Quad');
+await choose('Go to East Quad');
 await talk('adviser','Exploration with a plan');
 await choose('Record the new interest and agree what to check next');
 await choose('Review the advising record');

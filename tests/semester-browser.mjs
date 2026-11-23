@@ -35,7 +35,7 @@ try {
   await page.keyboard.press('Escape');
   assert.equal(await panelTitle(),'Your story so far');
   await choice();await choice();
-  assert.equal((await state()).pending,'ch1a');
+  assert.equal((await state()).pending,'welcomePaul');
 
   const spawn=await model(()=>window.__artsGeo.position);
   const facing=await model(()=>window.__artsGeo.lookYaw);
@@ -215,9 +215,9 @@ try {
     },'E — Enter '+door.name);
     await page.keyboard.press('e');
   }
-  async function walkToMeeting(door){
+  async function walkToMeeting(door,key=door.id){
     const contact=await model(()=>window.__artsGeo.semesterMeetingPlaces);
-    const meeting=contact[door.id];
+    const meeting=contact[key];
     assert(meeting?.visible);
     assert(Math.hypot(meeting.position[0]-door.interaction[0],meeting.position[1]-door.interaction[1])>2);
     segments+=await walk(door.exit);
@@ -238,7 +238,12 @@ try {
   await walkToDoor(east);
   assert.equal(await panelTitle(),'East Quad entrance');
   await button('Exit to campus').click();
-  await walkToMeeting(central);
+  await walkToMeeting(east,'welcome');
+  assert.equal(await panelTitle(),'Welcome to BA Arts');
+  await choice();
+  assert.equal(await panelTitle(),'A question to bring to Julie');
+  await choice();
+  await walkToMeeting(east);
   assert.equal(await panelTitle(),'What have I joined?');
   await page.reload({waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>window.__artsGeo?.ready);
@@ -252,9 +257,21 @@ try {
   assert.equal((await state()).formA.modules.length,6);
   await page.screenshot({path:'/tmp/arts-geo-semester-timetable.png'});
   await button('Close (M)').click();
-  await walkToMeeting(east);
+  await walkToMeeting(central);
   assert.equal(await panelTitle(),'Your first module');
   await choice();
+  const trail=await model(()=>window.__artsGeo.encounterPoints.stops);
+  segments+=await walk(trail.bradogue);
+  await page.keyboard.press('e');
+  assert.equal(await panelTitle(),'Two former infirmaries');
+  await choice();
+  assert((await state()).trailNotes.bradogue);
+  assert.equal((await state()).pending,'ch2b');
+  segments+=await walk(trail.printmaking);
+  await page.keyboard.press('e');
+  assert.equal(await panelTitle(),'A studio for printmaking');
+  await choice();await choice();
+  assert((await state()).trailNotes.printmaking);
   assert.equal((await state()).pending,'ch2b');
   await walkToMeeting(library);
   assert.equal(await panelTitle(),'What does 5 ECTS mean?');
@@ -264,7 +281,7 @@ try {
   await choice();
   assert.equal((await state()).pending,'ch3a');
   await page.keyboard.press('m');
-  await button('Messages (2)').click();
+  await page.getByRole('button',{name:/^Messages \(\d+\)$/}).click();
   await page.getByText('Timetable update · practice',{exact:true}).waitFor();
   await button('Timetable').click();
   await page.getByText('Additional workshop',{exact:true}).waitFor();

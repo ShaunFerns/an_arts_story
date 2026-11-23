@@ -40,6 +40,7 @@
 <script type="importmap">{"imports":{"three":"../vendor/three.module.js","three/addons/":"../vendor/addons/"}}</script>
 <script type="module">
 import * as THREE from 'three';
+import {campusTrail} from './assets/story/opening.mjs';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone as cloneSkinned} from 'three/addons/utils/SkeletonUtils.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
@@ -435,6 +436,9 @@ const landmarkMatches=[
  ['Glassmanogue',/^Glassmanogue$/i,'Gym'],
  ['St Laurence’s',/^St\. Laurence$/i,'Historic campus building'],
  ['Academic Hub & Library',/academic hub/i,'Library','way/1361416599'],
+ ['Bradogue',/^Bradogue$/i,'Campus trail','way/516821745',true],
+ ['Printmaking Workshop',/^Printmaking Workshop$/i,'Campus trail','way/1254931060',true],
+ ['Broadstone Plaza',/^Broadstone Plaza$/i,'Campus trail',null,true],
 ];
 function contains2D(pt,poly){
  let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){
@@ -454,10 +458,12 @@ function nearestWalkable(centre,footprint){
  }
  return best;
 }
-const missions=landmarkMatches.map(([name,re,description,fallback])=>{
+const missions=landmarkMatches.map(([name,re,description,fallback,trailOnly=false])=>{
  const matches=zone.filter(f=>re.test(f.name));
  const inferred=!matches.length&&fallback?zone.find(f=>f.id===fallback&&f.kind==='building'):null;
  if(inferred)matches.push(inferred);
+ const trail=campusTrail.find(stop=>stop.name===name&&stop.position);
+ if(name==='Broadstone Plaza'&&trail)return {name,description,trailOnly,found:true,position:trail.position,centre:trail.position,source:'way/1208522277'};
  matches.sort((a,b)=>{
   const score=f=>(f.tags?.railway==='tram_stop'?10:0)+(f.kind==='building'?2:0)+(f.id==='node/8398652317'?1:0);
   return score(b)-score(a);
@@ -466,7 +472,7 @@ const missions=landmarkMatches.map(([name,re,description,fallback])=>{
  // TU Dublin places the Library entrance on the playing-fields side.
  const reference=name==='Academic Hub & Library'&&centre?[centre[0],Math.min(...f.coords.map(p=>p[1]))-7]:centre;
  const approach=reference?nearestWalkable(reference,f.kind==='building'?f:null):null;
- return {name,description,found:!!(f&&approach),provisional:!!inferred,position:approach?.point||null,
+ return {name,description,trailOnly,found:!!(f&&approach),provisional:!!inferred,position:approach?.point||null,
   centre,source:f?.id,approachWay:approach?.road};
 });
 // The player is represented by a 1.74-metre upright capsule; its ground
@@ -1019,7 +1025,7 @@ function buildMissionBuildingDoors(){
  // The position is the closest mapped building wall to its existing pedestrian
  // approach: it is explicitly provisional wherever no surveyed door plan exists.
  for(const mission of missions){
-  if(!mission.found||['Broadstone–University','East Quad'].includes(mission.name))continue;
+  if(!mission.found||mission.trailOnly||['Broadstone–University','East Quad'].includes(mission.name))continue;
   const footprint=zone.find(f=>f.id===mission.source&&f.kind==='building');
   if(!footprint||!mission.position)throw Error('No mapped footprint for '+mission.name);
   if(footprint.id===saintLaurenceId){
@@ -1311,25 +1317,38 @@ function addCampusSignAt(m,kind,label){
 }
 // The East Quad identity is now represented on its actual façade family above; no duplicate freestanding blue sign.
 addCampusSignAt(missions.find(m=>m.name==='Rathdown House'),'wayfinding','Rathdown House');
-const huntMarkers=Object.entries(landmarksByPlace).filter(([id])=>!['east','central'].includes(id)).map(([id,m])=>{
- if(!m)throw Error('Missing campus landmark for '+id);
- const entry=missionDoorRegistry.find(e=>e.id===id);
- const position=clearPoint(entry?.interaction||m.position,[[0,0],[0,1],[1,0],[-1,0],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]);
- if(!position)throw Error('No walkable observation point for '+id);
+const huntMarkers=campusTrail.map(stop=>{
+ const m=landmarksByPlace[stop.id];
+ const entry=missionDoorRegistry.find(e=>e.id===stop.id);
+ const origin=stop.position||entry?.exit||m.position;
+ const position=clearPoint(origin,[[0,0],[0,1],[1,0],[-1,0],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]);
+ if(!position)throw Error('No walkable sign position for '+stop.name);
  const [x,n]=position;
- const marker=new THREE.Mesh(new THREE.OctahedronGeometry(.30),new THREE.MeshBasicMaterial({color:0xffce67}));
- marker.position.set(x,groundHeight(x,n)+1.06,-n);
- marker.visible=false;
+ const marker=new THREE.Group();
+ marker.position.set(x,groundHeight(x,n),-n);
+ marker.rotation.y=entry?Math.atan2(entry.outward[0],-entry.outward[1]):Math.PI;
+ const post=new THREE.Mesh(new THREE.BoxGeometry(.065,1.25,.065),mat(0x414a4d));
+ post.position.y=.625;marker.add(post);
+ const panel=new THREE.Mesh(new THREE.BoxGeometry(1.23,.77,.085),mat(0x234142));
+ panel.position.y=1.45;marker.add(panel);
+ const picture=new THREE.MeshBasicMaterial({map:signTexture(['CAMPUS TRAIL',stop.name],{background:'#234142',accent:'#e0ba73'})});
+ for(const side of [-1,1]){
+  const face=new THREE.Mesh(new THREE.PlaneGeometry(1.21,.75),picture);
+  face.position.set(0,1.45,side*.045);
+  if(side<0)face.rotation.y=Math.PI;
+  marker.add(face);
+ }
+ marker.name='Campus trail · '+stop.name;
  scene.add(marker);
- return {id,position,marker};
+ return {...stop,position,marker};
 });
 // Semester conversations use an exterior contact beside the entrance.
 const semesterMeetings=new Map();
-for(const id of ['central','east','lower','library','rathdown']){
- const door=missionDoorRegistry.find(e=>e.id===id);
+for(const id of ['central','east','lower','library','rathdown','welcome']){
+ const door=missionDoorRegistry.find(e=>e.id===(id==='welcome'?'east':id));
  const [ox,on]=door.outward;
  const offsets=[];
- for(const distance of [2.5,3.2,4.0,1.85])for(const side of [1.15,-1.15,0])
+ for(const distance of id==='welcome'?[7.9,8.6,9.5]:[2.5,3.2,4.0,1.85])for(const side of [1.15,-1.15,0])
   offsets.push([ox*distance+on*side,on*distance-ox*side]);
  const position=clearPoint(door.interaction,offsets);
  if(!position)throw Error('No outdoor meeting point for '+door.name);
@@ -1496,9 +1515,7 @@ function enterBuilding(entry){
  const m=missions.find(m=>m.name===entry.name);
  showDialogue({speaker:entry.name,title:entry.name+' entrance',
   text:m.description+'.',
-  choices:orientation()&&story.stopAvailable(entry.id)?[
-   {text:'Record an observation',select:()=>story.observe(entry.id)},
-  ]:[]});
+  choices:[]});
 }
 function nearbyDoor(){
  let closest=null,best=Infinity;
@@ -1517,13 +1534,33 @@ function nearestNpc(){
  return best;
 }
 function nearestObservation(){
- return huntMarkers.find(({id,marker})=>story.stopAvailable(id)&&
+ return huntMarkers.find(({id,marker})=>trailStopAvailable(id)&&
   Math.hypot(marker.position.x-player.position.x,marker.position.z-player.position.z)<2.2);
 }
+function trailStopAvailable(id){
+ if(orientation())return story.stopAvailable(id);
+ return semester.task()?.sign===id || (!semester.state.trailNotes[id]&&
+  (semester.state.trailNotes.bradogue||id==='bradogue'&&semester.state.chapterDone.includes(2)));
+}
+function readTrailSign(stop){
+ if(orientation()){story.observe(stop.id);return;}
+ if(semester.task()?.sign===stop.id){
+  if(semester.enter(stop.id))showSemester();
+  return;
+ }
+ showDialogue({speaker:'Campus trail',title:stop.title,text:stop.text,location:stop.name,choices:
+  stop.observations.map((o,i)=>({text:o.label,select:()=>{
+   if(semester.recordTrail(stop.id,i))showDialogue({
+    speaker:'Campus trail',title:'Added to Field Notes',text:o.note,
+    choices:[{text:'Continue exploring',select:hideDialogue}],
+   });
+  }}))});
+}
 function interaction(){
- const entrance=nearbyDoor();
+ const entrance=nearbyDoor(),observation=nearestObservation();
+ if(observation)return {label:'E — Read sign · '+observation.name,select:()=>readTrailSign(observation)};
  if(!orientation()){
-  const task=semester.task(),meeting=semesterMeetings.get(task?.place);
+  const task=semester.task(),meeting=semesterMeetings.get(task?.meeting||task?.place);
   if(meeting&&Math.hypot(meeting.position[0]-player.position.x,meeting.position[1]+player.position.z)<2.35){
    const talk=task.speaker&&task.speaker!=='Narrator';
    const name=talk?task.speaker.split(' · ')[0]:locationNames[task.place];
@@ -1540,15 +1577,8 @@ function interaction(){
    return {label:'E — Continue at Broadstone–University',select:()=>{semester.enter('luas');showSemester();}};
   return null;
  }
- const npc=nearestNpc(),observation=nearestObservation();
- if(!npc&&!observation)return entrance?{label:'E — Enter '+entrance.name,select:()=>enterBuilding(entrance)}:null;
- if(npc&&observation)return {
-  label:'Press E · talk or record an observation',
-  select:()=>showDialogue({speaker:places[observation.id].name,title:'What would you like to do?',text:'',
-   choices:[{text:'Talk to '+npc.label,select:()=>story.talk(npc.id)},
-    {text:'Record an observation',select:()=>story.observe(observation.id)}]}),
- };
- if(observation)return {label:'Press E to observe · '+places[observation.id].name,select:()=>story.observe(observation.id)};
+ const npc=nearestNpc();
+ if(!npc)return entrance?{label:'E — Enter '+entrance.name,select:()=>enterBuilding(entrance)}:null;
  return {label:'Press E to talk · '+npc.label,select:()=>story.talk(npc.id)};
 }
 function talkToNpc(){
@@ -1640,9 +1670,8 @@ function refreshStory(followObjective){
   const target=activeWaypoint();
   selected=target?missions.indexOf(target):null;
  }
- for(const stop of huntMarkers)stop.marker.visible=orientation()&&story.stopAvailable(stop.id);
  const task=semester.task();
- for(const [place,meeting] of semesterMeetings)meeting.body.visible=!orientation()&&task?.place===place;
+ for(const [place,meeting] of semesterMeetings)meeting.body.visible=!orientation()&&(task?.meeting||task?.place)===place;
  for(const npc of npcs){
   npc.body.visible=orientation();
   npc.marker.visible=orientation()&&!!story.nodeFor(npc.id);
@@ -1698,7 +1727,7 @@ function missionList(){
     ()=>{selectWaypoint(i);list.querySelector('.active')?.focus();});
    button.className=selected===i?'active':'';
    button.setAttribute('aria-pressed',String(selected===i));
-   if(isOrientation&&story.stopAvailable(id))button.textContent+=' · Observation available';
+   if(trailStopAvailable(id))button.textContent+=' · Read sign';
    list.appendChild(button);
   }
  }else{
@@ -1707,7 +1736,12 @@ function missionList(){
    showResource(type);
   };
   const entries=isOrientation?story.phoneContent():phoneEntries(semester,{
-   tab:currentTab,map:()=>{refreshStory(true);setSemesterTab('map');},
+   tab:currentTab,map:id=>{
+    refreshStory(true);
+    setSemesterTab('map');
+    const i=missions.findIndex(m=>landmarkIds.get(m.name)===id);
+    if(i>=0)selectWaypoint(i);
+   },
    tabTo:setSemesterTab,
    pause:()=>{semester.pauseEncounter();setSemesterTab('next');},
    interest:value=>{semester.setInterest(value);setSemesterTab('planner');},
@@ -1731,6 +1765,11 @@ function missionList(){
    const section=document.createElement('section');
    if(entry.title){const heading=document.createElement('h2');heading.textContent=entry.title;section.appendChild(heading);}
    if(entry.text){const text=document.createElement('p');text.textContent=entry.text;section.appendChild(text);}
+   if(entry.source){
+    const source=document.createElement('a');
+    source.href=entry.source;source.target='_blank';source.rel='noopener';
+    source.textContent='Read about this place';section.appendChild(source);
+   }
    for(const action of entry.buttons||(entry.button?[entry.button]:[]))section.appendChild(makeButton(action.text,action.select));
    list.appendChild(section);
   }
@@ -1745,19 +1784,20 @@ function selectWaypoint(index){
 }
 function mapPosition(m){
  const id=landmarkIds.get(m.name);
+ const stop=huntMarkers.find(stop=>stop.id===id);
+ if(stop&&trailStopAvailable(id))return stop.position;
  if(orientation()&&m===activeWaypoint()){
-  const stop=huntMarkers.find(s=>s.id===id&&story.stopAvailable(s.id));
-  return stop?.position||npcs.find(n=>n.id===story.targetCharacter)?.position||m.position;
+  return npcs.find(n=>n.id===story.targetCharacter)?.position||m.position;
  }
  if(!orientation()&&semester.task()?.place===id){
-  return semesterMeetings.get(id)?.position||m.position;
+  return semesterMeetings.get(semester.task().meeting||id)?.position||m.position;
  }
  return missionDoorRegistry.find(door=>door.id===id)?.interaction||m.position;
 }
 function updateObjective(){
  const task=semester.task();
  $('objective').textContent=orientation()?story.objective():task
-  ? (task.place==='luas'?'Go to ':'Meet outside ')+locationNames[task.place]+' · '+task.title
+  ? (task.sign?'Read the sign at ':task.place==='luas'?'Go to ':'Meet outside ')+locationNames[task.place]+' · '+task.title
   : semester.state.started?'Explore campus':'Broadstone–University arrival';
  const count=orientation()?0:semester.unread;
  $('mapBtn').textContent=count?'Phone (M) · '+count+' new':'Phone (M)';

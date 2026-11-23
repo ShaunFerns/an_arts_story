@@ -4,7 +4,7 @@ The canonical source is *First Semester: An Arts Story — Playable v1.3*, suppl
 
 | Scope | Before | Integrated |
 | --- | ---: | ---: |
-| v1.3 canonical scenes | 15 partial counterparts and 138 absent | 153, with all canonical choices and no scene exclusions |
+| v1.3 canonical scenes | 15 partial counterparts and 138 absent | 156, including the two Paul welcome scenes and the Bradogue trail opening |
 | Archived campus-orientation scenes | 30 of 33 | 33, including `huntTryAgain`, `induction2` and `defaultTalk` |
 | Broken canonical choice destinations | 0 | 0 |
 | Unreachable canonical scenes | 2 | 0 |
@@ -14,7 +14,7 @@ The [machine-readable audit](narrative-audit.json) records IDs, speakers, origin
 
 ## Reconciliation decisions
 
-- The guided semester is the default. The first two scenes read as a recollection of the evening before induction at Broadstone–University. The source labels these scenes Central Quad even though the prose sets them before arrival. The canonical induction and Form A occur at Central Quad. The earlier East Quad welcome, five-stop orientation and two advising cases remain available from **Phone → Campus**.
+- The guided semester is the default. The first two scenes read as a recollection of the evening before induction at Broadstone–University. The source labels these scenes Central Quad even though the prose sets them before arrival. The default opening sends the player to Paul and then Julie at East Quad, with Form A at Julie’s meeting point. Róisín meets the player outside Central Quad and directs them to the Bradogue trail sign. The separate orientation route is available from **Phone → Campus** and uses the same characters and trail signs.
 - Some source phone links name a different building from the linked scene. Destination names and street markers now come from the scene's physical location. Where the choice changes campus location, it creates a physical destination and resumes at an outdoor contact near that building. The same policy applies to referrals. The academic appointment message remains a fictional story event.
 - The source has zero unresolved choice IDs. `hub`, `ending`, `practiceTimetable` and `practiceForm` are explicit UI transitions. Its phone's undefined `MISSION_START` lookup is replaced by the source's place list and friend leads. `week3` and `week3End` become available through the optional campus conversations in or after Week 4. After that reflection, the player can resume the guided story.
 - Checking the Planner during Cian's missing-module case opens the app and then returns to the current conversation. The source jumps out to the timetable and drops the case. Visiting a referral clears the active destination, records the visit and keeps the message in the inbox. The phone only offers that message's map action while its destination is current.

@@ -1,10 +1,11 @@
+import {campusTrail} from '../story/opening.mjs';
 import { degreeMarkup, exitSurveyMarkup, guideMarkup, modules, renderEnding, storyMarkup } from './source.mjs';
 import { encounters } from './progress.mjs';
 import { locationNames } from './locations.mjs';
 
 export const phoneLabels = {
   map:'Map', next:'What’s next', messages:'Messages', timetable:'Timetable',
-  formA:'Advising', planner:'Planner', campus:'Campus', notes:'Notes',
+  formA:'Advising', planner:'Planner', campus:'Campus', trail:'Field Notes', notes:'Notes',
 };
 
 export function presentScene(progress, onChoose) {
@@ -45,7 +46,7 @@ export function phoneEntries(progress, actions) {
           ...(e.lead?[button('Try the original case',()=>actions.encounter(e,true))]:[])],
       })) : [];
       return [
-        {title:'Campus orientation', text:'Meet Bríd and explore five campus stops.',
+        {title:'Campus orientation', text:'Meet Paul and Julie, then explore the campus trail.',
           button:button('Open campus orientation',actions.orientation)},
         ...extras,
         ...(!progress.canExplore?[{text:'Optional conversations are available between chapters.'}]:[]),
@@ -93,6 +94,13 @@ export function phoneEntries(progress, actions) {
         ]:[]),
         {title:'Programme information',button:button('Read the BA Arts guide',actions.guide)},
       ];
+    case 'trail':
+      return !state.trailNotes.bradogue
+        ? [{title:'Campus trail',text:'Begin at the Bradogue sign after meeting Róisín outside Central Quad.',
+          button:button('Show Bradogue on map',()=>actions.map('bradogue'))}]
+        : [{title:'Campus trail',text:Object.keys(state.trailNotes).length+' of '+campusTrail.length+' observations saved. Visit the other signs in any order.'},
+          ...campusTrail.map(stop=>({title:stop.name,text:state.trailNotes[stop.id]||stop.title,source:stop.source,
+            button:button('Show on map',()=>actions.map(stop.id))}))];
     case 'notes':
       return [...(state.notes.length?state.notes.map(text=>({text})): [{text:'Notes from your conversations will appear here.'}]),
         ...(state.contacts.length?[{title:'People you have met',text:state.contacts.join(' · ')}]:[]),

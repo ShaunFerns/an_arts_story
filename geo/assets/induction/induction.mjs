@@ -1,4 +1,5 @@
 import {dialogueCopy, huntStops, timetable} from './dialogue.mjs';
+import {paul, julie, lecturer} from '../story/opening.mjs';
 
 export const places = {
   east: {name:'East Quad', landmark:'East Quad'},
@@ -7,15 +8,15 @@ export const places = {
   lower: {name:'Students’ Union', landmark:'Lower House'},
   glass: {name:'Glassmanogue gym', landmark:'Glassmanogue'},
   laurence: {name:'St Laurence’s', landmark:'St Laurence’s'},
+  ...Object.fromEntries(huntStops.map(({id,name})=>[id,{name,landmark:name}])),
   library: {name:'Academic Hub & Library', landmark:'Academic Hub & Library'},
 };
 
 export const characters = {
-  induction: {place:'east', name:'Bríd · Arts induction', offset:[2.1,1.2]},
-  adviser: {place:'central', name:'Dr Aoife Byrne · academic adviser', offset:[-.45,-2.4]},
-  sustainability: {place:'east', name:'Sustainability team', offset:[11.8,8.5]},
+  induction: {place:'east', name:paul, offset:[2.1,1.2]},
+  adviser: {place:'east', name:julie, offset:[6.8,5.8]},
   cian: {place:'lower', name:'Cian · fellow student', offset:[1.1,3.2]},
-  lecturer: {place:'east', name:'Róisín · subject lecturer', offset:[7.5,1.8]},
+  lecturer: {place:'central', name:lecturer, offset:[-.45,-2.4]},
   support: {place:'rathdown', name:'Niamh · Student Hub', offset:[-.8,0]},
   union: {place:'lower', name:'Students’ Union representative', offset:[.8,0]},
   saoirse: {place:'lower', name:'Saoirse · classmate', offset:[-3.5,0]},
@@ -23,19 +24,20 @@ export const characters = {
 };
 
 const missions = {
-  welcome: {npc:'induction', node:'induction1', objective:'Walk from Broadstone–University to East Quad and meet Bríd.'},
-  preferences: {npc:'adviser', node:'inductionAdviser', objective:'Speak with Dr Aoife Byrne outside Central Quad about Semester 1.'},
-  joinHunt: {npc:'sustainability', node:'huntStart', objective:'Join the sustainability team in the East Quad forecourt.'},
+  welcome: {npc:'induction', node:'induction1', objective:'Walk from Broadstone–University to East Quad and meet Paul.'},
+  preferences: {npc:'adviser', node:'inductionAdviser', objective:'Speak with Julie outside East Quad about Semester 1.'},
+  inductionLecturer: {npc:'lecturer', node:'inductionLecturer', objective:'Find Róisín outside Central Quad.'},
+  joinHunt: {objective:'Read the first campus trail sign at Bradogue.'},
   hunt: {npc:'induction', objective:'Explore the five scavenger-hunt stops in any order.'},
   friday: {npc:'induction', node:'friday', objective:'Continue to the Friday timetable publication.'},
   cian: {npc:'cian', node:'cian1', objective:'Find Cian outside Lower House and look at his timetable question.'},
-  cianAdviser: {npc:'adviser', node:'adviser1', objective:'Ask Dr Byrne how Cian’s timetable relates to his academic options.'},
+  cianAdviser: {npc:'adviser', node:'adviser1', objective:'Ask Julie how Cian’s timetable relates to his academic options.'},
   cianSupport: {npc:'support', node:'support1', objective:'Find Niamh at the Student Hub in Rathdown House.'},
-  cianReturn: {npc:'adviser', node:'adviserReturn', objective:'Take the clarified question back to Dr Byrne.'},
-  cianWrap: {npc:'adviser', node:'wrapUp', objective:'Finish Cian’s advising discussion at Central Quad.'},
+  cianReturn: {npc:'adviser', node:'adviserReturn', objective:'Take the clarified question back to Julie.'},
+  cianWrap: {npc:'adviser', node:'wrapUp', objective:'Finish Cian’s advising discussion at East Quad.'},
   saoirse: {npc:'saoirse', node:'saoirse1', objective:'Meet Saoirse near the Students’ Union at Lower House.'},
-  lecturer: {npc:'lecturer', node:'lecturer1', objective:'Ask Róisín outside East Quad about the subject and prerequisites.'},
-  saoirseReturn: {npc:'adviser', node:'adviserSecond', objective:'Discuss the new interest with Dr Byrne outside Central Quad.'},
+  lecturer: {npc:'lecturer', node:'lecturer1', objective:'Ask Róisín outside Central Quad about the subject and prerequisites.'},
+  saoirseReturn: {npc:'adviser', node:'adviserSecond', objective:'Discuss the new interest with Julie outside East Quad.'},
   complete: {objective:'Both advising cases are complete. You can keep exploring Grangegorman.'},
 };
 
@@ -61,6 +63,11 @@ export function createInduction({storage, saveKey, ui}) {
   try { saved=JSON.parse(storage.getItem(saveKey)); } catch {}
   const state = Object.assign(freshState(), saved?.story);
   if (!Object.hasOwn(missions,state.stage)) Object.assign(state,freshState());
+  if (['joinHunt','hunt'].includes(state.stage)) {
+    state.huntDone=state.huntDone.filter(id=>huntStops.some(stop=>stop.id===id));
+    if (!state.huntEvidence.bradogue) state.stage='joinHunt';
+    if (['huntStart','huntQuestion','huntTryAgain','huntFeedback'].includes(state.node)) state.node=null;
+  }
   let tab='map';
   let returnNode=null;
   const persist = () => {
@@ -70,13 +77,13 @@ export function createInduction({storage, saveKey, ui}) {
   const nextStop = () => huntStops.find(stop=>stop.id===state.huntTarget && !state.huntEvidence[stop.id])
     || huntStops.find(stop=>!state.huntEvidence[stop.id]);
   const huntSummary = () => {
-    const tags=Object.values(state.huntEvidence).map(entry=>entry.tag);
-    if (tags.some(tag=>['people','belonging','voice'].includes(tag))) return 'You noticed the ways people connect and look after one another, as well as where the buildings are.';
-    if (tags.some(tag=>['study','support','roles'].includes(tag))) return 'You paid attention to where students can find help and where they can work independently.';
+    const tags=huntStops.map(stop=>state.huntEvidence[stop.id]?.tag);
+    if (tags.includes('sustainability')) return 'You noticed how transport or a new building can change the way people use the campus.';
+    if (tags.includes('reuse')) return 'You noticed what the older buildings kept when new people and activities moved in.';
     return 'You have started to connect the spaces, routes and older buildings into a campus you can navigate.';
   };
 
-  const copy = dialogueCopy(state,{places,currentHuntStop:nextStop,huntSummary});
+  const copy = dialogueCopy(state,{currentHuntStop:nextStop,huntSummary});
   copy.friday = {
     speaker:'Programme Operations', title:'Friday before teaching begins',
     text:'Your initial Semester 1 timetable is now available. It reflects module availability, capacity, programme requirements and your preferences. Contact the programme team for allocation questions.\n\nThis is an illustrative timetable for the game. It contains no live TU Dublin registration or module availability.',
@@ -89,18 +96,19 @@ export function createInduction({storage, saveKey, ui}) {
   };
 
   function waypoint() {
+    if (state.stage==='joinHunt') return 'bradogue';
     if (state.stage==='hunt' && nextStop()) return nextStop().id;
     return characters[missions[state.stage].npc]?.place;
   }
   function objective() {
     if (state.stage==='cianAdviser' && state.chosenResponse==='swap')
-      return 'Check with Dr Byrne whether Stage 1 exploration means registered modules can be changed freely.';
+      return 'Check with Julie whether Stage 1 exploration means registered modules can be changed freely.';
     if (state.stage==='lecturer' && state.decisions.saoirse1===1)
       return 'Check the subject sequence with Róisín before assuming a current module can be exchanged.';
     if (state.stage==='saoirseReturn' && state.decisions.lecturer1===1)
-      return 'Check with Dr Byrne how to preserve possible options for the new interest.';
+      return 'Check with Julie how to preserve possible options for the new interest.';
     if (state.stage!=='hunt') return missions[state.stage].objective;
-    if (!nextStop()) return 'Return to Bríd at East Quad with your five field notes.';
+    if (!nextStop()) return 'Return to Paul at East Quad with your five field notes.';
     return `${state.huntDone.length} of 5 stops explored. Next waypoint: ${places[nextStop().id].name}. Choose any stop on the map.`;
   }
   function transition(stage) {
@@ -125,17 +133,18 @@ export function createInduction({storage, saveKey, ui}) {
     if (node) open(node);
   }
   function advance(stage) { transition(stage); close(); }
-  const branches = new Set(['cian1','adviser1','support1','saoirse1','lecturer1']);
+  const branches = new Set(['induction1','cian1','adviser1','support1','saoirse1','lecturer1']);
   const actions = {
     intro: [close],
-    induction1: [()=>advance('preferences')],
+    induction1: [()=>open('inductionWelcomeReply'),()=>open('inductionWelcomeReply')],
+    inductionWelcomeReply: [()=>advance('preferences')],
+    inductionLecturer: [()=>advance('joinHunt')],
     inductionAdviser: preferences.map(interests=>()=>{state.formA.interests=[...interests];open('constraints');}),
     constraints: [
       ()=>{state.formA.constraints=ui.constraint().trim();open('inductionPreferenceRecorded');},
       ()=>{state.formA.constraints='';open('inductionPreferenceRecorded');},
     ],
-    inductionPreferenceRecorded: [()=>advance('joinHunt')],
-    huntStart: [()=>advance('hunt'),()=>{advance('hunt');phone('hunt');}],
+    inductionPreferenceRecorded: [()=>advance('inductionLecturer')],
     huntKeepGoing: [close,()=>phone('map')],
     huntTryAgain: [()=>open('huntQuestion')],
     induction2: [close,()=>phone('map')],
@@ -229,11 +238,12 @@ export function createInduction({storage, saveKey, ui}) {
   }
   function observe(id) {
     if (!stopAvailable(id)) return;
+    if (state.stage==='joinHunt') transition('hunt');
     state.huntTarget=id;
     open('huntQuestion');
   }
   function stopAvailable(id) {
-    return state.stage==='hunt' && huntStops.some(stop=>stop.id===id) && !state.huntEvidence[id];
+    return (state.stage==='joinHunt'?id==='bradogue':state.stage==='hunt' && huntStops.some(stop=>stop.id===id)) && !state.huntEvidence[id];
   }
   function selectStop(id) {
     if (!stopAvailable(id)) return;
@@ -248,15 +258,15 @@ export function createInduction({storage, saveKey, ui}) {
     const notes=['fieldnotes','hunt'].includes(tab) ? huntStops.flatMap(stop=>{
       const entry=state.huntEvidence[stop.id];
       if (tab==='fieldnotes' && !entry) return [];
-      return [{title:places[stop.id].name,text:entry?.note||stop.clue,
+      return [{title:places[stop.id].name,text:entry?.note||stop.title,source:stop.source,
         button:stopAvailable(stop.id)?{text:'Set waypoint',select:()=>selectStop(stop.id)}:null}];
     }) : [];
     switch (tab) {
       case 'hunt': {
         const text=state.huntDone.length===huntStops.length
           ? 'All five field notes are saved.'
-          : state.stage==='hunt'?'Choose your own route. Stop nearby and press E to record an observation.'
-          : 'The scavenger hunt begins after your first advising conversation.';
+          : state.stage==='hunt'?'Choose your own route. Read the sign at each stop and record an observation.'
+          : 'Start at the Bradogue sign after speaking to Róisín.';
         return [{title:`${state.huntDone.length} of 5 places explored`,text},...notes];
       }
       case 'fieldnotes': return [...(notes.length?notes:[{text:'Your observations from the scavenger hunt will appear here.'}]),...state.notes.map(text=>({text}))];
