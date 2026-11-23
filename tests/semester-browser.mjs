@@ -92,7 +92,17 @@ try {
   assert.deepEqual(clock.streetBays,[6,5,6]);
   assert.equal(clock.storeys,3);
   assert(clock.roof.cupola&&clock.streetNormal[0]<-.9&&clock.tower[0]>clock.front[0]);
-  assert.deepEqual(clock.rearSections,['Canted spine and former chapel','Connecting corridor','North return','East range']);
+  assert.deepEqual(clock.rearSections,[
+    'Canted spine and former chapel','Connecting corridor','North return','East range','Low east service roofs',
+  ]);
+  const blueBadgeBays=await model(()=>{
+    const g=window.__artsGeo;
+    return g.street.parking.map(([x,n])=>({x,n,blocked:g.collisionProbe(x,n).blocked}));
+  });
+  assert.equal(blueBadgeBays.length,4);
+  assert(blueBadgeBays.every(bay=>!bay.blocked));
+  assert(blueBadgeBays.slice(0,2).every(({x,n})=>x>30&&x<44&&n<-95&&n>-114));
+  assert(blueBadgeBays.slice(2).every(({x,n})=>x>16&&x<25&&n<-42&&n>-51));
   const clockCourtyard=await model(()=>[[119,-56],[121,-55]].map(point=>
     window.__artsGeo.collisionProbe(...point).blocked));
   assert.deepEqual(clockCourtyard,[false,false]);
