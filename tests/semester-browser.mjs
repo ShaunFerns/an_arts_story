@@ -186,7 +186,7 @@ try {
     const drive=g.collisionMove(17.5,-145.2,8.1,-3.1);
     return {access:access.map(p=>g.collisionProbe(...p).blocked),drive,
       wall:g.collisionProbe(28,-134).id,racks:g.collisionProbe(64,-250).id,
-      bradogue:g.collisionProbe(7.5,-50).id,bradogueApproach:g.collisionProbe(10.7,-42).blocked};
+      bradogue:g.collisionProbe(25.25,-57.2).id,bradogueApproach:g.collisionProbe(29,-44).blocked};
   });
   assert(parkingChecks.access.every(blocked=>!blocked));
   assert.equal(parkingChecks.drive.collisions,0);

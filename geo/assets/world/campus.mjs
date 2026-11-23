@@ -25,6 +25,7 @@ const materials = {
   historic:new THREE.MeshStandardMaterial({color:0x9a8e7d,roughness:.95}),
   slate:new THREE.MeshStandardMaterial({color:0x50575a,roughness:.91}),
   bradoguePaint:new THREE.MeshStandardMaterial({color:0xd6d6c9,roughness:.79}),
+  bradogueLimestone:new THREE.MeshStandardMaterial({color:0x9d947e,roughness:.94}),
   brickTrim:new THREE.MeshStandardMaterial({color:0x8b7163,roughness:.87}),
   steel:new THREE.MeshStandardMaterial({color:0x454b4a,roughness:.57}),
 };
@@ -242,30 +243,33 @@ export function addCampusFacades(scene, buildings, groundHeight, entrances) {
        windowCount+=addAcademicFront(scene,a,b,[ox,on],base,door);
        continue;
       }
-      // The photographed St Brendan's Way entrance is in the north-facing
-      // west cross-gable beside St Laurence's, opposite the original south porch.
-      const gableEntry=bradogue&&i===1;
+      // TU Dublin's current front-entrance photo shows the east gable, with
+      // its return court on the right. The west gable beside St Laurence's
+      // has a separate entrance with a brick surround.
+      const mainBradogueEntry=bradogue&&i===9;
+      const gableEntry=mainBradogueEntry||(bradogue&&i===1);
       const historicPorch=bradogue&&i===13;
       if(gableEntry){
        const t=.5;
        const threshold=groundHeight(...point(t,.27))+.075-base;
        const h=2.76,w=1.73;
+       const trim=mainBradogueEntry?'bradogueLimestone':'brickTrim';
        const doorPart=(key,side,offset,y,width,height,depth)=>part(key,t+side/len,offset,threshold+y,width,height,depth);
        doorPart('shade',0,.065,h*.5,w+.11,h+.08,.14);
        for(const side of [-1,1]){
-        doorPart('brickTrim',side*.985,.120,1.47,.25,2.94,.16);
+        doorPart(trim,side*.985,.120,1.47,.25,2.94,.16);
         doorPart('bradoguePaint',side*.80,.157,h*.50,.087,h,.082);
         doorPart('bradoguePaint',side*.40,.155,.50,.725,1.0,.10);
         doorPart('steel',side*.089,.214,.965,.036,.145,.060);
        }
-       doorPart('brickTrim',0,.125,2.91,2.21,.27,.17);
+       doorPart(trim,0,.125,2.91,2.21,.27,.17);
        doorPart('glassLight',0,.137,1.87,1.55,1.69,.034);
        for(const side of [-.59,-.39,-.19,0,.19,.39,.59])
         doorPart('bradoguePaint',side,.171,1.87,side===0?.066:.031,1.69,.044);
        for(const y of [1.01,1.47,1.91,2.16,2.38,2.57,2.73])
         doorPart('bradoguePaint',0,.175,y,1.63,y===2.16?.092:.045,.052);
        doorPart('historic',0,.162,-.027,2.07,.092,.41);
-       part('brickTrim',t,.113,5.24,2.10,1.78,.17);
+       part(trim,t,.113,5.24,2.10,1.78,.17);
        part('bradoguePaint',t,.214,5.24,1.73,1.48,.072);
        part('glassLight',t,.262,5.24,1.56,1.36,.031);
        for(const x of [-.54,-.27,0,.27,.54])part('bradoguePaint',t+x/len,.287,5.24,x===0?.061:.033,1.37,.036);
