@@ -1557,10 +1557,11 @@ function readTrailSign(stop){
   }}))});
 }
 function interaction(){
- const entrance=nearbyDoor(),observation=nearestObservation();
- if(observation)return {label:'E — Read sign · '+observation.name,select:()=>readTrailSign(observation)};
+ const entrance=nearbyDoor(),observation=nearestObservation(),task=semester.task();
+ const readSign=observation?{label:'E — Read sign · '+observation.name,select:()=>readTrailSign(observation)}:null;
+ if(readSign&&(orientation()||task?.sign===observation.id))return readSign;
  if(!orientation()){
-  const task=semester.task(),meeting=semesterMeetings.get(task?.meeting||task?.place);
+  const meeting=semesterMeetings.get(task?.meeting||task?.place);
   if(meeting&&Math.hypot(meeting.position[0]-player.position.x,meeting.position[1]+player.position.z)<2.35){
    const talk=task.speaker&&task.speaker!=='Narrator';
    const name=talk?task.speaker.split(' · ')[0]:locationNames[task.place];
@@ -1573,6 +1574,7 @@ function interaction(){
    return {label:available?'E — Enter '+entrance.name:entrance.name+' · unavailable',
     select:()=>enterBuilding(entrance)};
   }
+  if(readSign)return readSign;
   if(task?.place==='luas'&&Math.hypot(player.position.x-spawnPoint[0],-player.position.z-spawnPoint[1])<3)
    return {label:'E — Continue at Broadstone–University',select:()=>{semester.enter('luas');showSemester();}};
   return null;
