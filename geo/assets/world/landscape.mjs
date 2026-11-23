@@ -7,9 +7,9 @@ const foliage=new THREE.MeshStandardMaterial({roughness:.93,side:THREE.DoubleSid
 const wood=new THREE.CylinderGeometry(.57,1,1,7);
 const leaf=new THREE.BufferGeometry();
 leaf.setAttribute('position',new THREE.Float32BufferAttribute([
- 0,0,0,-.45,.31,0,-.37,.73,.025,0,1,0,.37,.73,.025,.45,.31,0,0,.51,.13,
+ 0,0,0,-.43,.55,0,0,1,.07,.43,.55,-.07,
 ],3));
-leaf.setIndex([0,1,6,1,2,6,2,3,6,3,4,6,4,5,6,5,0,6]);
+leaf.setIndex([0,1,2,0,2,3]);
 leaf.computeVertexNormals();
 const leafCluster=mergeGeometries([
  leaf.clone().scale(.57,.62,.64).rotateZ(-.62).rotateY(.2).translate(-.19,.30,.12),
