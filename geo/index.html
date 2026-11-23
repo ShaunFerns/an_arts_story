@@ -876,53 +876,18 @@ buildEastQuadPavedForecourt();
 // Position and dimensions are educated approximations, not a landscape survey.
 const eastQuadPlazaFeatures=[];
 const blockedPlazaAreas=[];
-function createEastQuadCurvedSeating(number=0){
+function createEastQuadCurvedSeating(){
  const entry=eastQuadEntrance;
  if(!entry)return null;
- // The entrance's local +Z faces the approach; keep the central arrival
- // corridor and interaction NPC clear. Put the island beside that corridor.
- const rx=6.15,rz=2.55;
- // Construct the northern forecourt layout relative to the photographed
- // entrance, not the nearest random open area. On this face, +tangent
- // lies to the viewer's left, opposite the gold sign to the right.
- const [a,b]=entry.face,[cx,cn]=entry.mainWallMidpoint;
- const vx=b[0]-a[0],vn=b[1]-a[1],length=Math.hypot(vx,vn);
- let outwardX=-vn/length,outwardN=vx/length;
- const center=midpoint(eastFeature.coords);
- if(outwardX*(cx-center[0])+outwardN*(cn-center[1])<0){
-  outwardX=-outwardX;outwardN=-outwardN;
- }
- const tangentX=outwardN,tangentN=-outwardX;
- const choices=[];
- for(const side of [number===0?1:-1,number===0?-1:1])
- for(const lateral of [11.5,13.5,15.5,18,20,22])
- for(const outward of [7,8.5,10,12,14,16,19,22,25]){
-  const x=cx+side*lateral*tangentX+outward*outwardX,
-        n=cn+side*lateral*tangentN+outward*outwardN;
-  const interaction=entry.interaction;
-  const clearance=Math.hypot(x-interaction[0],n-interaction[1]);
-  if(clearance<rx+4||clearance>38)continue;
-  if(blockedPlazaAreas.some(p=>Math.hypot(x-p.x,n-p.n)<rx+p.rx+1.4))continue;
-  const clear=Array.from({length:30},(_,i)=>{
-   const ang=2*Math.PI*i/30;
-   const sx=x+(rx+.35)*Math.cos(ang)*tangentX+(rz+.35)*Math.sin(ang)*outwardX,
-    sn=n+(rx+.35)*Math.cos(ang)*tangentN+(rz+.35)*Math.sin(ang)*outwardN;
-   return !collision.query(sx,sn);
-  }).every(Boolean);
-  if(!clear||collision.query(x,n))continue;
-  const walkway=nearestWalkable([x,n],null);
-  const pathDist=walkway?Math.hypot(x-walkway.point[0],n-walkway.point[1]):99;
-  if(pathDist<2.4)continue;
-  choices.push({x,n,localX:side*lateral,localZ:outward,side,pathDist,
-    tangentX,tangentN,outwardX,outwardN,
-    score:pathDist*.2+clearance*.55+Math.abs(outward-(number?16:9))*.3+(side!==(number===0?1:-1)?8:0)});
- }
- choices.sort((a,b)=>a.score-b.score);
- const choice=choices[0]||null;
- if(!choice){console.warn('East Quad curved seating omitted: no collision-safe photo-inspired location');return null}
- const group=new THREE.Group();group.position.set(choice.x,groundHeight(choice.x,choice.n),-choice.n);
- // x-axis follows East Quad frontage; +z follows outward approach.
- group.rotation.y=Math.atan2(-choice.tangentN,choice.tangentX);
+ // The first island east of Grangegorman Lower is visible just west of
+ // OSM bed 1208522270. The aerial outline fixes its centre and long axis.
+ const rx=7.3,rz=2.8,x=84.1,n=-75.25;
+ const tangentX= .952,tangentN=-.306;
+ const outwardX=-tangentN,outwardN=tangentX;
+ const walkway=nearestWalkable([x,n],null);
+ const pathDist=walkway?Math.hypot(x-walkway.point[0],n-walkway.point[1]):99;
+ const group=new THREE.Group();group.position.set(x,groundHeight(x,n),-n);
+ group.rotation.y=Math.atan2(tangentN,tangentX);
  const concrete=mat(0x8f9593,.95),concreteEdge=mat(0x777e7d,.91);
  const timber=mat(0x777064,.88),joint=mat(0x4e514e,.92),earth=mat(0x454a3d,1);
  const add=(geometry,material,x,y,z)=>{
@@ -971,20 +936,22 @@ function createEastQuadCurvedSeating(number=0){
  // Keep the original upper planter and seating in front of the low curb.
  outerCurb.renderOrder=-1;
  const info={kind:'curved_concrete_planter_with_timber_seating',
-  location:'East Quad entrance forecourt',provisional:true,number:number+1,
+  location:'East Quad entrance forecourt',provisional:true,number:1,
   reference:'https://excellentstreetimages.com/blog-view/?permalink=east-quad-complex-university-campus-grangegorman',
-  position:[choice.x,choice.n],dimensions:{length:rx*2,width:rz*2,height:.62},
-  distanceToNpc:Math.hypot(choice.x-entry.interaction[0],choice.n-entry.interaction[1]),
-  nearestPedestrianPath:choice.pathDist,sideOfDoor:choice.side===1?'left when approaching northern entrance':'right when approaching northern entrance',
-  entranceDistance:Math.hypot(choice.x-entry.mainWallMidpoint[0],choice.n-entry.mainWallMidpoint[1]),
+  position:[x,n],dimensions:{length:rx*2,width:rz*2,height:.62},
+  distanceToNpc:Math.hypot(x-entry.interaction[0],n-entry.interaction[1]),
+  nearestPedestrianPath:pathDist,sideOfDoor:'west of the northern entrance',
+  entranceDistance:Math.hypot(x-entry.mainWallMidpoint[0],n-entry.mainWallMidpoint[1]),
   slats:planks};
  eastQuadPlazaFeatures.push(info);
  // An inhabited planter is a solid obstacle, not a walkway.
- blockedPlazaAreas.push({x:choice.x,n:choice.n,rx:rx+.26,rz:rz+.26,
-   tangentX:choice.tangentX,tangentN:choice.tangentN,outwardX:choice.outwardX,outwardN:choice.outwardN});
+ blockedPlazaAreas.push({x,n,rx:rx+.26,rz:rz+.26,tangentX,tangentN,outwardX,outwardN});
  return info;
 }
-createEastQuadCurvedSeating(0);
+// Apron extending from the street crossing along the mapped north beds.
+pavedArea([[55,-62.7],[74,-62.5],[111,-74],[150,-80],[163,-85],[160,-97],
+ [145,-97],[119,-100],[95,-93],[70,-83],[57,-75]],groundFinish('granite'),.039,'East Quad · north approach paving');
+createEastQuadCurvedSeating();
 addCampusLandscape(scene,zone,groundHeight,(x,n)=>collision.query(x,n)||intersectsPlanter(x,n),pavedArea);
 // A second curved planter appeared in the concept interpretation, but its
 // real position is not established by the available reference photography.

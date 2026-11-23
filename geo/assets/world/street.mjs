@@ -100,7 +100,7 @@ export function addCampusStreet(scene,features,heightAt) {
  function parkingBay(position,forward,street) {
   const atOffset=(side,end)=>[position[0]+forward[1]*side+forward[0]*end,
                              position[1]-forward[0]*side+forward[1]*end];
-  const y=street?.092:.124,halfWidth=street?1.10:1.20,halfLength=street?3.1:2.40;
+  const y=street?.107:.124,halfWidth=street?1.08:1.20,halfLength=street?2.56:2.40;
   decal(scene,position,forward,halfWidth*2,halfLength*2,y,heightAt,bayBlue,'Accessible parking · bay');
   for(const side of [-1,1]){
    strip([atOffset(side*halfWidth,-halfLength),atOffset(side*halfWidth,halfLength)],.04,-.04,y+.007,paint,'Accessible parking · edge');
@@ -112,7 +112,8 @@ export function addCampusStreet(scene,features,heightAt) {
 
  strip(coords,3.75,-3.75,.075,surface,'Grangegorman Lower · carriageway');
  for(const side of [-1,1]){
-  for(const [from,to] of [[34,-9.5],[-14.5,-65.5],[-70.5,-120.6]]){
+  const kerbs=side===1?[[34,-9.5],[-14.5,-65.5],[-70.5,-79.7],[-92.9,-120.6]]:[[34,-9.5],[-14.5,-65.5],[-70.5,-120.6]];
+  for(const [from,to] of kerbs){
    strip(between(from,to),side>0?5.02:-3.75,side>0?3.75:-5.02,.096,paving,'Grangegorman Lower · footway');
    const edge=between(from,to,side*3.73);
    ribbon(scene,edge,[[.10,.066],[.10,.132],[-.10,.132],[-.10,.066]],kerb,heightAt,'Grangegorman Lower · kerb');
@@ -134,10 +135,16 @@ export function addCampusStreet(scene,features,heightAt) {
    decal(scene,marker,direction(north),.64,2.15,.108,heightAt,finish(0x9a6255),'Grangegorman Lower · tactile crossing paving');
   }
  }
- for(const [north,side] of [[-101,1],[-107,-1]]){
-  const forward=direction(north);
-  parkingBay(at(north,side*2.57),forward,true);
-  const pin=at(north+3.3,side*3.99);
+ // The aerial shows both marked bays together on the west kerb,
+ // immediately south of the campus crossing and beside the cycle lane.
+ strip(between(-79.7,-92.9),5.8,3.67,.091,surface,'Grangegorman Lower · inset parking strip');
+ strip(between(-79.7,-92.9),7.0,5.85,.096,paving,'Grangegorman Lower · footway behind bays');
+ ribbon(scene,between(-79.7,-92.9,5.82),[[.075,.09],[.075,.136],[-.075,.136],[-.075,.09]],
+  kerb,heightAt,'Grangegorman Lower · inset parking kerb');
+ for(const position of [[39.9,-83.2],[37.7,-88.3]]){
+  const north=position[1],forward=direction(north);
+  parkingBay(position,forward,true);
+  const pin=at(north+1.9,5.98);
   sign(scene,heightAt,pin,[forward[1],-forward[0]],[{width:.39,height:.45,y:1.68,bothSides:true,draw(ctx,w,h){
    ctx.fillStyle='#1f4875';ctx.fillRect(0,0,w,h);
    ctx.save();ctx.translate(w*.24,h*.14);ctx.scale(w/235,w/235);wheelchair(ctx);ctx.restore();
@@ -162,8 +169,10 @@ export function addCampusStreet(scene,features,heightAt) {
  }
  bollards.name='Grangegorman Lower · cycle street bollards';bollards.castShadow=true;scene.add(bollards);
 
- const length=Math.hypot(.381,.924),bayForward=[.381/length,.924/length];
- for(const position of [[18.9,-46.35],[21.3,-47.34]])parkingBay(position,bayForward,false);
+ // Parking visible on the east edge of the paved court provides the
+ // location cue. Individual Blue Badge markings are approximated.
+ const bayAngle=-.31,bayForward=[Math.cos(bayAngle),Math.sin(bayAngle)];
+ for(const position of [[38.1,-40.6],[37.1,-43.8]])parkingBay(position,bayForward,false);
 
  // Bilingual fingers by the East Quad approach, based on the
  // Grangegorman Lower street photograph and the campus access map.

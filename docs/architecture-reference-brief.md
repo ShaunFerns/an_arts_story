@@ -56,8 +56,9 @@ The procedural v0.9 figures are placeholders, even after proportion, face, wardr
 
 ## Grangegorman Lower and planting
 
-The Grangegorman Lower reconstruction follows the existing road centreline. The GDA aerial and Dublin City Council photos show the crossings, cycle markings and edge treatment. The bilingual directional signs use the photographed fingerpost as a reference. TU Dublin confirms two Blue Badge spaces outside Rathdown House and two on Grangegorman Lower. The campus review locates the first pair within the Rathdown House forecourt and the second pair on opposite sides of the street level with East Quad. The positions and dimensions in the game are approximate.
+The Grangegorman Lower reconstruction follows the existing road centreline. The GDA aerial and Dublin City Council photos show the crossings, cycle markings and edge treatment. The bilingual directional signs use the photographed fingerpost as a reference. TU Dublin confirms two Blue Badge spaces outside Rathdown House and two on Grangegorman Lower. The overhead imagery shows the street pair together in the west-side inset just south of the campus crossing. The Rathdown pair is placed by the east edge of the paved forecourt where the aerial shows a parked vehicle. The exact Rathdown markings and dimensions still need ground verification. The East Quad seat follows the first island east of the crossing, west of OSM bed 1208522270.
 
+- [Esri World Imagery, east campus overhead](https://www.arcgis.com/home/webmap/viewer.html?basemap=satellite&center=-6.27855,53.35460&level=19)
 - [GDA December 2021 aerial, page 8](https://ggda.ie/media/zqqnimjf/cg-update-dec.pdf#page=8)
 - [Dublin City Council mobility works, pp. 22–24](https://www.dublincity.ie/sites/default/files/2021-12/2021-covid-mobility-measures-end-of-year-report.pdf)
 - [TU Dublin campus parking information](https://www.itb.ie/connect/campus-estates/parking/)

@@ -7,9 +7,10 @@ export function campusMix(position,luas,eastQuad) {
  const cityDistance=Math.hypot(position[0]-luas[0],position[1]-luas[1]);
  const doorDistance=Math.hypot(position[0]-eastQuad[0],position[1]-eastQuad[1]);
  return {
-  city:.76*(1-smooth((cityDistance-15)/165))+.08,
-  nature:.12+.62*smooth((cityDistance-25)/195),
-  music:.16*(1-smooth((doorDistance-1.4)/25)),
+  city:.37*(1-smooth((cityDistance-12)/95))+.018,
+  tram:.66*(1-smooth((cityDistance-5)/42)),
+  nature:.07+.58*smooth((cityDistance-42)/170),
+  music:.145*(1-smooth((doorDistance-1.4)/25)),
  };
 }
 
@@ -28,7 +29,7 @@ function bed(context,duration,sample) {
 function city(context) {
  const white=noise(1934);
  const passing=[[1,3.4,.30],[5.5,5.5,.59],[12.8,3.9,.75],[18.4,3.0,.32],[23,4.7,.52]];
- let low=0,tire=0,phase=0;
+ let low=0,tire=0;
  return bed(context,30,t=>{
   const next=white();low+=.009*(next-low);tire+=.11*(next-tire);
   let traffic=.12;
@@ -36,21 +37,27 @@ function city(context) {
    const p=(t-start)/duration;
    if(p>0&&p<1)traffic+=volume*Math.sin(Math.PI*p)**2;
   }
-  // Track rumble, a rising/falling electric motor and a short wheel squeal.
-  const tram=clamp((t-.9)/5.9),approach=Math.sin(Math.PI*tram)**2;
-  phase+=tau*(89+102*tram-45*tram**2)/rate;
-  const rail=approach*(.031*Math.sin(phase)+.013*Math.sin(2*phase)+.043*tire);
-  const wheel=Math.sin(Math.PI*clamp((t-4.9)/1.18))**2;
-  const squeal=wheel*.016*Math.sin(tau*(720*t+7*Math.sin(t*1.2)));
-  return low*(.28+traffic)+tire*(.025+.25*traffic)+rail+squeal;
+  return low*(.09+.38*traffic)+tire*(.015+.17*traffic);
+ });
+}
+function tram(context) {
+ const white=noise(1935);
+ let railNoise=0,phase=0;
+ return bed(context,5.65,t=>{
+  const travel=clamp((t-.18)/5.2),approach=Math.sin(Math.PI*travel)**2;
+  phase+=tau*(89+87*travel-38*travel**2)/rate;
+  railNoise+=.09*(white()-railNoise);
+  const motor=approach*(.024*Math.sin(phase)+.009*Math.sin(2*phase)+.023*railNoise);
+  const braking=Math.sin(Math.PI*clamp((t-2.28)/1.17))**2;
+  return motor+braking*.006*Math.sin(tau*(640*t+6*Math.sin(t*1.2)));
  });
 }
 function nature(context) {
  const white=noise(502);
  const calls=[1.64,1.93,4.6,7.95,8.2,8.62,12.36,16.75,17.11,21.42,21.68,25.94,28.3];
- let breeze=0,rustle=0;
+ let breeze=0,rustle=0,slow=0;
  return bed(context,32,t=>{
-  const next=white();breeze+=.018*(next-breeze);rustle+=.16*(next-rustle);
+  const next=white();breeze+=.018*(next-breeze);rustle+=.16*(next-rustle);slow+=.006*(breeze-slow);
   let birds=0;
   for(const [i,start] of calls.entries()){
    const time=t-start,duration=i%3===0?.17:.25;
@@ -60,7 +67,7 @@ function nature(context) {
    birds+=arch*(.034*Math.sin(phase)+.007*Math.sin(phase*2));
   }
   const gust=.55+.24*Math.sin(t*.77)+.14*Math.cos(t*1.41);
-  return gust*(.46*breeze+.070*rustle)+birds;
+  return gust*(.31*(breeze-slow)+.058*rustle)+birds;
  });
 }
 
@@ -88,7 +95,7 @@ function classical(context) {
 
 export function createCampusAmbience(buttons,luas,eastQuad) {
  const Audio=globalThis.AudioContext??globalThis.webkitAudioContext;
- let context,master,panner,layers,filter,enabled=false,nextUpdate=0;
+ let context,master,panner,layers,filter,tramSource,enabled=false,nextUpdate=0;
  let listener=luas,heading=0,foreground=true;
  const label=()=>{
   for(const button of buttons){
@@ -129,13 +136,22 @@ export function createCampusAmbience(buttons,luas,eastQuad) {
      source.start();
      return [name,gain];
     }));
+    layers.tram=context.createGain();
+    layers.tram.gain.value=0;layers.tram.connect(master);
+    tramSource=context.createBufferSource();
+    tramSource.buffer=tram(context);tramSource.connect(layers.tram);
    }
    await context.resume();
    enabled=true;nextUpdate=0;
    update(listener,heading,foreground);setMaster();
+   if(tramSource){
+    if(Math.hypot(listener[0]-luas[0],listener[1]-luas[1])<38)tramSource.start();
+    else tramSource.disconnect();
+    tramSource=null;
+   }
   }catch{
    context?.close().catch(()=>{});
-   context=master=null;
+   context=master=tramSource=null;
   }finally{
    label();
    for(const button of buttons)button.disabled=false;

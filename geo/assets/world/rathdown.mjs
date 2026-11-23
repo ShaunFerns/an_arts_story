@@ -17,9 +17,12 @@ export function rathdownRise(x,n) {
  return rise*clamp(distance/run)*clamp((spread+7-side)/7)*clamp((side+10)/6)*clamp((86-distance)/22);
 }
 
-const court=[[-41,-9],[-27,.1],[-17,-2],[4,-7.5],[26,-13.7],[35.2,-20.6],
- [41.6,-25],[45.6,-51.8],[44.6,-51.8],[45.7,-55.8],[43.1,-59.3],
- [31.1,-55],[-1,-42],[-11,-39],[-17,-33],[-27,-26],[-40,-23]];
+// Traced from the aerial paving edge and matched to the mapped gateway
+// rails and footprints. Paving reaches the Bradogue side of the forecourt.
+const court=[[-45,-6],[-34,2],[-22,-2],[-7,-9],[8,-14],[24,-21],
+ [34,-24],[42,-30],[46,-39],[45.3,-48],[45.6,-51.8],[44.6,-51.8],
+ [45.7,-55.8],[43.1,-59.3],[29.5,-57.8],[22.25,-55.16],[7.12,-51.07],
+ [-2.14,-45.73],[-14.24,-42.7],[-26.7,-35.05],[-39.6,-33],[-45,-25]];
 const island=[.4,-31.5];
 export const rathdownTreeObstacle={id:'rathdown-forecourt-tree',kind:'building',
  coords:[[-.01,-31.90],[.81,-31.90],[.81,-31.10],[-.01,-31.10],[-.01,-31.90]]};
@@ -39,11 +42,11 @@ export function addRathdownApproach(scene,heightAt,stone,features,blocked) {
   points.push(x,heightAt(x,n)+y,-n);
   texture.push(across(x,n),along(x,n));
  }
- for(let x=-41;x<46;x+=pitch)for(let n=-60;n<1;n+=pitch){
+ for(let x=-45;x<46;x+=pitch)for(let n=-60;n<3;n+=pitch){
   const ex=x+pitch/2,no=n+pitch/2;
   if(!contains(court,ex,no)||contains(islandShape,ex,no)||blocked(ex,no))continue;
   const s=across(ex,no);
-  const band=Math.abs(s/3.1-Math.round(s/3.1))<.095;
+  const band=Math.abs(s/3.65-Math.round(s/3.65))<.069;
   for(const [p,q] of [[x,n],[x+pitch,n],[x+pitch,n+pitch],[x,n],[x+pitch,n+pitch],[x,n+pitch]]){
    put(p,q,.111,band?inlay:vertices,band?inlayUv:uv);
   }

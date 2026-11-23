@@ -232,6 +232,10 @@ export function addClockTower(scene,feature,heightAt,masonry) {
   group.add(trim);
  }
  const towerD=5.35,plinth=13.10;
+ // The clock stage sits on a masonry pier. Extend that pier through the
+ // falling roof on the east side while keeping the street-facing cornice.
+ const pierBase=frontEaves-.06,pierTop=plinth+.04;
+ block(0,towerD,(pierBase+pierTop)/2,4.92,5.08,pierTop-pierBase,granite);
  block(0,towerD,plinth+.23,5.62,5.62,.55,granite);
  // A chamfered square granite drum with four broad cardinal faces.
  const corners=[[-2.28,-1.73],[-1.73,-2.28],[1.73,-2.28],[2.28,-1.73],

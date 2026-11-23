@@ -101,8 +101,8 @@ try {
   });
   assert.equal(blueBadgeBays.length,4);
   assert(blueBadgeBays.every(bay=>!bay.blocked));
-  assert(blueBadgeBays.slice(0,2).every(({x,n})=>x>30&&x<44&&n<-95&&n>-114));
-  assert(blueBadgeBays.slice(2).every(({x,n})=>x>16&&x<25&&n<-42&&n>-51));
+  assert.deepEqual(blueBadgeBays.slice(0,2).map(({x,n})=>[x,n]),[[39.9,-83.2],[37.7,-88.3]]);
+  assert(blueBadgeBays.slice(2).every(({x,n})=>x>34&&x<43&&n<-38&&n>-48));
   const clockCourtyard=await model(()=>[[119,-56],[121,-55]].map(point=>
     window.__artsGeo.collisionProbe(...point).blocked));
   assert.deepEqual(clockCourtyard,[false,false]);
